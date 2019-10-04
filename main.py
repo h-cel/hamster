@@ -29,6 +29,7 @@ from joblib import Parallel, delayed
 from copy import deepcopy
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
+from dateutil.relativedelta import relativedelta
 
 ###############################################################################
 ###############################################################################
@@ -645,8 +646,9 @@ def gridder(ID, npart, array, code,
 
 def readNmore(
            ryear, ayear, amonth,
-           ipath="/media/gvo00090_scratch/vsc42561/tools/particle-o-matic/era_global/terabox/",
-           opath="/tmp/", sfnam_base="FXvG_r",           
+           ipath="/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/",
+           opath="/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/",
+           sfnam_base="FXvG_r",           
            dTH_thresh=1.0, # used for E,H,P (if P_dq_min==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            sample_E_upto=0, sample_H_upto=0, # set min ABLh, disabled if 0 
@@ -678,23 +680,22 @@ def readNmore(
     ###########################################################################
     
     ## construct precise input and storage paths
-    basepath  = ipath + "/NH/year"
-    basepath2 = ipath + "/SH/year"    
     ryear     = str(ryear)
-    mainpath  = basepath+ryear+"/output_temp/" # remove output_temp for data on DATA (not SCRATCH)
-    mainpath2 = basepath2+ryear+"/output_temp/"
-    sfilename = sfnam_base+ryear[-2:]+"_"+str(ayear)+"-"+str(amonth).zfill(2)+".nc"
-    
+    mainpath  = ipath+str(ryear)+"/"
+    sfilename = sfnam_base+str(ryear)[-2:]+"_"+str(ayear)+"-"+str(amonth).zfill(2)+".nc"
+
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     if log_this:    
         new_target = open(opath+sfilename[:-3]+'.txt', 'w')
         old_target, sys.stdout = sys.stdout, new_target
     
     if verbose:
-        print("\n====================================================================")
-        print("=========================--- WELCOME ---============================")
-        print("\n\n----- this is how the file will be stored:\n", sfilename)
-        print("\n====================================================================\n")
+        print("\n=========================================================================================")
+        print("====================================--- HAMSTER ---========================================")
+        print("\n PROCESSING: \t", 	ayear, "-", amonth)
+        print("\n INPUT PATH: \t", 	ipath)
+        print("\n OUTPUT FILE: \t", 	opath+sfilename)
+        print("\n=========================================================================================")
         
     ##########################    EXPERIMENTAL    #############################
     if P_dq_min == None:
@@ -725,24 +726,30 @@ def readNmore(
     ###########################################################################
     
     ## prepare filelist
-    filelist = fnmatch.filter(os.listdir(mainpath), '*.dat.gz')
+    filelist = fnmatch.filter(os.listdir(mainpath), '*SH*.dat.gz')
     filelist.sort() # probably unnecessary
        
     ## translate into datetime 
     alldates = []
     for file in filelist:
         filedate = file[-17:-7]
-        alldates.append(datetime(int(filedate[:4]),  int(filedate[4:6]),
-                      int(filedate[6:8]), int(filedate[8:10]))) # check if files change!
+        alldates.append(datetime(int(filedate[:4]),  int(filedate[4:6]), int(filedate[6:8]), int(filedate[8:10]))) # check if files change!
     #fdate_end = filelist[-1][-17:-7] # not needed
     
     ## create start date to find right files
     if amonth==11 and int(ayear)!=int(ryear):
         ## exception for incomplete November (could go a bit further; OCT incomplete)
         date_bgn = datetime(year=ayear, month=amonth, day=20, hour=6)
+	# date_bgn 	= datetime.datetime.strptime(str(ayear)+"-"+str(amonth).zfill(2)+"-01", "%Y-%m-%d")
+	# date_end	= start + relativedelta(months=1)
+   	# timestep 	= datetime.timedelta(hours=6)
+	# dateseq 	= []
+	# idate		= date_bgn
+	# while idate < date_end:
+    	# 	dateseq.append(idate.strftime('%Y-%m-%d %H:%M:%S'))
+    	# 	idate += timestep 
     else:
         date_bgn = datetime(year=ayear, month=amonth, day=1, hour=6)
-    
     ## same thing for end date; for DECEMBER, 'trick' doesn't work
     if amonth!=12: # these are easy
         date_end = datetime(year=ayear, month=amonth+1, day=1, hour=0)
@@ -778,7 +785,7 @@ def readNmore(
     ######################   REPEAT FOR SOUTHERN HEMISPHERE    ################
        
     ## prepare filelist
-    filelist2 = fnmatch.filter(os.listdir(mainpath2), '*.dat.gz')
+    filelist2 = fnmatch.filter(os.listdir(mainpath), '*NH*.dat.gz')
     filelist2.sort() # probably unnecessary
     
     if len(filelist2) != len(filelist_orig):
@@ -792,7 +799,7 @@ def readNmore(
         print("last file  --- ", filelist2[-1])
     
     ## complete file paths
-    filepaths2 = absoluteFilePaths(mainpath2, filelist2)
+    filepaths2 = absoluteFilePaths(mainpath, filelist2)
     filepaths2.sort()
     
     
@@ -975,7 +982,7 @@ def readNmore(
         nparts     = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
     
         ### set attributes ###
-        nc_f.description = "FLEXPART-based upward land surface fluxes & precipitation"
+        nc_f.description = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
         times.units       = 'hours since 1900-01-01 00:00:00'
         times.calendar    = 'Standard' # do NOT use gregorian here!
         latitudes.units   = 'degrees_north'
@@ -987,7 +994,6 @@ def readNmore(
         evaps.long_name	= 'evaporation'
         precs.units     = 'mm'
         precs.long_name	= 'precipitation'
-    	    
         nparts.units     = 'int'
         nparts.long_name = 'number of parcels (intermed. pos.)'
     
@@ -1016,3 +1022,5 @@ def readNmore(
         new_target.close()
         sys.stdout = old_target
         print("\n\n\n==================------------------ ALL DONE !!!")
+
+readNmore(2002,2002,3)
