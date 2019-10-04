@@ -22,7 +22,13 @@ import numpy as np
 import os, fnmatch
 import timeit
 import netCDF4 as nc4
+import sys
+import random
+import multiprocessing    
+from joblib import Parallel, delayed
+from copy import deepcopy
 from datetime import datetime, timedelta
+from math import sin,cos,acos,atan,atan2,sqrt
 
 ###############################################################################
 ###############################################################################
@@ -62,7 +68,6 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
 
     """
     
-    from math import sin,cos,acos
 
     ## set Earth radius, define pi
     R  = 6371
@@ -168,7 +173,6 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
     OUTPUT: geographical center coordinates (lat/lon)
 
     """
-    from math import sin,cos,atan,atan2,sqrt
 
     ## define pi
     pi = 3.141592654
@@ -683,7 +687,6 @@ def readNmore(
     
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     if log_this:    
-        import sys
         new_target = open(outpath+sfilename[:-3]+'.txt', 'w')
         old_target, sys.stdout = sys.stdout, new_target
     
@@ -752,7 +755,6 @@ def readNmore(
     fID_end = np.where(np.asarray(alldates)==date_end)[0][0] + 1
     
     ## crop filelist accordingly
-    from copy import deepcopy
     filelist_orig = deepcopy(filelist)
     filelist = filelist[fID_bgn:fID_end]
     
@@ -799,7 +801,6 @@ def readNmore(
     
     firstfile = filelist_orig[0]
     os.chdir(mainpath)
-    import random
     rint = random.randint(10000,100000)
     os.system(str("cp "+firstfile+" "+firstfile[:-7]+"_TMP-"+str(rint)+".DAT.gz"))
     os.system(str("gunzip "+firstfile[:-7]+"_TMP-"+str(rint)+".DAT.gz"))
@@ -887,8 +888,6 @@ def readNmore(
             raise ValueError("Array shape incompatible with code")
             
         ## here comes some multiprocessing to diagnose all particles
-        import multiprocessing    
-        from joblib import Parallel, delayed
         if __name__ == '__main__':
             num_cores = multiprocessing.cpu_count()
             diagcodes = Parallel(n_jobs=num_cores)(delayed(diagnoser)(
