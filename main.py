@@ -644,9 +644,9 @@ def gridder(ID, npart, array, code,
 #############################    SETTINGS ##################################
 
 def readNmore(
-           runyr, ayear, amonth,
-           inpath="/media/gvo00090_scratch/vsc42561/tools/particle-o-matic/era_global/terabox/",
-           outpath="/tmp/", sfnam_base="FXvG_r",           
+           ryear, ayear, amonth,
+           ipath="/media/gvo00090_scratch/vsc42561/tools/particle-o-matic/era_global/terabox/",
+           opath="/tmp/", sfnam_base="FXvG_r",           
            dTH_thresh=1.0, # used for E,H,P (if P_dq_min==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            sample_E_upto=0, sample_H_upto=0, # set min ABLh, disabled if 0 
@@ -678,16 +678,16 @@ def readNmore(
     ###########################################################################
     
     ## construct precise input and storage paths
-    basepath  = inpath + "/NH/year"
-    basepath2 = inpath + "/SH/year"    
-    runyr     = str(runyr)
-    mainpath  = basepath+runyr+"/output_temp/" # remove output_temp for data on DATA (not SCRATCH)
-    mainpath2 = basepath2+runyr+"/output_temp/"
-    sfilename = sfnam_base+runyr[-2:]+"_"+str(ayear)+"-"+str(amonth)+".nc"
+    basepath  = ipath + "/NH/year"
+    basepath2 = ipath + "/SH/year"    
+    ryear     = str(ryear)
+    mainpath  = basepath+ryear+"/output_temp/" # remove output_temp for data on DATA (not SCRATCH)
+    mainpath2 = basepath2+ryear+"/output_temp/"
+    sfilename = sfnam_base+ryear[-2:]+"_"+str(ayear)+"-"+str(amonth).zfill(2)+".nc"
     
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     if log_this:    
-        new_target = open(outpath+sfilename[:-3]+'.txt', 'w')
+        new_target = open(opath+sfilename[:-3]+'.txt', 'w')
         old_target, sys.stdout = sys.stdout, new_target
     
     if verbose:
@@ -737,7 +737,7 @@ def readNmore(
     #fdate_end = filelist[-1][-17:-7] # not needed
     
     ## create start date to find right files
-    if amonth==11 and int(ayear)!=int(runyr):
+    if amonth==11 and int(ayear)!=int(ryear):
         ## exception for incomplete November (could go a bit further; OCT incomplete)
         date_bgn = datetime(year=ayear, month=amonth, day=20, hour=6)
     else:
@@ -746,7 +746,7 @@ def readNmore(
     ## same thing for end date; for DECEMBER, 'trick' doesn't work
     if amonth!=12: # these are easy
         date_end = datetime(year=ayear, month=amonth+1, day=1, hour=0)
-    elif amonth==12 and int(ayear)==int(runyr):
+    elif amonth==12 and int(ayear)==int(ryear):
         date_end = datetime(year=ayear, month=amonth, day=31, hour=18)
     else:
         date_end = datetime(year=ayear+1, month=1, day=1, hour=0)
@@ -951,12 +951,12 @@ def readNmore(
             
         ### delete nc file if it is present (avoiding error message)
         try:
-            os.remove(outpath+sfilename)
+            os.remove(opath+sfilename)
         except OSError:
             pass
         
         ### create netCDF4 instance
-        nc_f = nc4.Dataset(outpath+sfilename,'w', format='NETCDF4') #'w' stands for write
+        nc_f = nc4.Dataset(opath+sfilename,'w', format='NETCDF4') #'w' stands for write
         
         ### create dimensions ###
         nc_f.createDimension('time', dt_dates.size)
@@ -1007,7 +1007,7 @@ def readNmore(
         
         print("\n===============================================================")
         print("======  file",sfilename," written to:")
-        print("======  ",outpath)
+        print("======  ",opath)
         print("===============================================================")
         
         
