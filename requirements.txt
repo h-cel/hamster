@@ -1,7 +1,7 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-# Created by jkeune 04-10-2019 with conda list -e > requirements.txt
+# created by jkeune 04/10/2019 with conda list -e > requirements.txt
 _license=1.1=py36_1
 alabaster=0.7.10=py36_0
 anaconda=custom=py36_0
@@ -153,6 +153,7 @@ pillow=4.3.0=py36_0
 pip=9.0.1=py36_1
 pixman=0.34.0=0
 ply=3.10=py36_0
+progress=1.5=py36_0
 prompt_toolkit=1.0.14=py36_0
 psutil=5.2.2=py36_0
 ptyprocess=0.5.1=py36_0
