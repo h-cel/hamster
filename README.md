@@ -1,2 +1,2 @@
 # hamster
-Heat And MoiSture Tracking fRamework
+Heat And MoiSturE Tracking fRamework
