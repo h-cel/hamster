@@ -4,7 +4,7 @@ Heat And MoiSturE Tracking fRamework
 
 ## Getting started 
 
-These are a bunch generic instructions.
+These are a bunch of generic instructions.
 
 ### Prerequisites
 
