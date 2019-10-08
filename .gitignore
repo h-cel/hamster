@@ -2,6 +2,9 @@
 *.e*
 *.o*
 
+# Copy of mainpy to work-dir
+work/main.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
