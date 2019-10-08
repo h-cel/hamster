@@ -337,7 +337,7 @@ def readNmore(
         nparticle   = ary.shape[1]
         print("TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
-        bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
+        #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
             ntot    = range(1000)
         else:
@@ -380,9 +380,9 @@ def readNmore(
             #             logger=npart_log, heat=ary_heat, evap=ary_evap, prec=ary_prec)
             #        
             # update progress bar
-            bar.next()
+            #bar.next()
         # finish progress bar
-        bar.finish()
+        #bar.finish()
 
     ###########################################################################
     
