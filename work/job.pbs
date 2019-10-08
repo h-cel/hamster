@@ -24,15 +24,21 @@ if [ "$SLURM_CLUSTER_NAME" == "skitty" ] || [ "$SLURM_CLUSTER_NAME" == "victini"
 fi
 
 # use anaconda environment, which has requirements.txt installed
-source activate py36
+#set +eu 
+#export PS1=
+#source activate py36
+#module load Python/3.6.6-intel-2018b
+#source "/user/data/gent/vsc423/vsc42383/tools/python_anaconda/envs/py36/bin/activate"
 
 ## Settings
 echo "***************************************************************************"
 echo "Working directory: 	${PBS_O_WORKDIR}"
 echo "***************************************************************************"
 
+
 ## START JOB
-cd /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster
+#chmod 750 /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py
+cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WORKDIR}/.
 time python main.py
 
 #tdqp=0.0
