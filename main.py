@@ -22,13 +22,13 @@ import sys
 import time
 import random
 import multiprocessing    
-from joblib import Parallel, delayed
+#from joblib import Parallel, delayed
 from copy import deepcopy
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
-from progress.bar import Bar
+#from progress.bar import Bar
 
 ###############################################################################
 ## ------ USER SETTINGS
@@ -49,7 +49,7 @@ am              = 5
 ## Experiment ID (choose a letter or short name)
 expID           = "FXvG_r"
 ## mode (test/oper)
-mode            = "test"
+mode            = "oper"
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if P_dq_min==None)
