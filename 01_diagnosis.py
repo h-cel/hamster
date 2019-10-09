@@ -3,6 +3,25 @@
 """
 MAIN FUNCTIONS FOR 01_diagnosis
 """
+def readparcel(parray):
+    
+    # constants
+    R_specific = 287.057                    # round(8.3144598 / (28.9645/1e3), 3)
+    DALR       = (-9.8/1e3)                 # dry adiabatic lapse rate
+    ## parcel information
+    lats    = parray[:,2]                   # latitude
+    lons    = parray[:,1]                   # longitude
+    temp    = parray[:,8]                   # temperature (K)
+    ztra    = parray[:,3]                   # height (m)
+    #topo   = parray[:,4]                   # topography (m) 
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    hpbl    = parray[:,7]                   # ABL height (m)
+    dens    = parray[:,6]                   # density (kg m-3)
+    pres    = dens*R_specific*temp          # pressure (Pa)
+    potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
+    eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
+
+    return lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT 
 
 def diagnoser(parray,
               dTH_thresh=tdTH, 
@@ -19,34 +38,23 @@ def diagnoser(parray,
     ACTION
     RETURNS
     """
-        
-    ###### CONSTANTS #######
+    # constants
     R_specific = 287.057                    # round(8.3144598 / (28.9645/1e3), 3)
     DALR       = (-9.8/1e3)                 # dry adiabatic lapse rate
-
-    ####################################################################### 
-    ###### PARTICLE INFORMATION ########
-    lats    = parray[:,2]                   # latitude
-    lons    = parray[:,1]                   # longitude
-    # skip this parcel if unreasonable jump in data
+    
+    # read in parcel information from parray
+    lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(parray)
+    # check for jumps
     if dist_on_sphere(lats[0],lons[0],lats[1],lons[1])>1620:
         return(0)
-    temp    = parray[:,8]                   # temperature (K)
-    ztra    = parray[:,3]                   # height (m)
-    #topo   = parray[:,4]                   # topography (m) 
-    qv      = parray[:,5]                   # specific humidity (kg kg-1)
-    hmix    = parray[:,7]                   # ABL height (m)
-    dens    = parray[:,6]                   # density (kg m-3)
-    ## calculate everything else that is needed at least once from here
+    # differences / mean / max values
     dq      = qv[0] - qv[1]                 # humidity change (kg kg-1)
-    BLh_max = np.max(hmix[:2])              # max. boundary layer height (m)
-    pres    = dens*R_specific*temp          # pressure (Pa)
-    potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
-    eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
+    hpbl_max= np.max(hpbl[:2])              # max. boundary layer height (m)
     dTH     = potT[0] - potT[1]             # potential temperature difference
     dTHe    = (eqvpotT[0]-eqvpotT[1])       # equiv. pot. temperature difference (K)
     dz      = ztra[0] - ztra[1]             # height difference (rise/descent) (m)
-    #dz = (ztra[0]+topo[0]) - (ztra[1]+topo[1]) # WHY WOULD THIS BE CORRECT?
+
+
     ####################################################################### 
     
     counter = 0 # not elegant, but it works
@@ -83,8 +91,8 @@ def diagnoser(parray,
 
     ########### EVAPORATION & SENSIBLE HEAT ############
     if (
-        (ztra[0] < hmix[0]) and
-        (ztra[1] < hmix[1]) and
+        (ztra[0] < hpbl[0]) and
+        (ztra[1] < hpbl[1]) and
         (dTH > dTH_thresh) and 
         ((dTHe - dTH) > dTH_thresh) and         
         abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*R_specific*temp[1]/1e2, T_degC=temp[1]-273.15) and
@@ -96,8 +104,8 @@ def diagnoser(parray,
         
     ########### SENSIBLE HEAT ############
     if (   
-        (ztra[0] <  max(hmax_H, BLh_max)) and 
-        (ztra[1] <  max(hmax_H, BLh_max)) and 
+        (ztra[0] <  max(hmax_H, hpbl_max)) and 
+        (ztra[1] <  max(hmax_H, hpbl_max)) and 
         (dTH > dTH_thresh) and 
         abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*R_specific*temp[1]/1e2, T_degC=temp[1]-273.15)
         ):
@@ -106,8 +114,8 @@ def diagnoser(parray,
     
     ########### EVAPORATION ############
     if ( 
-        (ztra[0] <  max(hmax_E, BLh_max)) and 
-        (ztra[1] <  max(hmax_E, BLh_max)) and
+        (ztra[0] <  max(hmax_E, hpbl_max)) and 
+        (ztra[1] <  max(hmax_E, hpbl_max)) and
         ((dTHe - dTH) > dTH_thresh) and
          abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*R_specific*temp[1]/1e2, q_kgkg=qv[1])
        ):
