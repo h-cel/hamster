@@ -66,7 +66,7 @@ def readparcel(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = dens*RSPECIFIC*temp          # pressure (Pa)
+    pres    = calc_pres(dens,temp)          # pressure (Pa)
     potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
     eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
 
@@ -109,8 +109,8 @@ def diagnoser(parray,
     ########### PRECIPITATION ############
     if ( 
           dq < P_dq_min and
-          q2rh(qv[0], dens[0]*RSPECIFIC*temp[0], temp[0])>P_RHmin and 
-          q2rh(qv[1], dens[1]*RSPECIFIC*temp[1], temp[1])>P_RHmin 
+          q2rh(qv[0], calc_pres(dens[0],temp[0]), temp[0])>P_RHmin and 
+          q2rh(qv[1], calc_pres(dens[1],temp[1]), temp[1])>P_RHmin 
           ):
             counter += 1
     elif ( 
@@ -142,8 +142,8 @@ def diagnoser(parray,
         (ztra[1] < hpbl[1]) and
         (dTH > dTH_thresh) and 
         ((dTHe - dTH) > dTH_thresh) and         
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, T_degC=temp[1]-TREF) and
-        abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, q_kgkg=qv[1])
+        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=calc_pres(dens[1],temp[1])/1e2, T_degC=temp[1]-TREF) and
+        abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=calc_pres(dens[1],temp[1])/1e2, q_kgkg=qv[1])
         ):
         ### EVAP-HEAT ###
         counter += 6
@@ -154,7 +154,7 @@ def diagnoser(parray,
         (ztra[0] <  max(hmax_H, hpbl_max)) and 
         (ztra[1] <  max(hmax_H, hpbl_max)) and 
         (dTH > dTH_thresh) and 
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, T_degC=temp[1]-TREF)
+        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=calc_pres(dens[1],temp[1])/1e2, T_degC=temp[1]-TREF)
         ):
         ### HEAT ###
         counter += 4
@@ -164,7 +164,7 @@ def diagnoser(parray,
         (ztra[0] <  max(hmax_E, hpbl_max)) and 
         (ztra[1] <  max(hmax_E, hpbl_max)) and
         ((dTHe - dTH) > dTH_thresh) and
-         abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, q_kgkg=qv[1])
+         abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=calc_pres(dens[1],temp[1])/1e2, q_kgkg=qv[1])
        ):
         ### EVAP ###
         counter += 2
@@ -207,7 +207,7 @@ def gridder(parray,
         if code>=4:
             temp  = parray[:,8]                 # temperature (K)
             dens  = parray[:,6]                 # density (kg/m^3)
-            pres  = dens*RSPECIFIC*temp        # pressure (Pa)
+            pres  = calc_pres(dens,temp)        # pressure (Pa)
             theta = calc_theta(pres, qv, temp)  # potential temperature 
             dT    = (theta[0] - theta[1])*CPD   # <<-------------------------------- assuming dry air; check this!
         if code >= 4:

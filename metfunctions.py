@@ -33,6 +33,10 @@ import datetime as datetime
 ###############################################################################
 
 ## METEOROLOGY FUNCTIONS
+
+def calc_pres(dens,temp):
+    return(dens*RSPECIFIC*temp)
+
 def dist_on_sphere(lat1,lon1,lat2,lon2):
     """
     INPUT 
