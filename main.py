@@ -20,15 +20,10 @@ import timeit
 import netCDF4 as nc4
 import sys
 import time
-import random
-import multiprocessing    
-#from joblib import Parallel, delayed
-from copy import deepcopy
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
-#from progress.bar import Bar
 
 ###############################################################################
 ## ------ USER SETTINGS
@@ -47,9 +42,9 @@ ryyyy           = 2002
 ayyyy           = 2002
 am              = 5
 ## Experiment ID (choose a letter or short name)
-expID           = "FXvG_r"
+expID           = "FXvH_r"
 ## mode (test/oper)
-mode            = "oper"
+mode            = "test"
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if P_dq_min==None)
@@ -63,9 +58,9 @@ P_RHmin         = 80        #
 
 # Optional flags
 ffwrite_netcdf  = True      # write netcdf output
-ffverbose       = True      # verbose
 fftimethis      = True      # check runtime of diagnoser & gridder
 ffscale_mass    = False     # scale mass with number of particles 
+verbose         = True      # use as global variable
 
 ###############################################################################
 # ------ END USER SETTINGS
@@ -74,8 +69,9 @@ ffscale_mass    = False     # scale mass with number of particles
 os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
+exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
-exec(open("01_functions.py").read())
+exec(open("01_diagnosis.py").read())
 
 ## (2) RUN
 readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
@@ -92,5 +88,4 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           P_dT_thresh=0, 
           P_RHmin=80,
           write_netcdf=ffwrite_netcdf,
-          verbose=ffverbose,
           timethis=fftimethis)
