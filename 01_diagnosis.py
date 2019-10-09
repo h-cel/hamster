@@ -3,11 +3,9 @@
 """
 MAIN FUNCTIONS FOR 01_diagnosis
 """
+
 def readparcel(parray):
     
-    # constants
-    R_specific = 287.057                    # round(8.3144598 / (28.9645/1e3), 3)
-    DALR       = (-9.8/1e3)                 # dry adiabatic lapse rate
     ## parcel information
     lats    = parray[:,2]                   # latitude
     lons    = parray[:,1]                   # longitude
@@ -17,7 +15,7 @@ def readparcel(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = dens*R_specific*temp          # pressure (Pa)
+    pres    = dens*RSPECIFIC*temp          # pressure (Pa)
     potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
     eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
 
@@ -38,15 +36,13 @@ def diagnoser(parray,
     ACTION
     RETURNS
     """
-    # constants
-    R_specific = 287.057                    # round(8.3144598 / (28.9645/1e3), 3)
-    DALR       = (-9.8/1e3)                 # dry adiabatic lapse rate
     
     # read in parcel information from parray
     lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(parray)
     # check for jumps
     if dist_on_sphere(lats[0],lons[0],lats[1],lons[1])>1620:
         return(0)
+
     # differences / mean / max values
     dq      = qv[0] - qv[1]                 # humidity change (kg kg-1)
     hpbl_max= np.max(hpbl[:2])              # max. boundary layer height (m)
@@ -62,8 +58,8 @@ def diagnoser(parray,
     ########### PRECIPITATION ############
     if ( 
           dq < P_dq_min and
-          q2rh(qv[0], dens[0]*R_specific*temp[0], temp[0])>P_RHmin and 
-          q2rh(qv[1], dens[1]*R_specific*temp[1], temp[1])>P_RHmin 
+          q2rh(qv[0], dens[0]*RSPECIFIC*temp[0], temp[0])>P_RHmin and 
+          q2rh(qv[1], dens[1]*RSPECIFIC*temp[1], temp[1])>P_RHmin 
           ):
             counter += 1
     elif ( 
@@ -73,11 +69,11 @@ def diagnoser(parray,
         ## moist adiabatic lapse rate, T @ Lifting Condensation Level
         T_LCL, MALR = moist_ascender(p_Pa=pres[1], q_kgkg=qv[1], T_K=temp[1])
         ## calculate whether LCL was reached during ascent
-        dz_reachLCL = (T_LCL-temp[1])/DALR
+        dz_reachLCL = (T_LCL-temp[1])/LAPSERATE_DRY
         if dz > dz_reachLCL:
             dz_rem = dz - dz_reachLCL    # remaining ascent
             T_moi = T_LCL  + dz_rem*MALR # hypoth. T if partially moist adiabatic
-            T_dry = temp[1]+ dz*DALR     # hypoth. T if purely dry adibatic
+            T_dry = temp[1]+ dz*LAPSERATE_DRY     # hypoth. T if purely dry adibatic
             ## check if temperatures are somewhat consistent
             if ( # yes, yet another if
                 # check if temperature change closer to what we expect in case
@@ -95,8 +91,8 @@ def diagnoser(parray,
         (ztra[1] < hpbl[1]) and
         (dTH > dTH_thresh) and 
         ((dTHe - dTH) > dTH_thresh) and         
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*R_specific*temp[1]/1e2, T_degC=temp[1]-273.15) and
-        abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*R_specific*temp[1]/1e2, q_kgkg=qv[1])
+        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, T_degC=temp[1]-TREF) and
+        abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, q_kgkg=qv[1])
         ):
         ### EVAP-HEAT ###
         counter += 6
@@ -107,7 +103,7 @@ def diagnoser(parray,
         (ztra[0] <  max(hmax_H, hpbl_max)) and 
         (ztra[1] <  max(hmax_H, hpbl_max)) and 
         (dTH > dTH_thresh) and 
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*R_specific*temp[1]/1e2, T_degC=temp[1]-273.15)
+        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, T_degC=temp[1]-TREF)
         ):
         ### HEAT ###
         counter += 4
@@ -117,7 +113,7 @@ def diagnoser(parray,
         (ztra[0] <  max(hmax_E, hpbl_max)) and 
         (ztra[1] <  max(hmax_E, hpbl_max)) and
         ((dTHe - dTH) > dTH_thresh) and
-         abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*R_specific*temp[1]/1e2, q_kgkg=qv[1])
+         abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=dens[1]*RSPECIFIC*temp[1]/1e2, q_kgkg=qv[1])
        ):
         ### EVAP ###
         counter += 2
@@ -154,14 +150,16 @@ def freadpom(idate,     # run year
             break
         elif os.path.isfile(ifile):
             # Read file
-            print("--------------------------------------------------------------------------------------")
-            print("Reading " + ifile)
+            if verbose:
+                print("--------------------------------------------------------------------------------------")
+                print("Reading " + ifile)
             ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
             nparticle   = int(ary_dim[0])
             ntrajstep   = int(ary_dim[1])
             nvars       = int(ary_dim[2])
-            print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
-            print("--------------------------------------------------------------------------------------")
+            if verbose:
+                print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
+                print("--------------------------------------------------------------------------------------")
             ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
             datav       = (np.asarray(ary_dat).flatten('C'))
             if dataar is None:
@@ -186,11 +184,6 @@ def gridder(parray,
     ACTION
     RETURNS
     """
-
-    ###### CONSTANTS #######
-    R_specific = 287.057                        # round(8.3144598 / (28.9645/1e3), 3)
-    cpd        = 1005.7
-    mass_part  = 2548740090557.712              # 5.09198e18/1997842
     
     #######################################################################
     # Save midpoint position 
@@ -213,15 +206,15 @@ def gridder(parray,
         if code>=4:
             temp  = parray[:,8]                 # temperature (K)
             dens  = parray[:,6]                 # density (kg/m^3)
-            pres  = dens*R_specific*temp        # pressure (Pa)
+            pres  = dens*RSPECIFIC*temp        # pressure (Pa)
             theta = calc_theta(pres, qv, temp)  # potential temperature 
-            dT    = (theta[0] - theta[1])*cpd   # <<-------------------------------- assuming dry air; check this!
+            dT    = (theta[0] - theta[1])*CPD   # <<-------------------------------- assuming dry air; check this!
         if code >= 4:
-            heat[fileID,lat_ix,lon_ix] += mass_part*dT/(1e6*gd_area[lat_ix]*6*3600) # Wm-2
+            heat[fileID,lat_ix,lon_ix] += PMASS*dT/(1e6*gd_area[lat_ix]*6*3600) # Wm-2
         if code in [2,3,6,7]: # I know, so amateur-like. sorry.    
-            evap[fileID,lat_ix,lon_ix] += mass_part*dq/(1e6*gd_area[lat_ix]) # mm
+            evap[fileID,lat_ix,lon_ix] += PMASS*dq/(1e6*gd_area[lat_ix]) # mm
         if code%2-1==0:
-            prec[fileID,lat_ix,lon_ix] += mass_part*dq/(1e6*gd_area[lat_ix]) # mm
+            prec[fileID,lat_ix,lon_ix] += PMASS*dq/(1e6*gd_area[lat_ix]) # mm
             
     #-- DONE!
     return(logger, heat, evap, prec)
@@ -239,7 +232,7 @@ def readNmore(
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
-           verbose=True,write_netcdf=True,timethis=True):
+           write_netcdf=True,timethis=True):
 
     """
     comments
@@ -279,8 +272,8 @@ def readNmore(
         #if verbose:
         #    print("\n--- INFO: P_dq_min is calculated based on d(theta)-threshold!")
         dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_theta_e(1013.25e2, (5+dummy_dq)/1e3, 273.15+15) - 
-                       calc_theta_e(1013.25e2, 5/1e3, 273.15+15)))*dummy_dq/1e3
+        P_dq_min = -(1/(calc_theta_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+                       calc_theta_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
         #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
     elif P_dq_min > 0:
         raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
@@ -304,7 +297,7 @@ def readNmore(
     ###########################################################################
     
     ## grab gridded areas prior to loop to save some CPU time
-    gd_area = gridded_area_exact(glat, res=1.0, R=6371)
+    gd_area = gridded_area_exact(glat, res=1.0)
     
     ###########################################################################
 

@@ -63,9 +63,9 @@ P_RHmin         = 80        #
 
 # Optional flags
 ffwrite_netcdf  = True      # write netcdf output
-ffverbose       = True      # verbose
 fftimethis      = True      # check runtime of diagnoser & gridder
 ffscale_mass    = False     # scale mass with number of particles 
+verbose         = True      # use as global variable
 
 ###############################################################################
 # ------ END USER SETTINGS
@@ -93,5 +93,4 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           P_dT_thresh=0, 
           P_RHmin=80,
           write_netcdf=ffwrite_netcdf,
-          verbose=ffverbose,
           timethis=fftimethis)
