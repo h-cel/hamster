@@ -75,7 +75,7 @@ os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
 exec(open("metfunctions.py").read())
-exec(open("01_functions.py").read())
+exec(open("01_diagnosis.py").read())
 
 ## (2) RUN
 readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
