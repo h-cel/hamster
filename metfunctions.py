@@ -58,9 +58,6 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
         - dist :    distance between locations in kilometers.
 
     """
-    ## set Earth radius, define pi
-    R  = 6371
-    pi = 3.141592654
 
     ## first off, must adapt lat/lon for spherical coordinates
     lat1 = 90 - lat1
@@ -69,10 +66,10 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
     lon2 = 180 + lon2
 
     ## second, must obtain angles in radian from (arc) degree
-    la1 = (pi/180)*lat1
-    la2 = (pi/180)*lat2
-    lo1 = (pi/180)*lon1
-    lo2 = (pi/180)*lon2
+    la1 = (PI/180)*lat1
+    la2 = (PI/180)*lat2
+    lo1 = (PI/180)*lon1
+    lo2 = (PI/180)*lon2
 
     ## third, convert to cartesian coordinates
     ## use unit sphere for simplicity (r=1)
@@ -89,16 +86,15 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
     angle = acos(dotp)
 
     ## fifth, calculate distance
-    dist = angle * R   # pi cancels out
+    dist = angle * EARTHRADIUS   # pi cancels out
 
     return(dist)
 
-def gridded_area_exact(lats_centr, res, R):
+def gridded_area_exact(lats_centr, res):
     """
     INPUT
         - lats_centr :  latitute of the center [deg N], between -90 to +90 (float or 1D np ary)
         - res :         regular (!) grid resolution [deg]
-        - R :           Earth radius [km]
 
     RETURNS
         - area :        EXACT gridded area, shape as defined by input [km^2]
@@ -128,7 +124,7 @@ def gridded_area_exact(lats_centr, res, R):
     ## make use of numpy vectorization
     lats1 = (lats_centr+(res/2))*np.pi/180 # np.sin requires radians
     lats2 = (lats_centr-(res/2))*np.pi/180
-    areas = (np.pi/180)*(R**2)*np.abs(np.sin(lats1)-np.sin(lats2))*res
+    areas = (np.pi/180)*(EARTHRADIUS**2)*np.abs(np.sin(lats1)-np.sin(lats2))*res
 
     ## overwrite any areas of 0 (at the poles) with np.NaN to prevent problems
     try:
@@ -162,9 +158,6 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
 
     """
 
-    ## define pi
-    pi = 3.141592654
-
     ## first off, must adapt lat/lon for spherical coordinates
     lat1 = 90 - lat1
     lat2 = 90 - lat2
@@ -172,10 +165,10 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
     lon2 = 180 + lon2
 
     ## second, must obtain angles in radian from (arc) degree
-    lat1 = (pi/180)*lat1
-    lat2 = (pi/180)*lat2
-    lon1 = (pi/180)*lon1
-    lon2 = (pi/180)*lon2
+    lat1 = (PI/180)*lat1
+    lat2 = (PI/180)*lat2
+    lon1 = (PI/180)*lon1
+    lon2 = (PI/180)*lon2
 
     ## third, convert to cartesian coordinates
     ## use unit sphere for simplicity (r=1)
@@ -197,13 +190,13 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
 
     ## convert these mid coordinates back to (arc) degree & shift
     if theta > 0:
-        lat_mid = 90 - theta*(180/pi)
+        lat_mid = 90 - theta*(180/PI)
     else:
-        lat_mid = -(90 + theta*(180/pi))
+        lat_mid = -(90 + theta*(180/PI))
     if phi > 0:
-        lon_mid = (phi*(180/pi)-180)
+        lon_mid = (phi*(180/PI)-180)
     else:
-        lon_mid = 180 + phi*(180/pi)
+        lon_mid = 180 + phi*(180/PI)
 
     return(lat_mid, lon_mid)
 
@@ -225,8 +218,7 @@ def q2rh(q_kgkg,p_Pa,T_K):
     e = q_kgkg*p_Pa/(0.622+0.378*q_kgkg)
 
     # compute saturation vapor pressure, must convert T to °C
-    Tref = 273.15
-    es = 611.2*np.exp(17.67*(T_K-Tref)/(T_K-Tref+243.5))
+    es = 611.2*np.exp(17.67*(T_K-TREF)/(T_K-TREF+243.5))
 
     # return relative humidity
     return(1e2*e/es)
@@ -323,17 +315,10 @@ def calc_theta_e(p_Pa, q_kgkg, T_K):
     T_L = (1. / (1. / (T_D - 56.) + np.log(T_K / T_D) / 800.)) + 56.
     
     ## theta at lifting condensation level (eq. 3.19, Davies-Jones 2009)
-    epsilon = 0.6620
-    kappa_d = 0.2854
-    theta_DL = theta*(((theta/T_L)**(0.28*r_kgkg))*(1+(r_kgkg/epsilon))**kappa_d)
+    theta_DL = theta*(((theta/T_L)**(0.28*r_kgkg))*(1+(r_kgkg/EPSILON))**KAPPAD)
     
     ## theta at lifting condensation level (eq. 6.5, Davies-Jones 2009)
-    C  = 273.15
-    L0s = 2.56313e6 
-    L1s = 1754
-    K2 = 1.137e6
-    cpd = 1005.7
-    theta_E = theta_DL*np.exp((L0s-L1s*(T_L-C)+K2*r_kgkg)*r_kgkg/(cpd*T_L))
+    theta_E = theta_DL*np.exp((L0s-L1s*(T_L-C)+K2*r_kgkg)*r_kgkg/(CPD*T_L))
     
     return(theta_E)
     
@@ -389,17 +374,11 @@ def moist_ascender(p_Pa, q_kgkg, T_K):
     T_LCL = (1. / (1. / (T_D - 56.) + np.log(T_K / T_D) / 800.)) + 56.
     
     ## now that we have T_LCL, calculate moist adiabatic lapse rate...
-    g   = 9.8076
-    Hv  = 2.5e6
-    Rsd = 287.057 # round(8.3144598 / (28.9645/1e3), 3)
-    Rsw = 461.5   # specific gas constant of water vapor 
-    eps = Rsd/Rsw
-    cpd = 1005.7
     
     ## convert specific humidity to mixing ratio (exact)
     r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
     ## now, finally, approximate lapse rate
-    MALR = g*( (Rsd*(T_LCL**2)) + (Hv*r_kgkg*T_LCL) )/( (cpd*Rsd*T_LCL**2) + (Hv**2*r_kgkg*eps))
+    MALR = GRAV*( (RSPECIFIC*(T_LCL**2)) + (HV*r_kgkg*T_LCL) )/( (CPD*RSPECIFIC*T_LCL**2) + (HV**2*r_kgkg*EPS))
     
     return(T_LCL, -MALR) # T_LCL in Kelvin, MALR in K/m
 
