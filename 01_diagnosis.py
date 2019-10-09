@@ -73,153 +73,56 @@ def readparcel(parray):
 
     return lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT 
 
-def diagnoser(parray,
-              dTH_thresh=tdTH, 
-              f_dqsdT=1.0, 
-              f_dTdqs=1.0, 
-              hmax_E=0, 
-              hmax_H=0, 
-              P_dq_min=None, 
-              P_dT_thresh=0, 
-              P_RHmin=80):
-    
+def parceldiff(pvals, meval):
+    # difference 
+    if meval in ['diff']:
+        dpval   = pvals[0] - pvals[1]
+    # mean
+    if meval in ['mean']:
+        dpval   = np.mean(pvals)
+    # mean
+    if meval in ['max']:
+        dpval   = np.max(pvals)
+    return(dpval)
+
+def gridder(plon, plat, pval,
+            glat, glon):
     """
-    INPUTS
+    INPUT
+        - plon, plat: parcel longitutde and latitude
+        - glon, glat: grid longitude and latitutde
+        - pval      : parcel value to be assigned to grid
     ACTION
-    RETURNS
+        1. calculated midpoint of two coordinates
+        2. assigns val to gridcell corresponding to midpoint
+    RETURN
+        - array of dimension (nlat x nlon) with 0's and one value assigned
     """
-    
-    # read in parcel information from parray
-    lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(parray)
-    # check for jumps
-    if dist_on_sphere(lats[0],lons[0],lats[1],lons[1])>1620:
-        return(0)
-
-    # differences / mean / max values
-    dq      = qv[0] - qv[1]                 # humidity change (kg kg-1)
-    hpbl_max= np.max(hpbl[:2])              # max. boundary layer height (m)
-    dTH     = potT[0] - potT[1]             # potential temperature difference
-    dTHe    = (eqvpotT[0]-eqvpotT[1])       # equiv. pot. temperature difference (K)
-    dz      = ztra[0] - ztra[1]             # height difference (rise/descent) (m)
-
-
-    ####################################################################### 
-    
-    counter = 0 # not elegant, but it works
-    
-    ########### PRECIPITATION ############
-    if ( 
-          dq < P_dq_min and
-          q2rh(qv[0], calc_pres(dens[0],temp[0]), temp[0])>P_RHmin and 
-          q2rh(qv[1], calc_pres(dens[1],temp[1]), temp[1])>P_RHmin 
-          ):
-            counter += 1
-    elif ( 
-        dq < P_dq_min and
-        dz > 0 # not really a parameter, but rather: is the parcel ascending?
-        ): 
-        ## moist adiabatic lapse rate, T @ Lifting Condensation Level
-        T_LCL, MALR = moist_ascender(p_Pa=pres[1], q_kgkg=qv[1], T_K=temp[1])
-        ## calculate whether LCL was reached during ascent
-        dz_reachLCL = (T_LCL-temp[1])/LAPSERATE_DRY
-        if dz > dz_reachLCL:
-            dz_rem = dz - dz_reachLCL    # remaining ascent
-            T_moi = T_LCL  + dz_rem*MALR # hypoth. T if partially moist adiabatic
-            T_dry = temp[1]+ dz*LAPSERATE_DRY     # hypoth. T if purely dry adibatic
-            ## check if temperatures are somewhat consistent
-            if ( # yes, yet another if
-                # check if temperature change closer to what we expect in case
-                # of condensation occurring during ascent
-                abs(temp[0]-T_moi) < abs(temp[0]-T_dry) and 
-                (temp[0]-T_moi) < P_dT_thresh 
-                # above: if air is 'too warm', ABL 'detrainment' in large-scale
-                # subsidence areas more likely (results in pseudo-precip)
-                ): 
-                counter += 1
-
-    ########### EVAPORATION & SENSIBLE HEAT ############
-    if (
-        (ztra[0] < hpbl[0]) and
-        (ztra[1] < hpbl[1]) and
-        (dTH > dTH_thresh) and 
-        ((dTHe - dTH) > dTH_thresh) and         
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=calc_pres(dens[1],temp[1])/1e2, T_degC=temp[1]-TREF) and
-        abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=calc_pres(dens[1],temp[1])/1e2, q_kgkg=qv[1])
-        ):
-        ### EVAP-HEAT ###
-        counter += 6
-        return(counter)
-        
-    ########### SENSIBLE HEAT ############
-    if (   
-        (ztra[0] <  max(hmax_H, hpbl_max)) and 
-        (ztra[1] <  max(hmax_H, hpbl_max)) and 
-        (dTH > dTH_thresh) and 
-        abs(dq) < f_dqsdT*(dTH)*dqsdT(p_hPa=calc_pres(dens[1],temp[1])/1e2, T_degC=temp[1]-TREF)
-        ):
-        ### HEAT ###
-        counter += 4
-    
-    ########### EVAPORATION ############
-    if ( 
-        (ztra[0] <  max(hmax_E, hpbl_max)) and 
-        (ztra[1] <  max(hmax_E, hpbl_max)) and
-        ((dTHe - dTH) > dTH_thresh) and
-         abs(dTH) < f_dTdqs*(dq)*dTdqs(p_hPa=calc_pres(dens[1],temp[1])/1e2, q_kgkg=qv[1])
-       ):
-        ### EVAP ###
-        counter += 2
-
-    return(counter)
-    
-#def gridder(plon,plat,
-#            glat, glon, var):
-
-def gridder(parray, 
-            fileID,code, 
-            glat, glon, gd_area, 
-            npart, 
-            heat, evap, prec):
-    
-    """
-    INPUT 
-        -
-    ACTION
-    RETURNS
-    """
-    
-    #######################################################################
-    # Save midpoint position
-    lons    = parray[:,1]
-    lats    = parray[:,2]
-    lat_mid,lon_mid = midpoint_on_sphere(lats[0],lons[0],lats[1],lons[1]) # use own function to calculate midpoint position
-    #if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    # 1. calculate midpoint
+    lat_mid,lon_mid = midpoint_on_sphere(plat[0],plon[0],plat[1],plon[1]) # use own function to calculate midpoint position
+    if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    # 2. get grid index
     ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
-    
-    ###################################################################
-    npart[fileID,ind_lat,ind_lon] += 1 ## store npart per pixel
-    ###################################################################
-    
-    if code > 0:
-        qv      = parray[:,5]                   # specific humidity (kg/kg)
-        dq      = qv[0] - qv[1]                 # specific humidity change 
-    
-        if code>=4:
-            temp  = parray[:,8]                 # temperature (K)
-            dens  = parray[:,6]                 # density (kg/m^3)
-            pres  = calc_pres(dens,temp)        # pressure (Pa)
-            theta = calc_theta(pres, qv, temp)  # potential temperature 
-            dT    = (theta[0] - theta[1])*CPD   # <<-------------------------------- assuming dry air; check this!
-        if code >= 4:
-            heat[fileID,ind_lat,ind_lon] += PMASS*dT/(1e6*gd_area[ind_lat]*6*3600) # Wm-2
-        if code in [2,3,6,7]: # I know, so amateur-like. sorry.    
-            evap[fileID,ind_lat,ind_lon] += PMASS*dq/(1e6*gd_area[ind_lat]) # mm
-        if code%2-1==0:
-            prec[fileID,ind_lat,ind_lon] += PMASS*dq/(1e6*gd_area[ind_lat]) # mm
-            
-    #-- DONE!
-    return(npart, heat, evap, prec)
+    # and assign pval to gridcell (init. with 0's)
+    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, nlat, nlon)
+    gval[ind_lat,ind_lon]    += pval
+    return(gval)
+
+def convertunits(ary_val, gd_area, var):
+    """
+    INPUT
+        - aryval
+    ACTION
+        - calculates grid cell values 
+    RETURN
+        - returns P and E as mm
+        - returns H as W m-2
+    """
+    if var in ['P','E']:
+        return(PMASS*ary_val/(1e6*gd_area))
+    if var in ['H']:
+        return(PMASS*ary_val*CPD/(1e6*gd_area*6*3600))
 
 
 ############################################################################
@@ -230,7 +133,7 @@ def readNmore(
            ipath, opath,
            mode,
            sfnam_base,           
-           dTH_thresh=tdTH,          # used for E,H,P (if P_dq_min==None)
+           dTH_thresh=1.0,          # used for E,H,P (if P_dq_min==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
@@ -281,29 +184,19 @@ def readNmore(
         raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
     ###########################################################################
         
-    ###########################################################################
-    #############################     SETUP      ##############################
-    
     ## start timer
     if timethis:
         megatic = timeit.default_timer()
     
-    ## prepare grid
-    resolution = 1. # in degrees
-    glat = np.arange(-90,90+resolution,resolution) # lats from -90 to + 90 deg
-    glon = np.arange(-180,180,resolution)
-    nlat = glat.size
-    nlon = glon.size
-
-    ###########################################################################
-    ###########################################################################
+    ## grid
+    resolution  = 1. # in degrees
+    glat        = np.arange(-90,90+resolution,resolution)
+    glon        = np.arange(-180,180,resolution)
+    nlat        = glat.size
+    nlon        = glon.size
+    gd_area     = gridded_area_exact(glat, res=resolution, nlon=nlon)
     
-    ## grab gridded areas prior to loop to save some CPU time
-    gd_area = gridded_area_exact(glat, res=1.0)
-    
-    ###########################################################################
-
-    # -- DATES
+    ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
     date_end        = date_bgn + relativedelta(months=1)
     timestep        = datetime.timedelta(hours=6)
@@ -329,7 +222,7 @@ def readNmore(
     ary_heat     = np.zeros(shape=(ntime,nlat,nlon))
     ary_evap     = np.zeros(shape=(ntime,nlat,nlon))
     ary_prec     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_npart    = np.zeros(shape=(ntime,nlat,nlon), dtype=int)
+    ary_npart    = np.zeros(shape=(ntime,nlat,nlon))
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
@@ -345,57 +238,50 @@ def readNmore(
             ntot    = range(1000)
         else:
             ntot    = range(nparticle)
+
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
-        ## - 2.1) diagnose fluxes and position
-            # diagnosis
-            diagcodes = diagnoser(parray=ary[:,i,:],
-                                  dTH_thresh=dTH_thresh, 
-                                  f_dqsdT=f_dqsdT, 
-                                  f_dTdqs=f_dTdqs,
-                                  hmax_E=hmax_E, 
-                                  hmax_H=hmax_H, 
-                                  P_dq_min=P_dq_min, 
-                                  P_dT_thresh=P_dT_thresh, 
-                                  P_RHmin=P_RHmin)
-        ## - 2.2) grid to predefined grid
-            # write to arrays: npart, H, E, P
-            ary_npart, ary_heat, ary_evap, ary_prec = gridder(  parray=ary[:,i,:], 
-                                                                code=diagcodes,
-                                                                fileID=ix, 
-                                                                glat=glat, glon=glon, gd_area=gd_area, 
-                                                                npart=ary_npart, 
-                                                                heat=ary_heat, evap=ary_evap, prec=ary_prec)
-            ## here comes some multiprocessing to diagnose all particles
-            #if __name__ == '__main__':
-            #    num_cores = multiprocessing.cpu_count()
-            #    diagcodes = Parallel(n_jobs=num_cores)(delayed(diagnoser)(
-            #                         ID=i,npart=nparticle,array=ary,
-            #                         dTH_thresh=dTH_thresh, f_dqsdT=f_dqsdT, f_dTdqs=f_dTdqs, 
-            #                         hmax_E=hmax_E, hmax_H=hmax_H, 
-            #                         P_dq_min=P_dq_min, P_dT_thresh=P_dT_thresh, P_RHmin=P_RHmin
-            #                         ) for i in range(nparticle))
-            ### proceed to call gridding function w/o parallelization
-            #for i in range(nparticle):
-            #    ary_npart, ary_heat, ary_evap, ary_prec = gridder(
-            #             ID=i, npart=nparticle, array=ary, code=diagcodes[i],
-            #             fileID=ix, glat=glat, glon=glon, gd_area=gd_area, 
-            #             npart=ary_npart, heat=ary_heat, evap=ary_evap, prec=ary_prec)
-            #        
-            # update progress bar
-            #bar.next()
-        # finish progress bar
-        #bar.finish()
 
-    ###########################################################################
-    
-    #if verbose:
-    #    print("\n===========================  CONFIGURATION  =======================")
-    #    print("\nayyyy=", ayyyy)
-    #    print("\nresolution=", resolution)
-    #    print("nlat=", nlat)
-    #    print("nlon=", nlon)
-                 
+            ## - 2.1) read parcel information
+            lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(ary[:,i,:])
+
+            ## - 2.2) parcel changes / criteria
+            dq          = parceldiff(qv, 'diff') 
+            hpbl_max    = parceldiff(hpbl, 'max')
+            dTH         = parceldiff(potT, 'diff')
+            dTHe        = parceldiff(eqvpotT, 'diff')
+            dz          = parceldiff(ztra, 'diff')
+
+            ## - 2.3) diagnose fluxes
+
+            ## (a) number of parcels
+            ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
+
+            ## (b) precipitation
+            if ( dq < P_dq_min and 
+                 q2rh(qv[0], pres[0], temp[0]) > P_RHmin  and
+                 q2rh(qv[1], pres[1], temp[1]) > P_RHmin ):
+                ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
+            ## (c) evaporation
+            if ( ztra[0] <  max(hmax_E, hpbl_max)  and
+                 ztra[1] <  max(hmax_E, hpbl_max)  and
+                 (dTHe - dTH) > dTH_thresh and
+                 abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
+                ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
+            ## (d) sensible heat
+            if ( ztra[0] <  max(hmax_H, hpbl_max) and 
+                 ztra[1] <  max(hmax_H, hpbl_max) and 
+                 (dTH > dTH_thresh) and 
+                 abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+
+        # Convert units
+        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], gd_area, "P")
+        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], gd_area, "E")
+        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], gd_area, "H")
+
     if timethis:
         megatoc = timeit.default_timer()
         print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")

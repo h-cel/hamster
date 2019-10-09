@@ -9,29 +9,6 @@ To execute interactively:
 
 """
 
-###########################################################################
-#############################    MODULES ##################################
-
-import gzip
-import pandas as pd
-import numpy as np
-import os, fnmatch
-import timeit
-import netCDF4 as nc4
-import sys
-import time
-import random
-import multiprocessing    
-#from joblib import Parallel, delayed
-from copy import deepcopy
-from datetime import datetime, timedelta
-from math import sin,cos,acos,atan,atan2,sqrt
-from dateutil.relativedelta import relativedelta
-import datetime as datetime
-#from progress.bar import Bar
-
-###############################################################################
-
 ## METEOROLOGY FUNCTIONS
 
 def calc_pres(dens,temp):
@@ -94,14 +71,15 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
 
     return(dist)
 
-def gridded_area_exact(lats_centr, res):
+def gridded_area_exact(lats_centr, res, nlon):
     """
     INPUT
         - lats_centr :  latitute of the center [deg N], between -90 to +90 (float or 1D np ary)
         - res :         regular (!) grid resolution [deg]
+        - nlon :        to return array of dim (nlat x nlon)
 
     RETURNS
-        - area :        EXACT gridded area, shape as defined by input [km^2]
+        - area :        EXACT gridded area, shape as defined by input [km^2] as array of dimension (nlon x nlat)
 
     ACTION
         based on the grid spacing inferred by lats & lons,
@@ -135,7 +113,9 @@ def gridded_area_exact(lats_centr, res):
         areas[np.where(areas==0.)] = np.NaN # only works for arrays
     except TypeError:
         pass # simply ignore if it's a float
-    return(areas)
+    # return array of dimension nlat x nlon
+    ary_area = np.swapaxes(np.tile(areas, (nlon,1)), 0,1)
+    return(ary_area)
 
 def midpoint_on_sphere(lat1,lon1,lat2,lon2):
 

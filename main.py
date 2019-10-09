@@ -20,15 +20,10 @@ import timeit
 import netCDF4 as nc4
 import sys
 import time
-import random
-import multiprocessing    
-#from joblib import Parallel, delayed
-from copy import deepcopy
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
-#from progress.bar import Bar
 
 ###############################################################################
 ## ------ USER SETTINGS
@@ -47,7 +42,7 @@ ryyyy           = 2002
 ayyyy           = 2002
 am              = 5
 ## Experiment ID (choose a letter or short name)
-expID           = "FXvG_r"
+expID           = "FXvH_r"
 ## mode (test/oper)
 mode            = "test"
 
