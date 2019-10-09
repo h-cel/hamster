@@ -4,6 +4,57 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
+def freadpom(idate,     # run year
+            ipath,      # input data path
+            ifile_base):# loop over ifile_base filenames for each date
+
+    """
+    INPUT
+        - idate :       date as string [YYYYMMDDHH]
+        - ipath :       path where input files are located
+        - ifile_base :  base filename(s); loop over filenames possible
+    ACTION
+        reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
+        flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
+        and concatenates all information of files, 
+            - [ifile_base][idate].dat.gz
+        e.g. terabox_NH_AUXTRAJ_2002080100.dat.gz and terabox_SH_AUXTRAJ_2002080100.dat.gz
+        to one array (nparticle = SUM ( nparticle[*] ) for all files of ifile_base)
+    RETURNS
+        - dataar :      data array of dimension (ntrajlength x nparticles x nvars)
+    """
+
+    dataar  = None
+    # loop over ifile_base, concatenating files for the same date 
+    for iifile_base in ifile_base:
+        # Check if file exists
+        ifile   = str(ipath+"/"+iifile_base+idate+".dat.gz")
+        if not os.path.isfile(ifile):
+            print(ifile + " does not exist!")
+            break
+        elif os.path.isfile(ifile):
+            # Read file
+            if verbose:
+                print("--------------------------------------------------------------------------------------")
+                print("Reading " + ifile)
+            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
+            nparticle   = int(ary_dim[0])
+            ntrajstep   = int(ary_dim[1])
+            nvars       = int(ary_dim[2])
+            if verbose:
+                print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
+                print("--------------------------------------------------------------------------------------")
+            ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
+            datav       = (np.asarray(ary_dat).flatten('C'))
+            if dataar is None:
+                dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
+            else:
+                dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
+            # flip time axis    (TODO: flip axis depending on forward/backward flag)
+            dataar          = dataar[::-1,:,:]
+
+    return(dataar)
+
 def readparcel(parray):
     
     ## parcel information
@@ -120,56 +171,6 @@ def diagnoser(parray,
 
     return(counter)
     
-def freadpom(idate,     # run year
-            ipath,      # input data path
-            ifile_base):# loop over ifile_base filenames for each date
-
-    """
-    INPUT
-        - idate :       date as string [YYYYMMDDHH]
-        - ipath :       path where input files are located
-        - ifile_base :  base filename(s); loop over filenames possible
-    ACTION
-        reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
-        flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
-        and concatenates all information of files, 
-            - [ifile_base][idate].dat.gz
-        e.g. terabox_NH_AUXTRAJ_2002080100.dat.gz and terabox_SH_AUXTRAJ_2002080100.dat.gz
-        to one array (nparticle = SUM ( nparticle[*] ) for all files of ifile_base)
-    RETURNS
-        - dataar :      data array of dimension (ntrajlength x nparticles x nvars)
-    """
-
-    dataar  = None
-    # loop over ifile_base, concatenating files for the same date 
-    for iifile_base in ifile_base:
-        # Check if file exists
-        ifile   = str(ipath+"/"+iifile_base+idate+".dat.gz")
-        if not os.path.isfile(ifile):
-            print(ifile + " does not exist!")
-            break
-        elif os.path.isfile(ifile):
-            # Read file
-            if verbose:
-                print("--------------------------------------------------------------------------------------")
-                print("Reading " + ifile)
-            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-            nparticle   = int(ary_dim[0])
-            ntrajstep   = int(ary_dim[1])
-            nvars       = int(ary_dim[2])
-            if verbose:
-                print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
-                print("--------------------------------------------------------------------------------------")
-            ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
-            datav       = (np.asarray(ary_dat).flatten('C'))
-            if dataar is None:
-                dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
-            else:
-                dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
-            # flip time axis    (TODO: flip axis depending on forward/backward flag)
-            dataar          = dataar[::-1,:,:]
-
-    return(dataar)
 
 def gridder(parray, 
             code,
