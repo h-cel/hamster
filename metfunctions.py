@@ -202,6 +202,8 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
     else:
         lon_mid = 180 + phi*(180/PI)
 
+    if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+
     return(lat_mid, lon_mid)
 
 def q2rh(q_kgkg,p_Pa,T_K):

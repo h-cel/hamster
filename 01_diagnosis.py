@@ -60,6 +60,7 @@ def readparcel(parray):
     ## parcel information
     lats    = parray[:,2]                   # latitude
     lons    = parray[:,1]                   # longitude
+    lons[lons>180.0] -= 360                 # transform coordinates from [0 ... 360] to [-180 ... 180]
     temp    = parray[:,8]                   # temperature (K)
     ztra    = parray[:,3]                   # height (m)
     #topo   = parray[:,4]                   # topography (m) 
@@ -171,12 +172,13 @@ def diagnoser(parray,
 
     return(counter)
     
+#def gridder(plon,plat,
+#            glat, glon, var):
 
 def gridder(parray, 
-            code,
-            fileID, 
+            fileID,code, 
             glat, glon, gd_area, 
-            logger, 
+            npart, 
             heat, evap, prec):
     
     """
@@ -187,17 +189,16 @@ def gridder(parray,
     """
     
     #######################################################################
-    # Save midpoint position 
-    lats        = parray[:,2]                   # lat
-    lons        = parray[:,1]                   # lon
-    lons[lons>180.0] -= 360                     # enforce proper coordinates for midpoint function [-180.0 .. 180.0]
+    # Save midpoint position
+    lons    = parray[:,1]
+    lats    = parray[:,2]
     lat_mid,lon_mid = midpoint_on_sphere(lats[0],lons[0],lats[1],lons[1]) # use own function to calculate midpoint position
-    if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
-    lat_ix = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
-    lon_ix = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
+    #if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
+    ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
     
     ###################################################################
-    logger[fileID,lat_ix,lon_ix] += 1 ## store npart per pixel
+    npart[fileID,ind_lat,ind_lon] += 1 ## store npart per pixel
     ###################################################################
     
     if code > 0:
@@ -211,14 +212,14 @@ def gridder(parray,
             theta = calc_theta(pres, qv, temp)  # potential temperature 
             dT    = (theta[0] - theta[1])*CPD   # <<-------------------------------- assuming dry air; check this!
         if code >= 4:
-            heat[fileID,lat_ix,lon_ix] += PMASS*dT/(1e6*gd_area[lat_ix]*6*3600) # Wm-2
+            heat[fileID,ind_lat,ind_lon] += PMASS*dT/(1e6*gd_area[ind_lat]*6*3600) # Wm-2
         if code in [2,3,6,7]: # I know, so amateur-like. sorry.    
-            evap[fileID,lat_ix,lon_ix] += PMASS*dq/(1e6*gd_area[lat_ix]) # mm
+            evap[fileID,ind_lat,ind_lon] += PMASS*dq/(1e6*gd_area[ind_lat]) # mm
         if code%2-1==0:
-            prec[fileID,lat_ix,lon_ix] += PMASS*dq/(1e6*gd_area[lat_ix]) # mm
+            prec[fileID,ind_lat,ind_lon] += PMASS*dq/(1e6*gd_area[ind_lat]) # mm
             
     #-- DONE!
-    return(logger, heat, evap, prec)
+    return(npart, heat, evap, prec)
 
 
 ############################################################################
@@ -328,7 +329,7 @@ def readNmore(
     ary_heat     = np.zeros(shape=(ntime,nlat,nlon))
     ary_evap     = np.zeros(shape=(ntime,nlat,nlon))
     ary_prec     = np.zeros(shape=(ntime,nlat,nlon))
-    npart_log    = np.zeros(shape=(ntime,nlat,nlon), dtype=int)
+    ary_npart    = np.zeros(shape=(ntime,nlat,nlon), dtype=int)
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
@@ -359,11 +360,11 @@ def readNmore(
                                   P_RHmin=P_RHmin)
         ## - 2.2) grid to predefined grid
             # write to arrays: npart, H, E, P
-            npart_log, ary_heat, ary_evap, ary_prec = gridder(  parray=ary[:,i,:], 
+            ary_npart, ary_heat, ary_evap, ary_prec = gridder(  parray=ary[:,i,:], 
                                                                 code=diagcodes,
                                                                 fileID=ix, 
                                                                 glat=glat, glon=glon, gd_area=gd_area, 
-                                                                logger=npart_log, 
+                                                                npart=ary_npart, 
                                                                 heat=ary_heat, evap=ary_evap, prec=ary_prec)
             ## here comes some multiprocessing to diagnose all particles
             #if __name__ == '__main__':
@@ -376,10 +377,10 @@ def readNmore(
             #                         ) for i in range(nparticle))
             ### proceed to call gridding function w/o parallelization
             #for i in range(nparticle):
-            #    npart_log, ary_heat, ary_evap, ary_prec = gridder(
+            #    ary_npart, ary_heat, ary_evap, ary_prec = gridder(
             #             ID=i, npart=nparticle, array=ary, code=diagcodes[i],
             #             fileID=ix, glat=glat, glon=glon, gd_area=gd_area, 
-            #             logger=npart_log, heat=ary_heat, evap=ary_evap, prec=ary_prec)
+            #             npart=ary_npart, heat=ary_heat, evap=ary_evap, prec=ary_prec)
             #        
             # update progress bar
             #bar.next()
@@ -449,8 +450,7 @@ def readNmore(
         heats[:]            = ary_heat[:]
         evaps[:]            = ary_evap[:]
         precs[:]            = ary_prec[:]     
-    
-        nparts[:]           = npart_log[:]
+        nparts[:]           = ary_npart[:]
         
         ### close file
         nc_f.close()
