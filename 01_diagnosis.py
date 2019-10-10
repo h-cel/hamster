@@ -150,7 +150,7 @@ def readNmore(
            dTH_thresh=0., # used for E,H,P (if cprec_dqv==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
-           cprec_dqv=None, P_dT_thresh=0, P_RHmin=80, # P settings
+           cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
     """
@@ -164,7 +164,7 @@ def readNmore(
         dTH_thresh = 1. (Kelvin),
         f_dqdst == f_dTdqs,
         P_dT_thresh = 0. (Kelvin), # not a good idea to increase this a lot    
-        P_RHmin=80 (%) 
+        cprec_rh=80 (%) 
         
         thus, the previosuly introduced dz-Parameter could return,
         with the advantage of being used both for E,H & P 
@@ -260,8 +260,8 @@ def readNmore(
 
             ## (b) precipitation
             if ( dq < cprec_dqv and 
-                 q2rh(qv[0], pres[0], temp[0]) > P_RHmin  and
-                 q2rh(qv[1], pres[1], temp[1]) > P_RHmin ):
+                 q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                 q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
                 ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
             ## (c) evaporation

@@ -54,7 +54,7 @@ hmax_E          = 0         # up to which height should E be considered? max(hma
 hmax_H          = 0         # up to which height should P be considered? max(hmax_H, BLh_max)
 cprec_dqv        = None      # 
 P_dT_thresh     = 0         #
-P_RHmin         = 80        # 
+cprec_rh         = 80        # 
 
 # Optional flags
 write_netcdf  = True      # write netcdf output
@@ -88,7 +88,7 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           hmax_H=0,
           cprec_dqv=None, 
           P_dT_thresh=0, 
-          P_RHmin=80,
+          cprec_rh=80,
           fwrite_netcdf=write_netcdf,
           ftimethis=timethis, 
           fcc_advanced=cc_advanced)
