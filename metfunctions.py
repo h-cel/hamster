@@ -368,3 +368,8 @@ def moist_ascender(p_Pa, q_kgkg, T_K):
     
     return(T_LCL, -MALR) # T_LCL in Kelvin, MALR in K/m
 
+def makegrid(resolution):
+    glat        = np.arange(-90,90+resolution,resolution)
+    glon        = np.arange(-180,180,resolution)
+    gd_area     = gridded_area_exact(glat, res=resolution, nlon=glon.size)
+    return glon, glat, gd_area

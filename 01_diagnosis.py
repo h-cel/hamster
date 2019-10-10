@@ -4,11 +4,6 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
-def makegrid(resolution=1):
-    glat        = np.arange(-90,90+resolution,resolution)
-    glon        = np.arange(-180,180,resolution)
-    gd_area     = gridded_area_exact(glat, res=resolution, nlon=glon.size)
-    return glon, glat, gd_area
 
 def freadpom(idate,     # run year
             ipath,      # input data path
@@ -138,7 +133,8 @@ def readNmore(
            ryyyy, ayyyy, am,
            ipath, opath,
            mode,
-           sfnam_base,           
+           gres,
+           sfnam_base,
            dTH_thresh=0., # used for E,H,P (if P_dq_min==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
@@ -194,7 +190,7 @@ def readNmore(
     if timethis:
         megatic = timeit.default_timer()
     
-    glon, glat, garea = makegrid(resolution=1)
+    glon, glat, garea = makegrid(resolution=gres)
 
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
