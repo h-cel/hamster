@@ -110,6 +110,18 @@ def gridder(plon, plat, pval,
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
+def default_thresholds(P_dq_min):
+    if P_dq_min == None:
+        #if verbose:
+        #    print("\n--- INFO: P_dq_min is calculated based on d(pottemp)-threshold!")
+        dummy_dq = 0.2 # this choice doesn't matter too much...
+        P_dq_min = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
+        #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
+    elif P_dq_min > 0:
+        raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
+    return P_dq_min
+
 def convertunits(ary_val, garea, var):
     """
     INPUT
@@ -174,18 +186,6 @@ def readNmore(
         print("\n============================================================================================================")
         print("\n============================================================================================================")
         
-    ##########################    EXPERIMENTAL    #############################
-    if P_dq_min == None:
-        #if verbose:
-        #    print("\n--- INFO: P_dq_min is calculated based on d(pottemp)-threshold!")
-        dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
-    elif P_dq_min > 0:
-        raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
-    ###########################################################################
-        
     ## start timer
     if ftimethis:
         megatic = timeit.default_timer()
@@ -219,6 +219,9 @@ def readNmore(
     ary_evap     = np.zeros(shape=(ntime,glat.size,glon.size))
     ary_prec     = np.zeros(shape=(ntime,glat.size,glon.size))
     ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
+
+    # set some default thresholds
+    P_dq_min    = default_thresholds(P_dq_min) 
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
