@@ -148,7 +148,7 @@ def readNmore(
            gres,
            sfnam_base,
            cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
-           f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
+           cheat_cc=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
@@ -287,8 +287,8 @@ def readNmore(
                 if ( ztra[0] <  max(hmax_H, hpbl_max) and 
                      ztra[1] <  max(hmax_H, hpbl_max) and 
                      (dTH > cheat_dtemp) and 
-                     ( (dT > 0 and abs(dq) < f_dqsdT * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
-                       (dT < 0 and abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
+                     ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
+                       (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
                      )
                    ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
@@ -296,7 +296,7 @@ def readNmore(
                 if ( ztra[0] <  max(hmax_H, hpbl_max) and 
                      ztra[1] <  max(hmax_H, hpbl_max) and 
                      (dTH > cheat_dtemp) and 
-                     abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                     abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
 
 

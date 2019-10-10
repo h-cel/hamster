@@ -48,7 +48,7 @@ mode            = "test"
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
-f_dqsdT         = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
+cheat_cc         = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
 f_dqTds         = 0.7       # for H, E diagnosis (lower = more strict)
 hmax_E          = 0         # up to which height should E be considered? max(hmax_E, BLh_max)
 hmax_H          = 0         # up to which height should P be considered? max(hmax_H, BLh_max)
@@ -82,7 +82,7 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           gres=1,
           sfnam_base=expID,
           cheat_dtemp=tdTH,
-          f_dqsdT=0.7, 
+          cheat_cc=0.7, 
           f_dTdqs=0.7,
           hmax_E=0, 
           hmax_H=0,
