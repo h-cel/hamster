@@ -147,7 +147,7 @@ def readNmore(
            mode,
            gres,
            sfnam_base,
-           dTH_thresh=0., # used for E,H,P (if cprec_dqv==None)
+           cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
@@ -161,7 +161,7 @@ def readNmore(
       as much.
     - with the current configuration, there are only 4 parameters:
         
-        dTH_thresh = 1. (Kelvin),
+        cheat_dtemp = 1. (Kelvin),
         f_dqdst == f_dTdqs,
         P_dT_thresh = 0. (Kelvin), # not a good idea to increase this a lot    
         cprec_rh=80 (%) 
@@ -268,7 +268,7 @@ def readNmore(
             if fcc_advanced:
                 if ( ztra[0] <  max(hmax_E, hpbl_max)  and
                      ztra[1] <  max(hmax_E, hpbl_max)  and
-                     (dTHe - dTH) > dTH_thresh and
+                     (dTHe - dTH) > cheat_dtemp and
                      ( (dT > 0 and dT       < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
                        (dT < 0 and abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
                      )
@@ -277,7 +277,7 @@ def readNmore(
             else:
                 if ( ztra[0] <  max(hmax_E, hpbl_max)  and
                      ztra[1] <  max(hmax_E, hpbl_max)  and
-                     (dTHe - dTH) > dTH_thresh and
+                     (dTHe - dTH) > cheat_dtemp and
                      abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
                     ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
@@ -286,7 +286,7 @@ def readNmore(
             if fcc_advanced:
                 if ( ztra[0] <  max(hmax_H, hpbl_max) and 
                      ztra[1] <  max(hmax_H, hpbl_max) and 
-                     (dTH > dTH_thresh) and 
+                     (dTH > cheat_dtemp) and 
                      ( (dT > 0 and abs(dq) < f_dqsdT * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
                        (dT < 0 and abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
                      )
@@ -295,7 +295,7 @@ def readNmore(
             else:
                 if ( ztra[0] <  max(hmax_H, hpbl_max) and 
                      ztra[1] <  max(hmax_H, hpbl_max) and 
-                     (dTH > dTH_thresh) and 
+                     (dTH > cheat_dtemp) and 
                      abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
 
