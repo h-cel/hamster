@@ -110,17 +110,17 @@ def gridder(plon, plat, pval,
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-def default_thresholds(P_dq_min):
-    if P_dq_min == None:
+def default_thresholds(cprec_dqv):
+    if cprec_dqv == None:
         #if verbose:
-        #    print("\n--- INFO: P_dq_min is calculated based on d(pottemp)-threshold!")
+        #    print("\n--- INFO: cprec_dqv is calculated based on d(pottemp)-threshold!")
         dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+        cprec_dqv = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
                        calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
-    elif P_dq_min > 0:
-        raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
-    return P_dq_min
+        #print("cprec_dqv = ", 1e3*cprec_dqv, "g/kg")
+    elif cprec_dqv > 0:
+        raise SystemExit("------ FATAL ERROR: cprec_dqv should be negative (and in kg/kg)!")
+    return cprec_dqv
 
 def convertunits(ary_val, garea, var):
     """
@@ -147,10 +147,10 @@ def readNmore(
            mode,
            gres,
            sfnam_base,
-           dTH_thresh=0., # used for E,H,P (if P_dq_min==None)
+           dTH_thresh=0., # used for E,H,P (if cprec_dqv==None)
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
-           P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
+           cprec_dqv=None, P_dT_thresh=0, P_RHmin=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
     """
@@ -221,7 +221,7 @@ def readNmore(
     ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
 
     # set some default thresholds
-    P_dq_min    = default_thresholds(P_dq_min) 
+    cprec_dqv    = default_thresholds(cprec_dqv) 
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
@@ -259,7 +259,7 @@ def readNmore(
             ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
             ## (b) precipitation
-            if ( dq < P_dq_min and 
+            if ( dq < cprec_dqv and 
                  q2rh(qv[0], pres[0], temp[0]) > P_RHmin  and
                  q2rh(qv[1], pres[1], temp[1]) > P_RHmin ):
                 ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)

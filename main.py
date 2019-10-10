@@ -47,12 +47,12 @@ expID           = "FXvH_r"
 mode            = "test"
 
 ## DIAGNOSIS SETTINGS
-tdTH            = 1.0       # used for E,H,P (if P_dq_min==None)
+tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
 f_dqsdT         = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
 f_dqTds         = 0.7       # for H, E diagnosis (lower = more strict)
 hmax_E          = 0         # up to which height should E be considered? max(hmax_E, BLh_max)
 hmax_H          = 0         # up to which height should P be considered? max(hmax_H, BLh_max)
-P_dq_min        = None      # 
+cprec_dqv        = None      # 
 P_dT_thresh     = 0         #
 P_RHmin         = 80        # 
 
@@ -86,7 +86,7 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           f_dTdqs=0.7,
           hmax_E=0, 
           hmax_H=0,
-          P_dq_min=None, 
+          cprec_dqv=None, 
           P_dT_thresh=0, 
           P_RHmin=80,
           fwrite_netcdf=write_netcdf,
