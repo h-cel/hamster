@@ -48,13 +48,13 @@ mode            = "test"
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
-cheat_cc         = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
-f_dqTds         = 0.7       # for H, E diagnosis (lower = more strict)
-cevap_hgt          = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
-cheat_hgt          = 0         # up to which height should P be considered? max(cheat_hgt, BLh_max)
-cprec_dqv        = None      # 
+cheat_cc        = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
+cevap_cc        = 0.7       # for H, E diagnosis (lower = more strict)
+cevap_hgt       = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
+cheat_hgt       = 0         # up to which height should P be considered? max(cheat_hgt, BLh_max)
+cprec_dqv       = None      # 
 cprec_dtemp     = 0         #
-cprec_rh         = 80        # 
+cprec_rh        = 80        # 
 
 # Optional flags
 write_netcdf  = True      # write netcdf output
