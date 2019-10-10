@@ -139,7 +139,7 @@ def readNmore(
            f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
-           write_netcdf=True,timethis=True,fcc_advanced=False):
+           fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
     """
     comments
@@ -187,7 +187,7 @@ def readNmore(
     ###########################################################################
         
     ## start timer
-    if timethis:
+    if ftimethis:
         megatic = timeit.default_timer()
     
     glon, glat, garea = makegrid(resolution=gres)
@@ -301,13 +301,13 @@ def readNmore(
         ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
         ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
 
-    if timethis:
+    if ftimethis:
         megatoc = timeit.default_timer()
         print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
     
     ###########################################################################    
     
-    if write_netcdf:
+    if fwrite_netcdf:
             
         ### delete nc file if it is present (avoiding error message)
         try:

@@ -57,10 +57,10 @@ P_dT_thresh     = 0         #
 P_RHmin         = 80        # 
 
 # Optional flags
-ffwrite_netcdf  = True      # write netcdf output
-fftimethis      = True      # check runtime of diagnoser & gridder
-ffscale_mass    = False     # scale mass with number of particles 
-fcc_advanced    = False     # use advanced Clausius-Clapeyron criteria
+write_netcdf  = True      # write netcdf output
+timethis      = True      # check runtime of diagnoser & gridder
+scale_mass    = False     # scale mass with number of particles 
+cc_advanced    = False     # use advanced Clausius-Clapeyron criteria
 verbose         = True      # use as global variable
 
 ###############################################################################
@@ -89,5 +89,6 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           P_dq_min=None, 
           P_dT_thresh=0, 
           P_RHmin=80,
-          write_netcdf=ffwrite_netcdf,
-          timethis=fftimethis, fcc_advanced=fcc_advanced)
+          fwrite_netcdf=write_netcdf,
+          ftimethis=timethis, 
+          fcc_advanced=cc_advanced)
