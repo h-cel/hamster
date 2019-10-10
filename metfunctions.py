@@ -263,7 +263,7 @@ def dTdqs(p_hPa, q_kgkg):
     dTdq = dTde*(e_hPa/((0.622 * e_hPa)/(p_hPa - (0.378 * e_hPa))))
     return(dTdq)
     
-def calc_potT_e(p_Pa, q_kgkg, T_K):
+def calc_pottemp_e(p_Pa, q_kgkg, T_K):
     """
     INPUTS
         - p_Pa : hPa,           pressure
@@ -308,7 +308,7 @@ def calc_potT_e(p_Pa, q_kgkg, T_K):
     
     return(potT_E)
     
-def calc_potT(p_Pa, q_kgkg, T_K):
+def calc_pottemp(p_Pa, q_kgkg, T_K):
     """
     INPUTS
         - p_Pa : hPa,           pressure

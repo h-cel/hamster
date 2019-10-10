@@ -4,6 +4,12 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
+def makegrid(resolution=1):
+    glat        = np.arange(-90,90+resolution,resolution)
+    glon        = np.arange(-180,180,resolution)
+    gd_area     = gridded_area_exact(glat, res=resolution, nlon=glon.size)
+    return glon, glat, gd_area
+
 def freadpom(idate,     # run year
             ipath,      # input data path
             ifile_base):# loop over ifile_base filenames for each date
@@ -96,7 +102,7 @@ def gridder(plon, plat, pval,
         1. calculated midpoint of two coordinates
         2. assigns val to gridcell corresponding to midpoint
     RETURN
-        - array of dimension (nlat x nlon) with 0's and one value assigned
+        - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # 1. calculate midpoint
     lat_mid,lon_mid = midpoint_on_sphere(plat[0],plon[0],plat[1],plon[1]) # use own function to calculate midpoint position
@@ -105,11 +111,11 @@ def gridder(plon, plat, pval,
     ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
     # and assign pval to gridcell (init. with 0's)
-    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, nlat, nlon)
+    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-def convertunits(ary_val, gd_area, var):
+def convertunits(ary_val, garea, var):
     """
     INPUT
         - aryval
@@ -120,9 +126,9 @@ def convertunits(ary_val, gd_area, var):
         - returns H as W m-2
     """
     if var in ['P','E']:
-        return(PMASS*ary_val/(1e6*gd_area))
+        return(PMASS*ary_val/(1e6*garea))
     if var in ['H']:
-        return(PMASS*ary_val*CPD/(1e6*gd_area*6*3600))
+        return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
 
 ############################################################################
@@ -188,14 +194,8 @@ def readNmore(
     if timethis:
         megatic = timeit.default_timer()
     
-    ## grid
-    resolution  = 1. # in degrees
-    glat        = np.arange(-90,90+resolution,resolution)
-    glon        = np.arange(-180,180,resolution)
-    nlat        = glat.size
-    nlon        = glon.size
-    gd_area     = gridded_area_exact(glat, res=resolution, nlon=nlon)
-    
+    glon, glat, garea = makegrid(resolution=1)
+
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
     date_end        = date_bgn + relativedelta(months=1)
@@ -219,10 +219,10 @@ def readNmore(
         print("....\n")
 
     ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_evap     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_prec     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_npart    = np.zeros(shape=(ntime,nlat,nlon))
+    ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_evap     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_prec     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
@@ -301,9 +301,9 @@ def readNmore(
 
 
         # Convert units
-        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], gd_area, "P")
-        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], gd_area, "E")
-        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], gd_area, "H")
+        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
+        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
+        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
 
     if timethis:
         megatoc = timeit.default_timer()
@@ -324,8 +324,8 @@ def readNmore(
         
         ### create dimensions ###
         nc_f.createDimension('time', ntime)
-        nc_f.createDimension('lat', nlat)
-        nc_f.createDimension('lon', nlon)
+        nc_f.createDimension('lat', glat.size)
+        nc_f.createDimension('lon', glon.size)
     
         ### create variables
         times       = nc_f.createVariable('time', 'i4', 'time')
