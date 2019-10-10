@@ -247,10 +247,11 @@ def readNmore(
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
             hpbl_max    = parceldiff(hpbl, 'max')
-            dT          = parceldiff(temp, 'diff')
             dTH         = parceldiff(pottemp, 'diff')
             dTHe        = parceldiff(epottemp, 'diff')
             dz          = parceldiff(ztra, 'diff')
+            if fcc_advanced:
+                dT          = parceldiff(temp, 'diff')
 
             ## - 2.3) diagnose fluxes
 
