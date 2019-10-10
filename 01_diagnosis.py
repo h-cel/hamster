@@ -68,10 +68,10 @@ def readparcel(parray):
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
     pres    = calc_pres(dens,temp)          # pressure (Pa)
-    potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
-    eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
+    pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
+    epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
 
-    return lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT 
+    return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
 
 def parceldiff(pvals, meval):
     # difference 
@@ -175,10 +175,10 @@ def readNmore(
     ##########################    EXPERIMENTAL    #############################
     if P_dq_min == None:
         #if verbose:
-        #    print("\n--- INFO: P_dq_min is calculated based on d(theta)-threshold!")
+        #    print("\n--- INFO: P_dq_min is calculated based on d(pottemp)-threshold!")
         dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_theta_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_theta_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
+        P_dq_min = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
         #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
     elif P_dq_min > 0:
         raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
@@ -243,14 +243,14 @@ def readNmore(
         for i in ntot:
 
             ## - 2.1) read parcel information
-            lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(ary[:,i,:])
+            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
 
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
             hpbl_max    = parceldiff(hpbl, 'max')
             dT          = parceldiff(temp, 'diff')
-            dTH         = parceldiff(potT, 'diff')
-            dTHe        = parceldiff(eqvpotT, 'diff')
+            dTH         = parceldiff(pottemp, 'diff')
+            dTHe        = parceldiff(epottemp, 'diff')
             dz          = parceldiff(ztra, 'diff')
 
             ## - 2.3) diagnose fluxes
