@@ -150,7 +150,7 @@ def readNmore(
            cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
            cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
            cevap_hgt=0, cheat_hgt=0, # set min ABLh, disabled if 0 
-           cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
+           cprec_dqv=None, cprec_dtemp=0, cprec_rh=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
     """
@@ -163,7 +163,7 @@ def readNmore(
         
         cheat_dtemp = 1. (Kelvin),
         f_dqdst == cevap_cc,
-        P_dT_thresh = 0. (Kelvin), # not a good idea to increase this a lot    
+        cprec_dtemp = 0. (Kelvin), # not a good idea to increase this a lot    
         cprec_rh=80 (%) 
         
         thus, the previosuly introduced dz-Parameter could return,
