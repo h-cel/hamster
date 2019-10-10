@@ -149,7 +149,7 @@ def readNmore(
            sfnam_base,
            cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
            cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
-           hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
+           cevap_hgt=0, hmax_H=0, # set min ABLh, disabled if 0 
            cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
@@ -266,8 +266,8 @@ def readNmore(
 
             ## (c) evaporation
             if fcc_advanced:
-                if ( ztra[0] <  max(hmax_E, hpbl_max)  and
-                     ztra[1] <  max(hmax_E, hpbl_max)  and
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
                      (dTHe - dTH) > cheat_dtemp and
                      ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
                        (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
@@ -275,8 +275,8 @@ def readNmore(
                    ):
                     ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
             else:
-                if ( ztra[0] <  max(hmax_E, hpbl_max)  and
-                     ztra[1] <  max(hmax_E, hpbl_max)  and
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
                      (dTHe - dTH) > cheat_dtemp and
                      abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
                     ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
