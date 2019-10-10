@@ -5,7 +5,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 """
 
 
-def freadpom(idate,     # run year
+def readpom(idate,     # run year
             ipath,      # input data path
             ifile_base):# loop over ifile_base filenames for each date
 
@@ -223,7 +223,7 @@ def readNmore(
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary = freadpom(idate    = date_seq[ix], 
+        ary = readpom( idate    = date_seq[ix], 
                        ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy), 
                        ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
         nparticle   = ary.shape[1]
