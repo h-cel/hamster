@@ -248,6 +248,7 @@ def readNmore(
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
             hpbl_max    = parceldiff(hpbl, 'max')
+            dT          = parceldiff(temp, 'diff')
             dTH         = parceldiff(potT, 'diff')
             dTHe        = parceldiff(eqvpotT, 'diff')
             dz          = parceldiff(ztra, 'diff')
@@ -267,14 +268,20 @@ def readNmore(
             if ( ztra[0] <  max(hmax_E, hpbl_max)  and
                  ztra[1] <  max(hmax_E, hpbl_max)  and
                  (dTHe - dTH) > dTH_thresh and
-                 abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
+                 ( (dT > 0 and dT       < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
+                   (dT < 0 and abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
+                 )
+               ):
                 ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
             ## (d) sensible heat
             if ( ztra[0] <  max(hmax_H, hpbl_max) and 
                  ztra[1] <  max(hmax_H, hpbl_max) and 
                  (dTH > dTH_thresh) and 
-                 abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                 ( (dT > 0 and abs(dq) < f_dqsdT * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
+                   (dT < 0 and abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
+                 )
+               ):
                 ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
 
         # Convert units
