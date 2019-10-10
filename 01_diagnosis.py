@@ -149,7 +149,7 @@ def readNmore(
            sfnam_base,
            cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
            cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
-           cevap_hgt=0, hmax_H=0, # set min ABLh, disabled if 0 
+           cevap_hgt=0, cheat_hgt=0, # set min ABLh, disabled if 0 
            cprec_dqv=None, P_dT_thresh=0, cprec_rh=80, # P settings
            fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
@@ -284,8 +284,8 @@ def readNmore(
 
             ## (d) sensible heat
             if fcc_advanced:
-                if ( ztra[0] <  max(hmax_H, hpbl_max) and 
-                     ztra[1] <  max(hmax_H, hpbl_max) and 
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
                      (dTH > cheat_dtemp) and 
                      ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
                        (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
@@ -293,8 +293,8 @@ def readNmore(
                    ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
             else:
-                if ( ztra[0] <  max(hmax_H, hpbl_max) and 
-                     ztra[1] <  max(hmax_H, hpbl_max) and 
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
                      (dTH > cheat_dtemp) and 
                      abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 

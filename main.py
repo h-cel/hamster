@@ -51,7 +51,7 @@ tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
 cheat_cc         = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
 f_dqTds         = 0.7       # for H, E diagnosis (lower = more strict)
 cevap_hgt          = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
-hmax_H          = 0         # up to which height should P be considered? max(hmax_H, BLh_max)
+cheat_hgt          = 0         # up to which height should P be considered? max(cheat_hgt, BLh_max)
 cprec_dqv        = None      # 
 P_dT_thresh     = 0         #
 cprec_rh         = 80        # 
@@ -85,7 +85,7 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           cheat_cc=0.7, 
           cevap_cc=0.7,
           cevap_hgt=0, 
-          hmax_H=0,
+          cheat_hgt=0,
           cprec_dqv=None, 
           P_dT_thresh=0, 
           cprec_rh=80,
