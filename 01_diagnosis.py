@@ -133,8 +133,8 @@ def readNmore(
            ipath, opath,
            mode,
            sfnam_base,           
-           dTH_thresh=1.0,          # used for E,H,P (if P_dq_min==None)
-           f_dqsdT=0.7, f_dTdqs=0.7, # for H, E diagnosis (lower = more strict)
+           dTH_thresh=0., # used for E,H,P (if P_dq_min==None)
+           f_dqsdT=1.0, f_dTdqs=4.0, # for H, E diagnosis (lower = more strict)
            hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
            P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
            write_netcdf=True,timethis=True):
