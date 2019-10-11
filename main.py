@@ -57,12 +57,13 @@ cprec_dtemp     = 0         #
 cprec_rh        = 80        # 
 
 # Optional flags
-write_netcdf  = True      # write netcdf output
-timethis      = True      # check runtime of diagnoser & gridder
-scale_mass    = False     # scale mass with number of particles 
-cc_advanced    = False     # use advanced Clausius-Clapeyron criteria
+write_netcdf    = True      # write netcdf output
+timethis        = True      # check runtime of diagnoser & gridder
+scale_mass      = False     # scale mass with number of particles 
+cc_advanced     = False     # use advanced Clausius-Clapeyron criteria
 verbose         = True      # use as global variable
-
+variable_mass   = True      # apply variable mass
+refdate         = "2002123118"
 ###############################################################################
 # ------ END USER SETTINGS
 ###############################################################################
@@ -89,6 +90,8 @@ readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           cprec_dqv=None, 
           #cprec_dtemp=0, 
           cprec_rh=80,
+          refdate=refdate,
           fwrite_netcdf=write_netcdf,
           ftimethis=timethis, 
-          fcc_advanced=cc_advanced)
+          fcc_advanced=cc_advanced,
+          fvariable_mass=variable_mass)

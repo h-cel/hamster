@@ -36,7 +36,6 @@ def readpom(idate,     # run year
         elif os.path.isfile(ifile):
             # Read file
             if verbose:
-                print("--------------------------------------------------------------------------------------")
                 print("Reading " + ifile)
             ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
             nparticle   = int(ary_dim[0])
@@ -44,7 +43,6 @@ def readpom(idate,     # run year
             nvars       = int(ary_dim[2])
             if verbose:
                 print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
-                print("--------------------------------------------------------------------------------------")
             ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
             datav       = (np.asarray(ary_dat).flatten('C'))
             if dataar is None:
@@ -137,6 +135,41 @@ def convertunits(ary_val, garea, var):
     if var in ['H']:
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
+def get_refnpart(refdate, glon, glat):
+    """
+    INPUT
+        - refdate [YYYYMMDDHH] :    reference date (str) used for counting midpoint parcels and scaling
+        - glon, glat :              reference grid coordinates      
+    ACTION
+        - calculates the reference distribution of parcels using the midpoint of parcels at refdate
+        - NOTE that this is run specific and needs to be adjusted if FLEXPART runs are setup differently
+    DEPEND
+        - uses numpy and functions readpom, gridder
+    RETURN
+        - npart (nlat x nlon) at refdate
+    """
+
+    ary_npart   = np.zeros(shape=(glat.size,glon.size))
+    ary         = readpom( idate    = refdate,
+                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
+                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
+    nparticle   = ary.shape[1]
+    if verbose:
+        print("Reference date for number of particles: \t" +str(refdate) )
+        #print("Reference number of particles: \t" + str(nparticle))
+        print("Getting reference distribution...\n")
+    for i in range(nparticle):
+        lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
+        ary_npart[:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
+
+    return ary_npart
+
+def scale_mass(ary_val, ary_part, ary_rpart):
+    ary_sval    = np.zeros(shape=(ary_val.shape)) 
+    for itime in range(ary_val.shape[0]):  
+        with np.errstate(divide='ignore', invalid='ignore'):
+            ary_sval[itime,:,:] = ary_val[itime,:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[itime,:,:] ) 
+    return(ary_sval)
 
 ############################################################################
 #############################    SETTINGS ##################################
@@ -151,7 +184,8 @@ def readNmore(
            cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
            cevap_hgt=0, cheat_hgt=0, # set min ABLh, disabled if 0 
            cprec_dqv=None, cprec_dtemp=0, cprec_rh=80, # P settings
-           fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
+           refdate="2002311218",
+           fwrite_netcdf=True,ftimethis=True,fcc_advanced=False,fvariable_mass=True):
 
     """
     comments
@@ -179,13 +213,29 @@ def readNmore(
     
     if verbose:
         print("\n============================================================================================================")
-        print(os.system("figlet -f bubble hamster"))
+        print("\n============================================================================================================")
+        print(os.system("figlet hamster"))
+        print(" * Copyright 2019                                                      *")
+        print(" * Dominik Schumacher, Jessica Keune                                   *")
+        print(" *                                                                     *")
+        print(" * This program is part of HAMSTER.                                    *")
+        print(" *                                                                     *")
+        print(" * HAMSTER is free under the terms of the GNU General Public license   *")
+        print(" * version 3 as published by the Free Software Foundation              *")
+        print(" * HAMSTER is distributed WITHOUT ANY WARRANTY! (see LICENSE           *") 
+        print("\n============================================================================================================")
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
         print("\n INPUT PATH: \t", 	ipath)
-        print("\n OUTPUT FILE: \t", 	opath+sfilename)
-        print("\n============================================================================================================")
+        print("\n OUTPUT FILE: \t", opath+sfilename)
         print("\n============================================================================================================")
         
+    if verbose:
+        print("\n SETTINGS :")
+        if fvariable_mass:
+            print(" = reference date for number of particles: \t" +str(refdate) )
+        print("\n============================================================================================================")
+        print("\n============================================================================================================")
+
     ## start timer
     if ftimethis:
         megatic = timeit.default_timer()
@@ -210,9 +260,7 @@ def readNmore(
         ntime       = 1
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
-        print("....\n")
-        print("TESTMODE: only processing "+str(date_seq) + " and looping over 1000 parcels")
-        print("....\n")
+        print("\n = TESTMODE: only processing "+str(date_seq) + " and looping over 1000 parcels \n")
 
     ## pre-allocate arrays
     ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
@@ -222,15 +270,21 @@ def readNmore(
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
-
+    # read in reference distribution of parcels
+    ary_rnpart   = get_refnpart(refdate=refdate, glon=glon, glat=glat)
+    
+    ## loop over time to read in files
     for ix in range(ntime):
+        if verbose:
+                print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdate_seq[ix]))
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
         ary = readpom( idate    = date_seq[ix], 
                        ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy), 
                        ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
         nparticle   = ary.shape[1]
-        print("TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
+        if verbose:
+            print("TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
         #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
@@ -305,9 +359,18 @@ def readNmore(
         ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
         ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
 
+    # Scale with parcel mass
+    if fvariable_mass:
+        if verbose: 
+            print(" * Applying variable mass...")
+        ary_prec         = scale_mass(ary_prec, ary_npart, ary_rnpart)
+        ary_evap         = scale_mass(ary_evap, ary_npart, ary_rnpart)
+        ary_heat         = scale_mass(ary_heat, ary_npart, ary_rnpart)
+
     if ftimethis:
         megatoc = timeit.default_timer()
-        print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
+        if verbose:
+            print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
     
     ###########################################################################    
     
@@ -365,7 +428,7 @@ def readNmore(
         nc_f.close()
         
         print("\n===============================================================")
-        print("\n======  Successfully written: "+opath+sfilename+ " !")
+        print("\n Successfully written: "+opath+sfilename+ " !")
         print("\n===============================================================")
         
         
