@@ -36,13 +36,13 @@ def readpom(idate,     # run year
         elif os.path.isfile(ifile):
             # Read file
             if verbose:
-                print("Reading " + ifile)
+                print(" Reading " + ifile)
             ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
             nparticle   = int(ary_dim[0])
             ntrajstep   = int(ary_dim[1])
             nvars       = int(ary_dim[2])
             if verbose:
-                print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
+                print("\t nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
             ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
             datav       = (np.asarray(ary_dat).flatten('C'))
             if dataar is None:
@@ -148,16 +148,15 @@ def get_refnpart(refdate, glon, glat):
     RETURN
         - npart (nlat x nlon) at refdate
     """
+    if verbose:
+        #print("Reference number of particles: \t" + str(nparticle))
+        print(" * Getting reference distribution...")
 
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readpom( idate    = refdate,
                            ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
                            ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
     nparticle   = ary.shape[1]
-    if verbose:
-        print("Reference date for number of particles: \t" +str(refdate) )
-        #print("Reference number of particles: \t" + str(nparticle))
-        print("Getting reference distribution...\n")
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
         ary_npart[:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
@@ -212,27 +211,35 @@ def readNmore(
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
     if verbose:
-        print("\n============================================================================================================")
-        print("\n============================================================================================================")
-        print(os.system("figlet hamster"))
-        print(" * Copyright 2019                                                      *")
-        print(" * Dominik Schumacher, Jessica Keune                                   *")
-        print(" *                                                                     *")
-        print(" * This program is part of HAMSTER.                                    *")
-        print(" *                                                                     *")
-        print(" * HAMSTER is free under the terms of the GNU General Public license   *")
-        print(" * version 3 as published by the Free Software Foundation              *")
-        print(" * HAMSTER is distributed WITHOUT ANY WARRANTY! (see LICENSE           *") 
-        print("\n============================================================================================================")
-        print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
-        print("\n INPUT PATH: \t", 	ipath)
-        print("\n OUTPUT FILE: \t", opath+sfilename)
-        print("\n============================================================================================================")
-        
-    if verbose:
+        disclaimer()
         print("\n SETTINGS :")
+        print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
+        print("\n input path: \t", 	ipath)
+        print("\n============================================================================================================")
+        print(" ! using variable mass: \t" +str(fvariable_mass) )
         if fvariable_mass:
-            print(" = reference date for number of particles: \t" +str(refdate) )
+            print(" \t ! reference date for number of particles: \t" +str(refdate) )
+        print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
+        if fwrite_netcdf:
+            print(" \t ! with grid resolution:: \t", str(gres) )
+            print(" \t ! output file: \t", opath+sfilename)
+        print(" ! using internal timer: \t" +str(ftimethis) )
+        print(" ! mode: \t" +str(mode))
+        print(" ! DIAGNOSIS SETTINGS")
+        print(" \t ! HEAT: ")
+        print(" \t \t  dTH > " + str(cheat_dtemp) )
+        print(" \t \t  abs(dqv) < "+str(cheat_cc)+" * (dTH) * ...")
+        print(" \t \t  ztra[0] <  max("+str(cheat_hgt)+", hpbl_max) ")
+        print(" \t \t  ztra[1] <  max("+str(cheat_hgt)+", hpbl_max) ")
+        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
+        print(" \t ! EVAPORATION: ")
+        print(" \t \t  abs(dTH) < "+str(cevap_cc)+" * (dqv) * ...")
+        print(" \t \t  ztra[0] <  max("+str(cevap_hgt)+", hpbl_max) ")
+        print(" \t \t  ztra[1] <  max("+str(cevap_hgt)+", hpbl_max) ")
+        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
+        print(" \t ! PRECIPITATION: ")
+        print(" \t \t  dqv < "+str(cprec_dqv) )
+        print(" \t \t  rh[0] > "+str(cprec_rh) )
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -260,7 +267,6 @@ def readNmore(
         ntime       = 1
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
-        print("\n = TESTMODE: only processing "+str(date_seq) + " and looping over 1000 parcels \n")
 
     ## pre-allocate arrays
     ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
@@ -274,6 +280,8 @@ def readNmore(
     ary_rnpart   = get_refnpart(refdate=refdate, glon=glon, glat=glat)
     
     ## loop over time to read in files
+    if verbose:
+        print("\n=== \t Start main program...\n")
     for ix in range(ntime):
         if verbose:
                 print("--------------------------------------------------------------------------------------")
@@ -284,7 +292,7 @@ def readNmore(
                        ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
         nparticle   = ary.shape[1]
         if verbose:
-            print("TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
+            print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
         #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
@@ -355,6 +363,8 @@ def readNmore(
 
 
         # Convert units
+        if verbose:
+            print(" * Converting units...")
         ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
         ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
         ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
@@ -370,11 +380,14 @@ def readNmore(
     if ftimethis:
         megatoc = timeit.default_timer()
         if verbose:
-            print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
+            print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
     ###########################################################################    
     
     if fwrite_netcdf:
+
+        if verbose:
+            print(" * Writing netcdf output...")
             
         ### delete nc file if it is present (avoiding error message)
         try:

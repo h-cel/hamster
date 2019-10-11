@@ -71,6 +71,7 @@ refdate         = "2002123118"
 os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
+exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
