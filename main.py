@@ -40,11 +40,11 @@ opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/
 ## Time period
 ryyyy           = 2002
 ayyyy           = 2002
-am              = 5
+am              = 1
 ## Experiment ID (choose a letter or short name)
-expID           = "FXvH_r"
+expID           = "FXvC_r"
 ## mode (test/oper)
-mode            = "test"
+mode            = "oper"    # 'test' or 'oper'
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
@@ -77,15 +77,15 @@ exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
 
 ## (2) RUN
-readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
+main_diagnosis(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
           ipath=ipath, 
           opath=opath,
           mode=mode,
           gres=1,
           sfnam_base=expID,
           cheat_dtemp=tdTH,
-          cheat_cc=0.7, 
-          cevap_cc=0.7,
+          cheat_cc=0.6, 
+          cevap_cc=0.5,
           cevap_hgt=0, 
           cheat_hgt=0,
           cprec_dqv=None, 

@@ -173,7 +173,7 @@ def scale_mass(ary_val, ary_part, ary_rpart):
 ############################################################################
 #############################    SETTINGS ##################################
 
-def readNmore(
+def main_diagnosis(
            ryyyy, ayyyy, am,
            ipath, opath,
            mode,
