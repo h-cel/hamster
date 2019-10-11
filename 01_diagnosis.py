@@ -4,7 +4,8 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
-def freadpom(idate,     # run year
+
+def readpom(idate,     # run year
             ipath,      # input data path
             ifile_base):# loop over ifile_base filenames for each date
 
@@ -68,10 +69,10 @@ def readparcel(parray):
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
     pres    = calc_pres(dens,temp)          # pressure (Pa)
-    potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
-    eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
+    pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
+    epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
 
-    return lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT 
+    return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
 
 def parceldiff(pvals, meval):
     # difference 
@@ -96,7 +97,7 @@ def gridder(plon, plat, pval,
         1. calculated midpoint of two coordinates
         2. assigns val to gridcell corresponding to midpoint
     RETURN
-        - array of dimension (nlat x nlon) with 0's and one value assigned
+        - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # 1. calculate midpoint
     lat_mid,lon_mid = midpoint_on_sphere(plat[0],plon[0],plat[1],plon[1]) # use own function to calculate midpoint position
@@ -105,11 +106,23 @@ def gridder(plon, plat, pval,
     ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
     # and assign pval to gridcell (init. with 0's)
-    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, nlat, nlon)
+    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-def convertunits(ary_val, gd_area, var):
+def default_thresholds(cprec_dqv):
+    if cprec_dqv == None:
+        #if verbose:
+        #    print("\n--- INFO: cprec_dqv is calculated based on d(pottemp)-threshold!")
+        dummy_dq = 0.2 # this choice doesn't matter too much...
+        cprec_dqv = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
+        #print("cprec_dqv = ", 1e3*cprec_dqv, "g/kg")
+    elif cprec_dqv > 0:
+        raise SystemExit("------ FATAL ERROR: cprec_dqv should be negative (and in kg/kg)!")
+    return cprec_dqv
+
+def convertunits(ary_val, garea, var):
     """
     INPUT
         - aryval
@@ -120,9 +133,9 @@ def convertunits(ary_val, gd_area, var):
         - returns H as W m-2
     """
     if var in ['P','E']:
-        return(PMASS*ary_val/(1e6*gd_area))
+        return(PMASS*ary_val/(1e6*garea))
     if var in ['H']:
-        return(PMASS*ary_val*CPD/(1e6*gd_area*6*3600))
+        return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
 
 ############################################################################
@@ -132,12 +145,13 @@ def readNmore(
            ryyyy, ayyyy, am,
            ipath, opath,
            mode,
-           sfnam_base,           
-           dTH_thresh=0., # used for E,H,P (if P_dq_min==None)
-           f_dqsdT=1.0, f_dTdqs=4.0, # for H, E diagnosis (lower = more strict)
-           hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
-           P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
-           write_netcdf=True,timethis=True):
+           gres,
+           sfnam_base,
+           cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
+           cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
+           cevap_hgt=0, cheat_hgt=0, # set min ABLh, disabled if 0 
+           cprec_dqv=None, cprec_dtemp=0, cprec_rh=80, # P settings
+           fwrite_netcdf=True,ftimethis=True,fcc_advanced=False):
 
     """
     comments
@@ -147,10 +161,10 @@ def readNmore(
       as much.
     - with the current configuration, there are only 4 parameters:
         
-        dTH_thresh = 1. (Kelvin),
-        f_dqdst == f_dTdqs,
-        P_dT_thresh = 0. (Kelvin), # not a good idea to increase this a lot    
-        P_RHmin=80 (%) 
+        cheat_dtemp = 1. (Kelvin),
+        f_dqdst == cevap_cc,
+        cprec_dtemp = 0. (Kelvin), # not a good idea to increase this a lot    
+        cprec_rh=80 (%) 
         
         thus, the previosuly introduced dz-Parameter could return,
         with the advantage of being used both for E,H & P 
@@ -172,30 +186,12 @@ def readNmore(
         print("\n============================================================================================================")
         print("\n============================================================================================================")
         
-    ##########################    EXPERIMENTAL    #############################
-    if P_dq_min == None:
-        #if verbose:
-        #    print("\n--- INFO: P_dq_min is calculated based on d(theta)-threshold!")
-        dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_theta_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_theta_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
-    elif P_dq_min > 0:
-        raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
-    ###########################################################################
-        
     ## start timer
-    if timethis:
+    if ftimethis:
         megatic = timeit.default_timer()
     
-    ## grid
-    resolution  = 1. # in degrees
-    glat        = np.arange(-90,90+resolution,resolution)
-    glon        = np.arange(-180,180,resolution)
-    nlat        = glat.size
-    nlon        = glon.size
-    gd_area     = gridded_area_exact(glat, res=resolution, nlon=nlon)
-    
+    glon, glat, garea = makegrid(resolution=gres)
+
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
     date_end        = date_bgn + relativedelta(months=1)
@@ -219,15 +215,18 @@ def readNmore(
         print("....\n")
 
     ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_evap     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_prec     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_npart    = np.zeros(shape=(ntime,nlat,nlon))
+    ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_evap     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_prec     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
+
+    # set some default thresholds
+    cprec_dqv    = default_thresholds(cprec_dqv) 
 
     for ix in range(ntime):
         print("Processing "+str(fdate_seq[ix]))
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary = freadpom(idate    = date_seq[ix], 
+        ary = readpom( idate    = date_seq[ix], 
                        ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy), 
                        ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
         nparticle   = ary.shape[1]
@@ -243,15 +242,16 @@ def readNmore(
         for i in ntot:
 
             ## - 2.1) read parcel information
-            lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(ary[:,i,:])
+            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
 
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
             hpbl_max    = parceldiff(hpbl, 'max')
-            dT          = parceldiff(temp, 'diff')
-            dTH         = parceldiff(potT, 'diff')
-            dTHe        = parceldiff(eqvpotT, 'diff')
+            dTH         = parceldiff(pottemp, 'diff')
+            dTHe        = parceldiff(epottemp, 'diff')
             dz          = parceldiff(ztra, 'diff')
+            if fcc_advanced:
+                dT          = parceldiff(temp, 'diff')
 
             ## - 2.3) diagnose fluxes
 
@@ -259,43 +259,59 @@ def readNmore(
             ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
             ## (b) precipitation
-            if ( dq < P_dq_min and 
-                 q2rh(qv[0], pres[0], temp[0]) > P_RHmin  and
-                 q2rh(qv[1], pres[1], temp[1]) > P_RHmin ):
+            if ( dq < cprec_dqv and 
+                 q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                 q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
                 ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
             ## (c) evaporation
-            if ( ztra[0] <  max(hmax_E, hpbl_max)  and
-                 ztra[1] <  max(hmax_E, hpbl_max)  and
-                 (dTHe - dTH) > dTH_thresh and
-                 ( (dT > 0 and dT       < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
-                   (dT < 0 and abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
-                 )
-               ):
-                ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+            if fcc_advanced:
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                     (dTHe - dTH) > cheat_dtemp and
+                     ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
+                       (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
+                     )
+                   ):
+                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+            else:
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                     (dTHe - dTH) > cheat_dtemp and
+                     abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
+                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
 
             ## (d) sensible heat
-            if ( ztra[0] <  max(hmax_H, hpbl_max) and 
-                 ztra[1] <  max(hmax_H, hpbl_max) and 
-                 (dTH > dTH_thresh) and 
-                 ( (dT > 0 and abs(dq) < f_dqsdT * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
-                   (dT < 0 and abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
-                 )
-               ):
-                ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+            if fcc_advanced:
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                     (dTH > cheat_dtemp) and 
+                     ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
+                       (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
+                     )
+                   ):
+                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+            else:
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                     (dTH > cheat_dtemp) and 
+                     abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+
 
         # Convert units
-        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], gd_area, "P")
-        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], gd_area, "E")
-        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], gd_area, "H")
+        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
+        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
+        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
 
-    if timethis:
+    if ftimethis:
         megatoc = timeit.default_timer()
         print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
     
     ###########################################################################    
     
-    if write_netcdf:
+    if fwrite_netcdf:
             
         ### delete nc file if it is present (avoiding error message)
         try:
@@ -308,8 +324,8 @@ def readNmore(
         
         ### create dimensions ###
         nc_f.createDimension('time', ntime)
-        nc_f.createDimension('lat', nlat)
-        nc_f.createDimension('lon', nlon)
+        nc_f.createDimension('lat', glat.size)
+        nc_f.createDimension('lon', glon.size)
     
         ### create variables
         times       = nc_f.createVariable('time', 'i4', 'time')
