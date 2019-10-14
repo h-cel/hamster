@@ -1,6 +1,10 @@
 # job-related
 *.e*
 *.o*
+*.log*
+*.pbs*
+*.sh*
+*.run*
 
 # Copy of mainpy to work-dir
 work/main.py
