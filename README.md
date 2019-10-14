@@ -1,8 +1,8 @@
 # hamster
 
-*HAMSTER - A Heat And MoiSturE Tracking fRamework* 
+**HAMSTER - A Heat And MoiSturE Tracking fRamework**
 
-*HAMSTER* is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source-sink relationships, using output from a Lagrangian model. 
+**HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source-sink relationships, using output from a Lagrangian model. 
 
 - - - -
 ## Getting started. 
@@ -12,7 +12,7 @@ This sections describes the prerequisites required to run HAMSTER, and describes
 ### Prerequisites
 To run HAMSTER, you need 
 * python 3
-* anaconda (or similar to manage python packages)
+* [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
 * git
 
 ### Installation
@@ -33,6 +33,7 @@ Dominik Schumacher and Jessica Keune
 ### License
 Copyright 2019 Dominik Schumacher and Jessica Keune
 
+This software is published under the GPLv3 license. This means: 
 1. Anyone can copy, modify and distribute this software. 
 2. You have to include the license and copyright notice with each and every distribution.
 3. You can use this software privately.
@@ -45,17 +46,41 @@ Copyright 2019 Dominik Schumacher and Jessica Keune
 
 - - - - 
 ## Run HAMSTER.
-*HAMSTER* consists of 3 modules, 
+**HAMSTER** consists of 3 modules, 
 * diagnosis
 * attribution
 * bias-correction
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
 ### diagnosis
-The diagnosis part of *HAMSTER* identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
+The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
+
+To perform the diagnosis for a single month, 
+[] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
+[] adjust the time period for the diagnosis in work/job.pbs 
+[] and submit the job
+```
+vi main.py                  # -- diagnosis settings
+vi work/job.pbs             # -- job settings
+cd work
+qsub job.pbs
+``` 
+You can also run multiple months in parallel (prerequisite: worker environment)
+[] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
+[] adjust the time period / dates in work/dates.txt
+[] adjust the work environment settings in work/workerjob.pbs
+[] and submit the jobs. 
+```
+vi main.py                  # -- diagnosis settings
+vi dates.py                 # -- job settings (dates)
+vi work/workerjob.pbs       # -- job settings
+cd work 
+qsub workerjob.pbs
+``` 
+
 
 ### attribution
-The attribution part of *HAMSTER* constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
+The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
 
 ### bias-correction
 The last module of *HAMSTER* uses information from the former two modules to bias-correct source-receptor relationships. Multiple options for bias-correction are available (see docs). 
