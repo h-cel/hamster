@@ -47,12 +47,12 @@ This software is published under the GPLv3 license. This means:
 - - - - 
 ## Run HAMSTER.
 **HAMSTER** consists of 3 modules, 
-* diagnosis
-* attribution
-* bias-correction
+1. Diagnosis
+2. Attribution
+3. Bias-correction
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
-### diagnosis
+### 1. Diagnosis
 The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
 
 To perform the diagnosis for a single month, 
@@ -79,8 +79,8 @@ qsub workerjob.pbs
 ``` 
 
 
-### attribution
+### 2. Attribution
 The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
 
-### bias-correction
+### 3. Bias-correction
 The last module of *HAMSTER* uses information from the former two modules to bias-correct source-receptor relationships. Multiple options for bias-correction are available (see docs). 
