@@ -56,9 +56,9 @@ which build up on each other. It is suggested to run them sequentially to obtain
 The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
 
 To perform the diagnosis for a single month, 
-[] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
-[] adjust the time period for the diagnosis in work/job.pbs 
-[] and submit the job
+- [ ] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
+- [ ] adjust the time period for the diagnosis in work/job.pbs 
+- [ ] and submit the job
 ```
 vi main.py                  # -- diagnosis settings
 vi work/job.pbs             # -- job settings
@@ -66,10 +66,10 @@ cd work
 qsub job.pbs
 ``` 
 You can also run multiple months in parallel (prerequisite: worker environment)
-[] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
-[] adjust the time period / dates in work/dates.txt
-[] adjust the work environment settings in work/workerjob.pbs
-[] and submit the jobs. 
+- [ ] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
+- [ ] adjust the time period / dates in work/dates.txt
+- [ ] adjust the work environment settings in work/workerjob.pbs
+- [ ] and submit the jobs. 
 ```
 vi main.py                  # -- diagnosis settings
 vi dates.py                 # -- job settings (dates)
