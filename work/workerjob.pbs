@@ -2,9 +2,8 @@
 
 #PBS -S /usr/bin/bash
 #PBS -N 01_diagnosis
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=00:10:00
-##PBS -l walltime=12:00:00
+#PBS -l nodes=1:ppn=13
+#PBS -l walltime=12:00:00
 ##PBS -l mem=517409341440b
 #PBS -M jessica.keune@ugent.be
 #PBS -m bea
@@ -35,7 +34,9 @@ echo "--------------------------------------------------------------------------
 cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WORKDIR}/.
 
 ##USAGE: python main.py RYYYY AYYYY AM (run year, analysis year, analysis month)
-time python main.py 2002 2002 12
+# workerjob: 
+# > wsub -data data.txt -batch workerjob.pbs
+time python main.py $ryyyy $ayyyy $am
 
 
 #tdqp=0.0

@@ -29,6 +29,8 @@ import datetime as datetime
 ## ------ USER SETTINGS
 ###############################################################################
 
+print("Running "+ str(sys.argv))
+
 ## Paths
 # work directory
 wpath           = "/kyukon/data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster"
@@ -38,13 +40,14 @@ ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/pa
 opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
 
 ## Time period
-ryyyy           = 2002
-ayyyy           = 2002
-am              = 1
+ryyyy           = int(sys.argv[1])#2002
+ayyyy           = int(sys.argv[2])#2002
+am              = int(sys.argv[3])#1
 ## Experiment ID (choose a letter or short name)
 expID           = "FXvC_r"
 ## mode (test/oper)
-mode            = "oper"    # 'test' or 'oper'
+#mode            = "oper"    # 'test' or 'oper'
+mode            = "test"    # 'test' or 'oper'
 
 ## DIAGNOSIS SETTINGS
 tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
@@ -63,7 +66,8 @@ scale_mass      = False     # scale mass with number of particles
 cc_advanced     = False     # use advanced Clausius-Clapeyron criteria
 verbose         = True      # use as global variable
 variable_mass   = True      # apply variable mass
-refdate         = "2002123118"
+refdate         = str(ryyyy)+"123118"
+
 ###############################################################################
 # ------ END USER SETTINGS
 ###############################################################################
