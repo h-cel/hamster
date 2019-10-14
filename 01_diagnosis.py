@@ -170,6 +170,65 @@ def scale_mass(ary_val, ary_part, ary_rpart):
             ary_sval[itime,:,:] = ary_val[itime,:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[itime,:,:] ) 
     return(ary_sval)
 
+def writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart):
+    if verbose:
+        print(" * Writing netcdf output...")
+                
+    # delete nc file if it is present (avoiding error message)
+    try:
+        os.remove(ofile)
+    except OSError:
+        pass
+        
+    # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+    
+    ### create dimensions ###
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('lat', glat.size)
+    nc_f.createDimension('lon', glon.size)
+    
+    # create variables
+    times               = nc_f.createVariable('time', 'i4', 'time')
+    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
+    heats               = nc_f.createVariable('H', 'f4', ('time','lat','lon'))
+    evaps               = nc_f.createVariable('E', 'f4', ('time','lat','lon'))
+    precs               = nc_f.createVariable('P', 'f4', ('time','lat','lon'))
+    nparts              = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
+    
+    # set attributes
+    nc_f.description    = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    heats.units         = 'W m-2'
+    heats.long_name	    = 'surface sensible heat flux'
+    evaps.units         = 'mm'
+    evaps.long_name	    = 'evaporation'
+    precs.units         = 'mm'
+    precs.long_name	    = 'precipitation'
+    nparts.units        = 'int'
+    nparts.long_name    = 'number of parcels (mid pos.)'
+    
+    # write data
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    longitudes[:]       = glon
+    latitudes[:]        = glat
+    heats[:]            = ary_heat[:]
+    evaps[:]            = ary_evap[:]
+    precs[:]            = ary_prec[:]     
+    nparts[:]           = ary_npart[:]
+        
+    # close file
+    nc_f.close()
+        
+    print("\n===============================================================")
+    print("\n Successfully written: "+ofile+" !")
+    print("\n===============================================================")
+        
+        
 ############################################################################
 #############################    SETTINGS ##################################
 
@@ -207,6 +266,7 @@ def main_diagnosis(
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
     sfilename = str(sfnam_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofile     = opath+sfilename
 
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
@@ -382,66 +442,5 @@ def main_diagnosis(
         if verbose:
             print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
-    ###########################################################################    
-    
     if fwrite_netcdf:
-
-        if verbose:
-            print(" * Writing netcdf output...")
-            
-        ### delete nc file if it is present (avoiding error message)
-        try:
-            os.remove(opath+sfilename)
-        except OSError:
-            pass
-        
-        ### create netCDF4 instance
-        nc_f = nc4.Dataset(opath+sfilename,'w', format='NETCDF4')
-        
-        ### create dimensions ###
-        nc_f.createDimension('time', ntime)
-        nc_f.createDimension('lat', glat.size)
-        nc_f.createDimension('lon', glon.size)
-    
-        ### create variables
-        times       = nc_f.createVariable('time', 'i4', 'time')
-        latitudes   = nc_f.createVariable('lat', 'f4', 'lat')
-        longitudes  = nc_f.createVariable('lon', 'f4', 'lon')
-        heats       = nc_f.createVariable('H', 'f4', ('time','lat','lon'))
-        evaps       = nc_f.createVariable('E', 'f4', ('time','lat','lon'))
-        precs       = nc_f.createVariable('P', 'f4', ('time','lat','lon'))
-        nparts      = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
-    
-        ### set attributes
-        nc_f.description    = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
-        times.units         = 'hours since 1900-01-01 00:00:00'
-        times.calendar      = 'Standard' # do NOT use gregorian here!
-        latitudes.units     = 'degrees_north'
-        longitudes.units    = 'degrees_east'
-        heats.units         = 'W m-2'
-        heats.long_name	    = 'surface sensible heat flux'
-        evaps.units         = 'mm'
-        evaps.long_name	    = 'evaporation'
-        precs.units         = 'mm'
-        precs.long_name	    = 'precipitation'
-        nparts.units        = 'int'
-        nparts.long_name    = 'number of parcels (mid pos.)'
-    
-        ### write data
-        times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
-        longitudes[:]       = glon
-        latitudes[:]        = glat
-        
-        heats[:]            = ary_heat[:]
-        evaps[:]            = ary_evap[:]
-        precs[:]            = ary_prec[:]     
-        nparts[:]           = ary_npart[:]
-        
-        ### close file
-        nc_f.close()
-        
-        print("\n===============================================================")
-        print("\n Successfully written: "+opath+sfilename+ " !")
-        print("\n===============================================================")
-        
-        
+        writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart)
