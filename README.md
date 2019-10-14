@@ -13,7 +13,7 @@ This sections describes the prerequisites required to run HAMSTER, and describes
 To run HAMSTER, you need 
 * python 3
 * [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
-* git
+* [git](https://git-scm.com/)
 
 ### Installation
 1. Clone the repository
@@ -50,6 +50,7 @@ This software is published under the GPLv3 license. This means:
 1. Diagnosis
 2. Attribution
 3. Bias-correction
+
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
 ### 1. Diagnosis
@@ -83,4 +84,4 @@ qsub workerjob.pbs
 The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
 
 ### 3. Bias-correction
-The last module of *HAMSTER* uses information from the former two modules to bias-correct source-receptor relationships. Multiple options for bias-correction are available (see docs). 
+The last module of **HAMSTER** uses information from the former two modules to bias-correct source-receptor relationships. Multiple options for bias-correction are available (see docs). 
