@@ -19,6 +19,7 @@ import os, fnmatch
 import timeit
 import netCDF4 as nc4
 import sys
+import argparse
 import time
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
@@ -29,8 +30,6 @@ import datetime as datetime
 ## ------ USER SETTINGS
 ###############################################################################
 
-print("Running "+ str(sys.argv))
-
 ## Paths
 # work directory
 wpath           = "/kyukon/data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster"
@@ -39,35 +38,6 @@ ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/pa
 # path for output data
 opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
 
-## Time period
-ryyyy           = int(sys.argv[1])  # 2002
-ayyyy           = int(sys.argv[2])  # 2002
-am              = int(sys.argv[3])  # 1
-## Experiment ID (choose a letter or short name)
-expID           = "FXvC_r"
-## mode (test/oper)
-mode            = "test"    # 'test' or 'oper'
-
-## DIAGNOSIS SETTINGS
-cheat_temp      = 1.0       # used for E,H,P (if cprec_dqv==None)
-cheat_cc        = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
-cevap_cc        = 0.7       # for H, E diagnosis (lower = more strict)
-cevap_hgt       = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
-cheat_hgt       = 0         # up to which height should P be considered? max(cheat_hgt, BLh_max)
-cprec_dqv       = None      # 
-cprec_dtemp     = 0         #
-cprec_rh        = 80        # 
-
-# Optional flags
-write_netcdf    = True      # write netcdf output
-timethis        = True      # check runtime of diagnoser & gridder
-cc_advanced     = False     # use advanced Clausius-Clapeyron criteria
-verbose         = True      # use as global variable
-variable_mass   = True      # apply variable mass
-refdate         = str(ryyyy)+"123118"
-
-# resolution of output model
-gres            = 1         # degree
 
 ###############################################################################
 # ------ END USER SETTINGS
@@ -81,22 +51,28 @@ exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
 
-## (2) RUN
-main_diagnosis(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
+## (2) get date, thresholds and flags from command line (job script) 
+#      note: this is where we set the default values now. 
+args    = read_cmdargs()
+verbose = args.verbose
+
+## (3) RUN main script with arguments
+main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
           ipath=ipath, 
           opath=opath,
-          mode=mode,
-          gres=gres,
-          sfnam_base=expID,
-          cheat_dtemp=cheat_temp,
-          cheat_cc=cheat_cc, 
-          cevap_cc=cevap_cc,
-          cevap_hgt=cevap_hgt, 
-          cheat_hgt=cheat_hgt,
-          cprec_dqv=None, 
-          cprec_rh=cprec_rh,
-          refdate=refdate,
-          fwrite_netcdf=write_netcdf,
-          ftimethis=timethis, 
-          fcc_advanced=cc_advanced,
-          fvariable_mass=variable_mass)
+          mode=args.mode,
+          gres=args.gres,
+          sfnam_base=args.expid,
+          cheat_dtemp=args.cheat_dtemp,
+          cheat_cc=args.cheat_cc, 
+          cevap_cc=args.cevap_cc,
+          cevap_hgt=args.cevap_hgt, 
+          cheat_hgt=args.cheat_hgt,
+          cprec_dqv=args.cprec_dqv, 
+          cprec_dtemp=args.cprec_dtemp, 
+          cprec_rh=args.cprec_rh,
+          refdate=args.refdate,
+          fwrite_netcdf=args.write_netcdf,
+          ftimethis=args.timethis, 
+          fcc_advanced=args.cc_advanced,
+          fvariable_mass=args.variable_mass)
