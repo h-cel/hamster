@@ -62,7 +62,6 @@ cprec_rh        = 80        #
 # Optional flags
 write_netcdf    = True      # write netcdf output
 timethis        = True      # check runtime of diagnoser & gridder
-scale_mass      = False     # scale mass with number of particles 
 cc_advanced     = False     # use advanced Clausius-Clapeyron criteria
 verbose         = True      # use as global variable
 variable_mass   = True      # apply variable mass
