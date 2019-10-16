@@ -50,7 +50,7 @@ expID           = "FXvC_r"
 mode            = "test"    # 'test' or 'oper'
 
 ## DIAGNOSIS SETTINGS
-tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
+cheat_temp            = 1.0       # used for E,H,P (if cprec_dqv==None)
 cheat_cc        = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
 cevap_cc        = 0.7       # for H, E diagnosis (lower = more strict)
 cevap_hgt       = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
@@ -86,7 +86,7 @@ main_diagnosis(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           mode=mode,
           gres=1,
           sfnam_base=expID,
-          cheat_dtemp=tdTH,
+          cheat_dtemp=cheat_temp,
           cheat_cc=0.6, 
           cevap_cc=0.5,
           cevap_hgt=0, 
