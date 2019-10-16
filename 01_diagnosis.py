@@ -4,6 +4,50 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
+def str2bol(v):
+    """
+    ACTION: converts (almost) any string to boolean False/True
+    NOTE:   needed for boolean interpretation in parser.add_argument from parsearg in read_cmdargs
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def read_cmdargs():
+    """
+    ACTION: read dates, thresholds and flags from command line
+    RETURN: 'args' contains all
+    DEP:    uses argparse
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
+    parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
+    parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
+    parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
+    parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
+    parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
+    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
+    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            type = float,   default = 0.7)
+    parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           type = float,   default = 0)
+    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            type = float,   default = 0.7)
+    parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           type = float,   default = 0)
+    parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         type = float,   default = 0)
+    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
+    parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = parser.parse_args().ayyyy)
+    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = str(parser.parse_args().ryyyy)+"123118")
+    #print(parser.format_help())
+    args = parser.parse_args()  # namespace
+    return args
 
 def readpom(idate,     # run year
             ipath,      # input data path
@@ -135,7 +179,7 @@ def convertunits(ary_val, garea, var):
     if var in ['H']:
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
-def get_refnpart(refdate, glon, glat):
+def get_refnpart(refdate, ryyyy, glon, glat):
     """
     INPUT
         - refdate [YYYYMMDDHH] :    reference date (str) used for counting midpoint parcels and scaling
@@ -238,12 +282,12 @@ def main_diagnosis(
            mode,
            gres,
            sfnam_base,
-           cheat_dtemp=0., # used for E,H,P (if cprec_dqv==None)
-           cheat_cc=0.7, cevap_cc=0.7, # for H, E diagnosis (lower = more strict)
-           cevap_hgt=0, cheat_hgt=0, # set min ABLh, disabled if 0 
-           cprec_dqv=None, cprec_dtemp=0, cprec_rh=80, # P settings
-           refdate="2002311218",
-           fwrite_netcdf=True,ftimethis=True,fcc_advanced=False,fvariable_mass=True):
+           cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
+           cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
+           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
+           cprec_dqv, cprec_dtemp, cprec_rh,
+           refdate,
+           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass):
 
     """
     comments
@@ -337,7 +381,8 @@ def main_diagnosis(
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
     # read in reference distribution of parcels
-    ary_rnpart   = get_refnpart(refdate=refdate, glon=glon, glat=glat)
+    if fvariable_mass:
+        ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
     
     ## loop over time to read in files
     if verbose:
