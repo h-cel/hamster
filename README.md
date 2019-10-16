@@ -56,29 +56,33 @@ which build up on each other. It is suggested to run them sequentially to obtain
 ### 1. Diagnosis
 The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
 
-To perform the diagnosis for a single month, 
-- [ ] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
-- [ ] adjust the time period for the diagnosis in work/job.pbs 
-- [ ] and submit the job
+There are two options to perform the diagnosis for a single month, 
+1. Run the python script interactively, use
 ```
-vi main.py                  # -- diagnosis settings
-vi work/job.pbs             # -- job settings
-cd work
-qsub job.pbs
-``` 
-You can also run multiple months in parallel (prerequisite: worker environment)
-- [ ] adjust the diagnosis settings (thresholds, etc.) in main.py, e.g. using vim, 
-- [ ] adjust the time period / dates in work/dates.txt
+python main.py
+```
+to run the script. 
+2. Run the script as a job on a cluster. use
+```
+qsub job.pbs 
+```
+to submit the job, which executes main.py
+Note that - without any flags - main.py is run with default values. Use 
+```
+python main.py -h
+```
+for more details on setting dates, thresholds and other options. 
+
+The modular setup of main.py enables to run multiple runs in parallel using the same script (prerequisite: worker environment)
+- [ ] adjust settings in work/dates.txt
 - [ ] adjust the work environment settings in work/workerjob.pbs
 - [ ] and submit the jobs. 
 ```
-vi main.py                  # -- diagnosis settings
-vi dates.py                 # -- job settings (dates)
+vi work/dates.py            # -- job settings (dates, thresholds, options, ...)
 vi work/workerjob.pbs       # -- job settings
 cd work 
-qsub workerjob.pbs
+wsub workerjob.pbs
 ``` 
-
 
 ### 2. Attribution
 The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
