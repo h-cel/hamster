@@ -40,17 +40,16 @@ ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/pa
 opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
 
 ## Time period
-ryyyy           = int(sys.argv[1])#2002
-ayyyy           = int(sys.argv[2])#2002
-am              = int(sys.argv[3])#1
+ryyyy           = int(sys.argv[1])  # 2002
+ayyyy           = int(sys.argv[2])  # 2002
+am              = int(sys.argv[3])  # 1
 ## Experiment ID (choose a letter or short name)
 expID           = "FXvC_r"
 ## mode (test/oper)
-#mode            = "oper"    # 'test' or 'oper'
 mode            = "test"    # 'test' or 'oper'
 
 ## DIAGNOSIS SETTINGS
-cheat_temp            = 1.0       # used for E,H,P (if cprec_dqv==None)
+cheat_temp      = 1.0       # used for E,H,P (if cprec_dqv==None)
 cheat_cc        = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
 cevap_cc        = 0.7       # for H, E diagnosis (lower = more strict)
 cevap_hgt       = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
@@ -66,6 +65,9 @@ cc_advanced     = False     # use advanced Clausius-Clapeyron criteria
 verbose         = True      # use as global variable
 variable_mass   = True      # apply variable mass
 refdate         = str(ryyyy)+"123118"
+
+# resolution of output model
+gres            = 1         # degree
 
 ###############################################################################
 # ------ END USER SETTINGS
@@ -84,16 +86,15 @@ main_diagnosis(ryyyy=ryyyy, ayyyy=ayyyy, am=am,
           ipath=ipath, 
           opath=opath,
           mode=mode,
-          gres=1,
+          gres=gres,
           sfnam_base=expID,
           cheat_dtemp=cheat_temp,
-          cheat_cc=0.6, 
-          cevap_cc=0.5,
-          cevap_hgt=0, 
-          cheat_hgt=0,
+          cheat_cc=cheat_cc, 
+          cevap_cc=cevap_cc,
+          cevap_hgt=cevap_hgt, 
+          cheat_hgt=cheat_hgt,
           cprec_dqv=None, 
-          #cprec_dtemp=0, 
-          cprec_rh=80,
+          cprec_rh=cprec_rh,
           refdate=refdate,
           fwrite_netcdf=write_netcdf,
           ftimethis=timethis, 
