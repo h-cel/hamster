@@ -7,7 +7,7 @@
 ##PBS -l walltime=12:00:00
 ##PBS -l mem=517409341440b
 #PBS -M jessica.keune@ugent.be
-#PBS -m bea
+##PBS -m bea
 
 cd $PBS_O_WORKDIR
 
@@ -30,21 +30,10 @@ echo "Working in directory: 	    ${PBS_O_WORKDIR}"
 echo "-----------------------------------------------------------------------------------------------------------------"
 echo "-----------------------------------------------------------------------------------------------------------------"
 
-
 ## START JOB
 cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WORKDIR}/.
 
-##USAGE: python main.py RYYYY AYYYY AM (run year, analysis year, analysis month)
-time python main.py 2002 2002 12
-
-
-#tdqp=0.0
-#trh=80
-#tpb=1.5
-#tdqe=0.2
-#writep="FALSE"
-#attmethod="random"
-#echo "Moisture source attribution... ${PBS_ARRAYID}" 
-#./workerscript_sourcealloc_months_restart.sh ${PBS_ARRAYID} "6" "v3" $tdqp $trh $tpb $tdqe $writep $attmethod
+## USAGE: python main.py --(options)
+time python main.py --ayyyy 2002 --am 12 --mode test --expid testname --variable_mass False
 
 exit 0
