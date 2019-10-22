@@ -19,6 +19,7 @@ import os, fnmatch
 import timeit
 import netCDF4 as nc4
 import sys
+import argparse
 import time
 from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
@@ -37,31 +38,6 @@ ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/pa
 # path for output data
 opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
 
-## Time period
-ryyyy           = 2002
-ayyyy           = 2002
-am              = 5
-## Experiment ID (choose a letter or short name)
-expID           = "FXvH_r"
-## mode (test/oper)
-mode            = "test"
-
-## DIAGNOSIS SETTINGS
-tdTH            = 1.0       # used for E,H,P (if cprec_dqv==None)
-cheat_cc        = 0.7       # for CC criterion of H, E diagnosis (lower = more strict)
-cevap_cc        = 0.7       # for H, E diagnosis (lower = more strict)
-cevap_hgt       = 0         # up to which height should E be considered? max(cevap_hgt, BLh_max)
-cheat_hgt       = 0         # up to which height should P be considered? max(cheat_hgt, BLh_max)
-cprec_dqv       = None      # 
-cprec_dtemp     = 0         #
-cprec_rh        = 80        # 
-
-# Optional flags
-write_netcdf  = True      # write netcdf output
-timethis      = True      # check runtime of diagnoser & gridder
-scale_mass    = False     # scale mass with number of particles 
-cc_advanced    = False     # use advanced Clausius-Clapeyron criteria
-verbose         = True      # use as global variable
 
 ###############################################################################
 # ------ END USER SETTINGS
@@ -70,25 +46,33 @@ verbose         = True      # use as global variable
 os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
+exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
 
-## (2) RUN
-readNmore(ryyyy=ryyyy, ayyyy=ayyyy, am=am, 
+## (2) get date, thresholds and flags from command line (job script) 
+#      note: this is where we set the default values now. 
+args    = read_cmdargs()
+verbose = args.verbose
+
+## (3) RUN main script with arguments
+main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
           ipath=ipath, 
           opath=opath,
-          mode=mode,
-          gres=1,
-          sfnam_base=expID,
-          cheat_dtemp=tdTH,
-          cheat_cc=0.7, 
-          cevap_cc=0.7,
-          cevap_hgt=0, 
-          cheat_hgt=0,
-          cprec_dqv=None, 
-          #cprec_dtemp=0, 
-          cprec_rh=80,
-          fwrite_netcdf=write_netcdf,
-          ftimethis=timethis, 
-          fcc_advanced=cc_advanced)
+          mode=args.mode,
+          gres=args.gres,
+          sfnam_base=args.expid,
+          cheat_dtemp=args.cheat_dtemp,
+          cheat_cc=args.cheat_cc, 
+          cevap_cc=args.cevap_cc,
+          cevap_hgt=args.cevap_hgt, 
+          cheat_hgt=args.cheat_hgt,
+          cprec_dqv=args.cprec_dqv, 
+          cprec_dtemp=args.cprec_dtemp, 
+          cprec_rh=args.cprec_rh,
+          refdate=args.refdate,
+          fwrite_netcdf=args.write_netcdf,
+          ftimethis=args.timethis, 
+          fcc_advanced=args.cc_advanced,
+          fvariable_mass=args.variable_mass)

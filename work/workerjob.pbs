@@ -2,12 +2,11 @@
 
 #PBS -S /usr/bin/bash
 #PBS -N 01_diagnosis
-#PBS -l nodes=1:ppn=1
-#PBS -l walltime=00:10:00
-##PBS -l walltime=12:00:00
+#PBS -l nodes=1:ppn=9
+#PBS -l walltime=12:00:00
 ##PBS -l mem=517409341440b
 #PBS -M jessica.keune@ugent.be
-##PBS -m bea
+#PBS -m bea
 
 cd $PBS_O_WORKDIR
 
@@ -30,10 +29,13 @@ echo "Working in directory: 	    ${PBS_O_WORKDIR}"
 echo "-----------------------------------------------------------------------------------------------------------------"
 echo "-----------------------------------------------------------------------------------------------------------------"
 
+
 ## START JOB
 cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WORKDIR}/.
 
-## USAGE: python main.py --(options)
-time python main.py --ayyyy 2002 --am 12 --mode test --expid testname --variable_mass False
+##USAGE: python main.py RYYYY AYYYY AM (run year, analysis year, analysis month)
+# workerjob: 
+# > wsub -data data.txt -batch workerjob.pbs
+time python main.py --ayyyy $ayyyy --am $am
 
 exit 0
