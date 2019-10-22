@@ -169,14 +169,14 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
     mv = np.asarray(middle_vec)/sqrt(sum(np.asarray(middle_vec)**2))
 
     ## TRANSFORM BACK TO RADIAN
-    theta = atan(sqrt((mv[0]**2)+(mv[1]**2))/(mv[2]))
+    potT = atan(sqrt((mv[0]**2)+(mv[1]**2))/(mv[2]))
     phi   = atan2(mv[1],mv[0]) # is "same" as atan(y/x), but NEED atan2 (sign!)
 
     ## convert these mid coordinates back to (arc) degree & shift
-    if theta > 0:
-        lat_mid = 90 - theta*(180/PI)
+    if potT > 0:
+        lat_mid = 90 - potT*(180/PI)
     else:
-        lat_mid = -(90 + theta*(180/PI))
+        lat_mid = -(90 + potT*(180/PI))
     if phi > 0:
         lon_mid = (phi*(180/PI)-180)
     else:
@@ -263,7 +263,7 @@ def dTdqs(p_hPa, q_kgkg):
     dTdq = dTde*(e_hPa/((0.622 * e_hPa)/(p_hPa - (0.378 * e_hPa))))
     return(dTdq)
     
-def calc_theta_e(p_Pa, q_kgkg, T_K):
+def calc_pottemp_e(p_Pa, q_kgkg, T_K):
     """
     INPUTS
         - p_Pa : hPa,           pressure
@@ -272,22 +272,22 @@ def calc_theta_e(p_Pa, q_kgkg, T_K):
     
     ACTION
         Dewpoint temperature is calculated to approximate the temperature at
-        the lifting condensation level, which is then used to find theta there,
-        and at last calculate theta-e.
+        the lifting condensation level, which is then used to find potT there,
+        and at last calculate potT-e.
         The procedure is essentially identical to what is used by MetPy,
         with the exception of making use of eq. 6.5 instead of eq. B39
         (see Davies-Jones, 2009; doi=10.1175/2009MWR2774.1)
     
     OUTPUTS
-        - theta-e: K,   equivalent potential temperature
+        - potT-e: K,   equivalent potential temperature
     """
     ## convert specific humidity to mixing ratio (exact)
     r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
     r_gkg  = r_kgkg*1e3
     
-    ## calculate theta using Bolton eq. 7
+    ## calculate potT using Bolton eq. 7
     p_hPa = p_Pa/1e2
-    theta = T_K*(1000/p_hPa)**(0.2854*(1-0.00028*r_gkg))
+    potT = T_K*(1000/p_hPa)**(0.2854*(1-0.00028*r_gkg))
     
     ## convert q into e, vapor pressure (Bolton 1980)
     e_Pa = q_kgkg*p_Pa/(0.622+0.378*q_kgkg)
@@ -300,15 +300,15 @@ def calc_theta_e(p_Pa, q_kgkg, T_K):
     ## temperature at lifting condensation level (all temperatures in KElVIN; eq. 15)
     T_L = (1. / (1. / (T_D - 56.) + np.log(T_K / T_D) / 800.)) + 56.
     
-    ## theta at lifting condensation level (eq. 3.19, Davies-Jones 2009)
-    theta_DL = theta*(((theta/T_L)**(0.28*r_kgkg))*(1+(r_kgkg/EPSILON))**KAPPAD)
+    ## potT at lifting condensation level (eq. 3.19, Davies-Jones 2009)
+    potT_DL = potT*(((potT/T_L)**(0.28*r_kgkg))*(1+(r_kgkg/EPSILON))**KAPPAD)
     
-    ## theta at lifting condensation level (eq. 6.5, Davies-Jones 2009)
-    theta_E = theta_DL*np.exp((L0s-L1s*(T_L-C)+K2*r_kgkg)*r_kgkg/(CPD*T_L))
+    ## potT at lifting condensation level (eq. 6.5, Davies-Jones 2009)
+    potT_E = potT_DL*np.exp((L0s-L1s*(T_L-C)+K2*r_kgkg)*r_kgkg/(CPD*T_L))
     
-    return(theta_E)
+    return(potT_E)
     
-def calc_theta(p_Pa, q_kgkg, T_K):
+def calc_pottemp(p_Pa, q_kgkg, T_K):
     """
     INPUTS
         - p_Pa : hPa,           pressure
@@ -320,13 +320,13 @@ def calc_theta(p_Pa, q_kgkg, T_K):
         to this end, specific humidity is converted into mixing ratio
     
     OUTPUTS
-        - theta: K,     potential temperature
+        - potT: K,     potential temperature
     """
     ## convert specific humidity to mixing ratio (exact)
     r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
     r_gkg  = r_kgkg*1e3
     
-    ## calculate theta using Bolton eq. 7
+    ## calculate potT using Bolton eq. 7
     p_hPa = p_Pa/1e2
     return( T_K*(1000/p_hPa)**(0.2854*(1-0.00028*r_gkg)) )
     
@@ -339,7 +339,7 @@ def moist_ascender(p_Pa, q_kgkg, T_K):
     
     ACTION
         Calculate lifting condensation level (LCL) temperature analogously to
-        theta_e,
+        potT_e,
         then approximate lapse rate at LCL using the approximation from:
             http://glossary.ametsoc.org/wiki/Saturation-adiabatic_lapse_rate
     
@@ -368,3 +368,8 @@ def moist_ascender(p_Pa, q_kgkg, T_K):
     
     return(T_LCL, -MALR) # T_LCL in Kelvin, MALR in K/m
 
+def makegrid(resolution):
+    glat        = np.arange(-90,90+resolution,resolution)
+    glon        = np.arange(-180,180,resolution)
+    gd_area     = gridded_area_exact(glat, res=resolution, nlon=glon.size)
+    return glon, glat, gd_area

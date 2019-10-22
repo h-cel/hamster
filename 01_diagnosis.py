@@ -4,7 +4,52 @@
 MAIN FUNCTIONS FOR 01_diagnosis
 """
 
-def freadpom(idate,     # run year
+def str2bol(v):
+    """
+    ACTION: converts (almost) any string to boolean False/True
+    NOTE:   needed for boolean interpretation in parser.add_argument from parsearg in read_cmdargs
+    """
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+def read_cmdargs():
+    """
+    ACTION: read dates, thresholds and flags from command line
+    RETURN: 'args' contains all
+    DEP:    uses argparse
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
+    parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
+    parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
+    parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
+    parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
+    parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
+    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
+    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            type = float,   default = 0.7)
+    parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           type = float,   default = 0)
+    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            type = float,   default = 0.7)
+    parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           type = float,   default = 0)
+    parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         type = float,   default = 0)
+    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
+    parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = parser.parse_args().ayyyy)
+    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = str(parser.parse_args().ryyyy)+"123118")
+    #print(parser.format_help())
+    args = parser.parse_args()  # namespace
+    return args
+
+def readpom(idate,     # run year
             ipath,      # input data path
             ifile_base):# loop over ifile_base filenames for each date
 
@@ -35,15 +80,13 @@ def freadpom(idate,     # run year
         elif os.path.isfile(ifile):
             # Read file
             if verbose:
-                print("--------------------------------------------------------------------------------------")
-                print("Reading " + ifile)
+                print(" Reading " + ifile)
             ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
             nparticle   = int(ary_dim[0])
             ntrajstep   = int(ary_dim[1])
             nvars       = int(ary_dim[2])
             if verbose:
-                print("nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
-                print("--------------------------------------------------------------------------------------")
+                print("\t nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
             ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
             datav       = (np.asarray(ary_dat).flatten('C'))
             if dataar is None:
@@ -68,10 +111,10 @@ def readparcel(parray):
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
     pres    = calc_pres(dens,temp)          # pressure (Pa)
-    potT    = calc_theta(pres, qv, temp)    # potential temperature (K)
-    eqvpotT = calc_theta_e(pres, qv, temp)  # equivalent potential temperature (K)
+    pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
+    epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
 
-    return lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT 
+    return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
 
 def parceldiff(pvals, meval):
     # difference 
@@ -96,7 +139,7 @@ def gridder(plon, plat, pval,
         1. calculated midpoint of two coordinates
         2. assigns val to gridcell corresponding to midpoint
     RETURN
-        - array of dimension (nlat x nlon) with 0's and one value assigned
+        - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # 1. calculate midpoint
     lat_mid,lon_mid = midpoint_on_sphere(plat[0],plon[0],plat[1],plon[1]) # use own function to calculate midpoint position
@@ -105,11 +148,23 @@ def gridder(plon, plat, pval,
     ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
     # and assign pval to gridcell (init. with 0's)
-    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, nlat, nlon)
+    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-def convertunits(ary_val, gd_area, var):
+def default_thresholds(cprec_dqv):
+    if cprec_dqv == None:
+        #if verbose:
+        #    print("\n--- INFO: cprec_dqv is calculated based on d(pottemp)-threshold!")
+        dummy_dq = 0.2 # this choice doesn't matter too much...
+        cprec_dqv = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
+                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
+        #print("cprec_dqv = ", 1e3*cprec_dqv, "g/kg")
+    elif cprec_dqv > 0:
+        raise SystemExit("------ FATAL ERROR: cprec_dqv should be negative (and in kg/kg)!")
+    return cprec_dqv
+
+def convertunits(ary_val, garea, var):
     """
     INPUT
         - aryval
@@ -120,24 +175,119 @@ def convertunits(ary_val, gd_area, var):
         - returns H as W m-2
     """
     if var in ['P','E']:
-        return(PMASS*ary_val/(1e6*gd_area))
+        return(PMASS*ary_val/(1e6*garea))
     if var in ['H']:
-        return(PMASS*ary_val*CPD/(1e6*gd_area*6*3600))
+        return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
+def get_refnpart(refdate, ryyyy, glon, glat):
+    """
+    INPUT
+        - refdate [YYYYMMDDHH] :    reference date (str) used for counting midpoint parcels and scaling
+        - glon, glat :              reference grid coordinates      
+    ACTION
+        - calculates the reference distribution of parcels using the midpoint of parcels at refdate
+        - NOTE that this is run specific and needs to be adjusted if FLEXPART runs are setup differently
+    DEPEND
+        - uses numpy and functions readpom, gridder
+    RETURN
+        - npart (nlat x nlon) at refdate
+    """
+    if verbose:
+        #print("Reference number of particles: \t" + str(nparticle))
+        print(" * Getting reference distribution...")
 
+    ary_npart   = np.zeros(shape=(glat.size,glon.size))
+    ary         = readpom( idate    = refdate,
+                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
+                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
+    nparticle   = ary.shape[1]
+    for i in range(nparticle):
+        lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
+        ary_npart[:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
+
+    return ary_npart
+
+def scale_mass(ary_val, ary_part, ary_rpart):
+    ary_sval    = np.zeros(shape=(ary_val.shape)) 
+    for itime in range(ary_val.shape[0]):  
+        with np.errstate(divide='ignore', invalid='ignore'):
+            ary_sval[itime,:,:] = ary_val[itime,:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[itime,:,:] ) 
+    return(ary_sval)
+
+def writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart):
+    if verbose:
+        print(" * Writing netcdf output...")
+                
+    # delete nc file if it is present (avoiding error message)
+    try:
+        os.remove(ofile)
+    except OSError:
+        pass
+        
+    # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+    
+    ### create dimensions ###
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('lat', glat.size)
+    nc_f.createDimension('lon', glon.size)
+    
+    # create variables
+    times               = nc_f.createVariable('time', 'i4', 'time')
+    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
+    heats               = nc_f.createVariable('H', 'f4', ('time','lat','lon'))
+    evaps               = nc_f.createVariable('E', 'f4', ('time','lat','lon'))
+    precs               = nc_f.createVariable('P', 'f4', ('time','lat','lon'))
+    nparts              = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
+    
+    # set attributes
+    nc_f.description    = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    heats.units         = 'W m-2'
+    heats.long_name	    = 'surface sensible heat flux'
+    evaps.units         = 'mm'
+    evaps.long_name	    = 'evaporation'
+    precs.units         = 'mm'
+    precs.long_name	    = 'precipitation'
+    nparts.units        = 'int'
+    nparts.long_name    = 'number of parcels (mid pos.)'
+    
+    # write data
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    longitudes[:]       = glon
+    latitudes[:]        = glat
+    heats[:]            = ary_heat[:]
+    evaps[:]            = ary_evap[:]
+    precs[:]            = ary_prec[:]     
+    nparts[:]           = ary_npart[:]
+        
+    # close file
+    nc_f.close()
+        
+    print("\n===============================================================")
+    print("\n Successfully written: "+ofile+" !")
+    print("\n===============================================================")
+        
+        
 ############################################################################
 #############################    SETTINGS ##################################
 
-def readNmore(
+def main_diagnosis(
            ryyyy, ayyyy, am,
            ipath, opath,
            mode,
-           sfnam_base,           
-           dTH_thresh=0., # used for E,H,P (if P_dq_min==None)
-           f_dqsdT=1.0, f_dTdqs=4.0, # for H, E diagnosis (lower = more strict)
-           hmax_E=0, hmax_H=0, # set min ABLh, disabled if 0 
-           P_dq_min=None, P_dT_thresh=0, P_RHmin=80, # P settings
-           write_netcdf=True,timethis=True):
+           gres,
+           sfnam_base,
+           cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
+           cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
+           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
+           cprec_dqv, cprec_dtemp, cprec_rh,
+           refdate,
+           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass):
 
     """
     comments
@@ -147,10 +297,10 @@ def readNmore(
       as much.
     - with the current configuration, there are only 4 parameters:
         
-        dTH_thresh = 1. (Kelvin),
-        f_dqdst == f_dTdqs,
-        P_dT_thresh = 0. (Kelvin), # not a good idea to increase this a lot    
-        P_RHmin=80 (%) 
+        cheat_dtemp = 1. (Kelvin),
+        f_dqdst == cevap_cc,
+        cprec_dtemp = 0. (Kelvin), # not a good idea to increase this a lot    
+        cprec_rh=80 (%) 
         
         thus, the previosuly introduced dz-Parameter could return,
         with the advantage of being used both for E,H & P 
@@ -160,42 +310,49 @@ def readNmore(
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
     sfilename = str(sfnam_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofile     = opath+sfilename
 
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
     if verbose:
-        print("\n============================================================================================================")
-        print(os.system("figlet -f bubble hamster"))
+        disclaimer()
+        print("\n SETTINGS :")
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
-        print("\n INPUT PATH: \t", 	ipath)
-        print("\n OUTPUT FILE: \t", 	opath+sfilename)
+        print("\n input path: \t", 	ipath)
+        print("\n============================================================================================================")
+        print(" ! using variable mass: \t" +str(fvariable_mass) )
+        if fvariable_mass:
+            print(" \t ! reference date for number of particles: \t" +str(refdate) )
+        print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
+        if fwrite_netcdf:
+            print(" \t ! with grid resolution:: \t", str(gres) )
+            print(" \t ! output file: \t", opath+sfilename)
+        print(" ! using internal timer: \t" +str(ftimethis) )
+        print(" ! mode: \t" +str(mode))
+        print(" ! DIAGNOSIS SETTINGS")
+        print(" \t ! HEAT: ")
+        print(" \t \t  dTH > " + str(cheat_dtemp) )
+        print(" \t \t  abs(dqv) < "+str(cheat_cc)+" * (dTH) * ...")
+        print(" \t \t  ztra[0] <  max("+str(cheat_hgt)+", hpbl_max) ")
+        print(" \t \t  ztra[1] <  max("+str(cheat_hgt)+", hpbl_max) ")
+        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
+        print(" \t ! EVAPORATION: ")
+        print(" \t \t  abs(dTH) < "+str(cevap_cc)+" * (dqv) * ...")
+        print(" \t \t  ztra[0] <  max("+str(cevap_hgt)+", hpbl_max) ")
+        print(" \t \t  ztra[1] <  max("+str(cevap_hgt)+", hpbl_max) ")
+        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
+        print(" \t ! PRECIPITATION: ")
+        print(" \t \t  dqv < "+str(cprec_dqv) )
+        print(" \t \t  rh[0] > "+str(cprec_rh) )
         print("\n============================================================================================================")
         print("\n============================================================================================================")
-        
-    ##########################    EXPERIMENTAL    #############################
-    if P_dq_min == None:
-        #if verbose:
-        #    print("\n--- INFO: P_dq_min is calculated based on d(theta)-threshold!")
-        dummy_dq = 0.2 # this choice doesn't matter too much...
-        P_dq_min = -(1/(calc_theta_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_theta_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("P_dq_min = ", 1e3*P_dq_min, "g/kg")
-    elif P_dq_min > 0:
-        raise SystemExit("------ FATAL ERROR: P_dq_min should be negative (and in kg/kg)!")
-    ###########################################################################
-        
+
     ## start timer
-    if timethis:
+    if ftimethis:
         megatic = timeit.default_timer()
     
-    ## grid
-    resolution  = 1. # in degrees
-    glat        = np.arange(-90,90+resolution,resolution)
-    glon        = np.arange(-180,180,resolution)
-    nlat        = glat.size
-    nlon        = glon.size
-    gd_area     = gridded_area_exact(glat, res=resolution, nlon=nlon)
-    
+    glon, glat, garea = makegrid(resolution=gres)
+
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
     date_end        = date_bgn + relativedelta(months=1)
@@ -214,24 +371,33 @@ def readNmore(
         ntime       = 1
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
-        print("....\n")
-        print("TESTMODE: only processing "+str(date_seq) + " and looping over 1000 parcels")
-        print("....\n")
 
     ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_evap     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_prec     = np.zeros(shape=(ntime,nlat,nlon))
-    ary_npart    = np.zeros(shape=(ntime,nlat,nlon))
+    ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_evap     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_prec     = np.zeros(shape=(ntime,glat.size,glon.size))
+    ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
 
+    # set some default thresholds
+    cprec_dqv    = default_thresholds(cprec_dqv) 
+    # read in reference distribution of parcels
+    if fvariable_mass:
+        ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
+    
+    ## loop over time to read in files
+    if verbose:
+        print("\n=== \t Start main program...\n")
     for ix in range(ntime):
+        if verbose:
+                print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdate_seq[ix]))
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary = freadpom(idate    = date_seq[ix], 
+        ary = readpom( idate    = date_seq[ix], 
                        ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy), 
                        ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
         nparticle   = ary.shape[1]
-        print("TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
+        if verbose:
+            print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
         #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
@@ -243,15 +409,16 @@ def readNmore(
         for i in ntot:
 
             ## - 2.1) read parcel information
-            lons, lats, temp, ztra, qv, hpbl, dens, pres, potT, eqvpotT = readparcel(ary[:,i,:])
+            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
 
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
             hpbl_max    = parceldiff(hpbl, 'max')
-            dT          = parceldiff(temp, 'diff')
-            dTH         = parceldiff(potT, 'diff')
-            dTHe        = parceldiff(eqvpotT, 'diff')
+            dTH         = parceldiff(pottemp, 'diff')
+            dTHe        = parceldiff(epottemp, 'diff')
             dz          = parceldiff(ztra, 'diff')
+            if fcc_advanced:
+                dT          = parceldiff(temp, 'diff')
 
             ## - 2.3) diagnose fluxes
 
@@ -259,97 +426,66 @@ def readNmore(
             ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
             ## (b) precipitation
-            if ( dq < P_dq_min and 
-                 q2rh(qv[0], pres[0], temp[0]) > P_RHmin  and
-                 q2rh(qv[1], pres[1], temp[1]) > P_RHmin ):
+            if ( dq < cprec_dqv and 
+                 q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                 q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
                 ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
             ## (c) evaporation
-            if ( ztra[0] <  max(hmax_E, hpbl_max)  and
-                 ztra[1] <  max(hmax_E, hpbl_max)  and
-                 (dTHe - dTH) > dTH_thresh and
-                 ( (dT > 0 and dT       < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
-                   (dT < 0 and abs(dTH) < f_dTdqs * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
-                 )
-               ):
-                ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+            if fcc_advanced:
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                     (dTHe - dTH) > cheat_dtemp and
+                     ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
+                       (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
+                     )
+                   ):
+                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+            else:
+                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                     (dTHe - dTH) > cheat_dtemp and
+                     abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
+                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
 
             ## (d) sensible heat
-            if ( ztra[0] <  max(hmax_H, hpbl_max) and 
-                 ztra[1] <  max(hmax_H, hpbl_max) and 
-                 (dTH > dTH_thresh) and 
-                 ( (dT > 0 and abs(dq) < f_dqsdT * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
-                   (dT < 0 and abs(dq) < f_dqsdT * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
-                 )
-               ):
-                ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+            if fcc_advanced:
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                     (dTH > cheat_dtemp) and 
+                     ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
+                       (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
+                     )
+                   ):
+                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+            else:
+                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                     (dTH > cheat_dtemp) and 
+                     abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+
 
         # Convert units
-        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], gd_area, "P")
-        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], gd_area, "E")
-        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], gd_area, "H")
+        if verbose:
+            print(" * Converting units...")
+        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
+        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
+        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
 
-    if timethis:
+    # Scale with parcel mass
+    if fvariable_mass:
+        if verbose: 
+            print(" * Applying variable mass...")
+        ary_prec         = scale_mass(ary_prec, ary_npart, ary_rnpart)
+        ary_evap         = scale_mass(ary_evap, ary_npart, ary_rnpart)
+        ary_heat         = scale_mass(ary_heat, ary_npart, ary_rnpart)
+
+    if ftimethis:
         megatoc = timeit.default_timer()
-        print("\n=======    main loop completed, total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds")
+        if verbose:
+            print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
-    ###########################################################################    
-    
-    if write_netcdf:
-            
-        ### delete nc file if it is present (avoiding error message)
-        try:
-            os.remove(opath+sfilename)
-        except OSError:
-            pass
-        
-        ### create netCDF4 instance
-        nc_f = nc4.Dataset(opath+sfilename,'w', format='NETCDF4')
-        
-        ### create dimensions ###
-        nc_f.createDimension('time', ntime)
-        nc_f.createDimension('lat', nlat)
-        nc_f.createDimension('lon', nlon)
-    
-        ### create variables
-        times       = nc_f.createVariable('time', 'i4', 'time')
-        latitudes   = nc_f.createVariable('lat', 'f4', 'lat')
-        longitudes  = nc_f.createVariable('lon', 'f4', 'lon')
-        heats       = nc_f.createVariable('H', 'f4', ('time','lat','lon'))
-        evaps       = nc_f.createVariable('E', 'f4', ('time','lat','lon'))
-        precs       = nc_f.createVariable('P', 'f4', ('time','lat','lon'))
-        nparts      = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
-    
-        ### set attributes
-        nc_f.description    = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
-        times.units         = 'hours since 1900-01-01 00:00:00'
-        times.calendar      = 'Standard' # do NOT use gregorian here!
-        latitudes.units     = 'degrees_north'
-        longitudes.units    = 'degrees_east'
-        heats.units         = 'W m-2'
-        heats.long_name	    = 'surface sensible heat flux'
-        evaps.units         = 'mm'
-        evaps.long_name	    = 'evaporation'
-        precs.units         = 'mm'
-        precs.long_name	    = 'precipitation'
-        nparts.units        = 'int'
-        nparts.long_name    = 'number of parcels (mid pos.)'
-    
-        ### write data
-        times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
-        longitudes[:]       = glon
-        latitudes[:]        = glat
-        
-        heats[:]            = ary_heat[:]
-        evaps[:]            = ary_evap[:]
-        precs[:]            = ary_prec[:]     
-        nparts[:]           = ary_npart[:]
-        
-        ### close file
-        nc_f.close()
-        
-        print("\n===============================================================")
-        print("\n======  Successfully written: "+opath+sfilename+ " !")
-        print("\n===============================================================")
-        
-        
+    if fwrite_netcdf:
+        writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart)
