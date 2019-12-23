@@ -32,7 +32,7 @@ import datetime as datetime
 
 ## Paths
 # work directory
-wpath           = "/kyukon/data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster"
+wpath           = os.getcwd()
 # path to input data
 ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"
 # path for output data
