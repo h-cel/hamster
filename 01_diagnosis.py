@@ -29,6 +29,7 @@ def read_cmdargs():
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
+    parser.add_argument('--diagnosis',  '-dgn', help = "diagnosis method (KAS, SOD, SAJ)",                              type = str,     default = "KAS")
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
     parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
@@ -282,6 +283,7 @@ def main_diagnosis(
            mode,
            gres,
            sfnam_base,
+           diagnosis,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
@@ -413,58 +415,84 @@ def main_diagnosis(
 
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
-            hpbl_max    = parceldiff(hpbl, 'max')
-            dTH         = parceldiff(pottemp, 'diff')
-            dTHe        = parceldiff(epottemp, 'diff')
-            dz          = parceldiff(ztra, 'diff')
-            if fcc_advanced:
-                dT          = parceldiff(temp, 'diff')
+            if diagnosis == 'KAS':
+                hpbl_max    = parceldiff(hpbl, 'max')
+                dTH         = parceldiff(pottemp, 'diff')
+                dTHe        = parceldiff(epottemp, 'diff')
+                #dz          = parceldiff(ztra, 'diff')
+                if fcc_advanced:
+                    dT          = parceldiff(temp, 'diff')
+            elif diagnosis == 'SOD':
+                hpbl_avg    = parceldiff(hpbl, 'mean')
+                dTH         = parceldiff(pottemp, 'diff')
 
             ## - 2.3) diagnose fluxes
 
             ## (a) number of parcels
             ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
-            ## (b) precipitation
-            if ( dq < cprec_dqv and 
-                 q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                 q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
-                ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+            ##  - 2.3)-KAS: Keune and Schumacher
+            if diagnosis == 'KAS':
 
-            ## (c) evaporation
-            if fcc_advanced:
-                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
-                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
-                     (dTHe - dTH) > cheat_dtemp and
-                     ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
-                       (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
-                     )
+                ## (b) precipitation
+                if ( dq < cprec_dqv and 
+                     q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                     q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
+                ## (c) evaporation
+                if fcc_advanced:
+                    if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                         ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                         (dTHe - dTH) > cheat_dtemp and
+                         ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
+                           (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
+                         )
+                       ):
+                        ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                else:
+                    if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
+                         ztra[1] <  max(cevap_hgt, hpbl_max)  and
+                         (dTHe - dTH) > cheat_dtemp and
+                         abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
+                        ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
+                ## (d) sensible heat
+                if fcc_advanced:
+                    if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                         ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                         (dTH > cheat_dtemp) and 
+                         ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
+                           (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
+                         )
+                       ):
+                        ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+                else:
+                    if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
+                         ztra[1] <  max(cheat_hgt, hpbl_max) and 
+                         (dTH > cheat_dtemp) and 
+                         abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
+                        ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+
+            ##  - 2.3)-SOD: Sodemann et al., 2008
+            elif diagnosis == 'SOD':
+         
+                ## (b) precipitation
+                if ( dq < 0 and 
+                     q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+
+                ## (c) evaporation
+                if ( dq > 0.0002 and 
+                     (ztra[0]+ztra[1])/2 <  hpbl_avg
                    ):
                     ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-            else:
-                if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
-                     ztra[1] <  max(cevap_hgt, hpbl_max)  and
-                     (dTHe - dTH) > cheat_dtemp and
-                     abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
-                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-
-
-            ## (d) sensible heat
-            if fcc_advanced:
-                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
-                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
-                     (dTH > cheat_dtemp) and 
-                     ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
-                       (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
-                     )
+    
+                ## (d) sensible heat (not used originally; analogous to evaporation)
+                if ( (dTH > dTH_thresh) and 
+                    (ztra[0]+ztra[1])/2 <  hpbl_avg
                    ):
-                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
-            else:
-                if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
-                     ztra[1] <  max(cheat_hgt, hpbl_max) and 
-                     (dTH > cheat_dtemp) and 
-                     abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
-                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
 
 
         # Convert units
