@@ -489,18 +489,38 @@ def main_diagnosis(
                     ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
     
                 ## (d) sensible heat (not used originally; analogous to evaporation)
-                if ( (dTH > dTH_thresh) and 
+                if ( (dTH > cheat_dtemp) and 
                     (ztra[0]+ztra[1])/2 <  hpbl_avg
                    ):
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
 
+            ##  - 2.3)-SAJ: Stohl and James, 2004
+            elif diagnosis == 'SAJ':
+
+                ## (b) precipitation
+                if ( dq < 0 ):
+                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+    
+                ## (c) evaporation
+                if ( dq > 0 ):
+                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
         # Convert units
         if verbose:
             print(" * Converting units...")
-        ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
-        ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
-        ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
+        if diagnosis == 'KAS' or diagnosis == 'SOD':
+            ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
+            ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
+            ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
+        elif diagnosis =='SAJ':
+            # first calculate column sums, assign to E or P according to sign
+            colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
+            colsum_pos = np.zeros_like(colsum)
+            colsum_neg = np.zeros_like(colsum)
+            colsum_pos[np.where(colsum>0)] = colsum[np.where(colsum>0)]
+            colsum_neg[np.where(colsum<0)] = colsum[np.where(colsum<0)]
+            ary_evap[ix,:,:] = convertunits(colsum_pos, garea, "E")
+            ary_prec[ix,:,:] = convertunits(colsum_neg, garea, "P")
 
     # Scale with parcel mass
     if fvariable_mass:
