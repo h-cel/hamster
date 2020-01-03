@@ -279,10 +279,10 @@ def writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart):
 
 def main_diagnosis(
            ryyyy, ayyyy, am,
-           ipath, opath,
+           ipath, ifile_base, 
+           opath, ofile_base,
            mode,
            gres,
-           sfnam_base,
            diagnosis,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
@@ -311,8 +311,8 @@ def main_diagnosis(
 
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
-    sfilename = str(sfnam_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
-    ofile     = opath+sfilename
+    ofilename = str(ofile_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofile     = opath+"/"+ofilename
 
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
@@ -328,7 +328,7 @@ def main_diagnosis(
         print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
         if fwrite_netcdf:
             print(" \t ! with grid resolution:: \t", str(gres) )
-            print(" \t ! output file: \t", opath+sfilename)
+            print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! mode: \t" +str(mode))
         print(" ! DIAGNOSIS SETTINGS")
@@ -395,8 +395,8 @@ def main_diagnosis(
         print("Processing "+str(fdate_seq[ix]))
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
         ary = readpom( idate    = date_seq[ix], 
-                       ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy), 
-                       ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
+                       ipath    = ipath+"/"+str(ryyyy), 
+                       ifile_base = ifile_base)
         nparticle   = ary.shape[1]
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")

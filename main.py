@@ -10,7 +10,8 @@ To execute interactively:
 """
 
 ###########################################################################
-#############################    MODULES ##################################
+##--- MODULES
+###########################################################################
 
 import gzip
 import pandas as pd
@@ -25,23 +26,27 @@ from datetime import datetime, timedelta
 from math import sin,cos,acos,atan,atan2,sqrt
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
+import imp
 
-###############################################################################
-## ------ USER SETTINGS
-###############################################################################
+###########################################################################
+##--- PATHS
+###########################################################################
 
-## Paths
-# work directory
-wpath           = os.getcwd()
-# path to input data
-ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"
-# path for output data
-opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
+## determine working directory
+wpath = os.getcwd()
 
+## load input and output paths & input file name base(s)
+with open(wpath+"/paths.txt") as f: 
+    content = imp.load_source('','',f) # load like a python module
+    ipath = content.ipath # input path
+    ibase = content.ibase # input file name base(s)
+    opath = content.opath # output path
+    # note: could load output file name base from txt file too,
+    # e.g. in addition to experiment name/ID from command line 
 
-###############################################################################
-# ------ END USER SETTINGS
-###############################################################################
+###########################################################################
+##--- MAIN
+###########################################################################
 
 os.chdir(wpath)
 
@@ -58,11 +63,12 @@ verbose = args.verbose
 
 ## (3) RUN main script with arguments
 main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath=ipath, 
+          ipath=ipath,
+          ifile_base=ibase, 
           opath=opath,
+          ofile_base=args.expid,
           mode=args.mode,
           gres=args.gres,
-          sfnam_base=args.expid,
           diagnosis=args.diagnosis,
           cheat_dtemp=args.cheat_dtemp,
           cheat_cc=args.cheat_cc, 
