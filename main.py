@@ -23,7 +23,7 @@ import sys
 import argparse
 import time
 from datetime import datetime, timedelta
-from math import sin,cos,acos,atan,atan2,sqrt
+from math import sin,cos,acos,atan,atan2,sqrt,floor
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
 import imp
@@ -55,6 +55,7 @@ exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
+exec(open("02_attribution.py").read()) ### PRELIM
 
 ## (2) get date, thresholds and flags from command line (job script) 
 #      note: this is where we set the default values now. 
@@ -62,14 +63,15 @@ args    = read_cmdargs()
 verbose = args.verbose
 
 ## (3) RUN main script with arguments
-main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath=ipath,
-          ifile_base=ibase, 
+main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+          ipath="/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/sampledata",#ipath,
+          ifile_base=["pom_ecoreg5_traj10d_AUXTRAJ_"],#ibase, ### NOTE, must feed in list as of now
           opath=opath,
-          ofile_base=args.expid,
+          ofile_base="test",#args.expid,
           mode=args.mode,
           gres=args.gres,
           diagnosis=args.diagnosis,
+          ctraj_len=10, ### PRELIM
           cheat_dtemp=args.cheat_dtemp,
           cheat_cc=args.cheat_cc, 
           cevap_cc=args.cevap_cc,
