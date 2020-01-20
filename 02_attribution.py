@@ -13,7 +13,7 @@ def main_attribution(
            opath, ofile_base,
            mode,
            gres,
-           diagnosis,
+           tdiagnosis,
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
@@ -199,14 +199,14 @@ def main_attribution(
 
             ## - 2.2) parcel changes / criteria
             dq          = trajparceldiff(qv[:], 'diff') 
-            if diagnosis == 'KAS':
+            if tdiagnosis == 'KAS':
                 hpbl_max    = parceldiff(hpbl[:], 'max')
                 dTH         = trajparceldiff(pottemp[:], 'diff')
                 dTHe        = trajparceldiff(epottemp[:], 'diff')
                 #dz          = parceldiff(ztra, 'diff')
                 #if fcc_advanced:
                 #    dT          = parceldiff(temp[:2], 'diff')
-            elif diagnosis == 'SOD':
+            elif tdiagnosis == 'SOD':
                 hpbl_avg    = parceldiff(hpbl[:], 'mean')
                 dTH         = trajparceldiff(pottemp[:], 'diff')
 
@@ -217,7 +217,7 @@ def main_attribution(
                 ary_npart[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=int(1), glon=glon, glat=glat)
 
             ##  - 2.3)-KAS: Keune and Schumacher
-            if diagnosis == 'KAS':
+            if tdiagnosis == 'KAS':
 
                 ## (b) E2P, evaporation resulting in precipitation
                 if ( dq[0] < cprec_dqv and 
@@ -236,7 +236,7 @@ def main_attribution(
                        ihf_E = tml + 2
 
                     # SHOULD I MAKE USE OF PARCELDIFF instead of PBL_check???
-                    in_PBL     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, diagnosis=diagnosis)                      
+                    in_PBL     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
                     evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
                     evap_plaus = abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
                     evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
@@ -257,7 +257,7 @@ def main_attribution(
                 ## (c) H, surface sensible heat arriving in PBL (or nocturnal layer)
                 if ( ztra[0] < np.max(hpbl[:4]) ):
 
-                    in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, diagnosis=diagnosis)
+                    in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
                     heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
                     heat_plaus = abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
                     heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
@@ -275,7 +275,7 @@ def main_attribution(
 
 
             ##  - 2.3)-SOD: Sodemann et al., 2008
-#            elif diagnosis == 'SOD':
+#            elif tdiagnosis == 'SOD':
 #         
 #                ## (b) precipitation
 #                if ( dq < 0 and 
@@ -295,7 +295,7 @@ def main_attribution(
 #                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
 #
 #            ##  - 2.3)-SAJ: Stohl and James, 2004
-#            elif diagnosis == 'SAJ':
+#            elif tdiagnosis == 'SAJ':
 #
 #                ## (b) precipitation
 #                if ( dq < 0 ):
@@ -308,11 +308,11 @@ def main_attribution(
         # Convert units
         if verbose:
             print(" * Converting units...")
-        if diagnosis == 'KAS' or diagnosis == 'SOD':
+        if tdiagnosis == 'KAS' or tdiagnosis == 'SOD':
             ary_etop[ix,:,:,:] = convertunits(ary_etop[ix,:,:,:], garea, "E")
             ary_heat[ix,:,:,:] = convertunits(ary_heat[ix,:,:,:], garea, "H")
             # NOTE: the above works for 3D arrays too thanks to numpy broadcasting!
-#        elif diagnosis =='SAJ':
+#        elif tdiagnosis =='SAJ':
 #            # first calculate column sums, assign to E or P according to sign
 #            colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
 #            colsum_pos = np.zeros_like(colsum)

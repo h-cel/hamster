@@ -11,14 +11,14 @@ To execute interactively:
 
 """
 
-def PBL_check(z, h, seth, diagnosis):
+def PBL_check(z, h, seth, tdiagnosis):
 
-    if diagnosis == 'KAS':
+    if tdiagnosis == 'KAS':
         h[h<seth] = seth
         before_inside = np.logical_or( z[1:] < h[:-1], z[1:]  < h[1:])  
         after_inside  = np.logical_or(z[:-1] < h[:-1], z[:-1] < h[1:])  
         change_inside = np.logical_and(before_inside, after_inside)
-    elif diagnosis == 'SOD':   
+    elif tdiagnosis == 'SOD':   
         change_inside = ((z[1:]+z[:-1])/2) < 1.5*((h[1:]+h[:-1])/2)
         # NOTE: factor 1.5 is hardcoded      
 

@@ -29,7 +29,7 @@ def read_cmdargs():
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
-    parser.add_argument('--diagnosis',  '-dgn', help = "diagnosis method (KAS, SOD, SAJ)",                              type = str,     default = "KAS")
+    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD, SAJ)",                              type = str,     default = "KAS")
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
     parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
@@ -283,7 +283,7 @@ def main_diagnosis(
            opath, ofile_base,
            mode,
            gres,
-           diagnosis,
+           tdiagnosis,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
@@ -415,14 +415,14 @@ def main_diagnosis(
 
             ## - 2.2) parcel changes / criteria
             dq          = parceldiff(qv, 'diff') 
-            if diagnosis == 'KAS':
+            if tdiagnosis == 'KAS':
                 hpbl_max    = parceldiff(hpbl, 'max')
                 dTH         = parceldiff(pottemp, 'diff')
                 dTHe        = parceldiff(epottemp, 'diff')
                 #dz          = parceldiff(ztra, 'diff')
                 if fcc_advanced:
                     dT          = parceldiff(temp, 'diff')
-            elif diagnosis == 'SOD':
+            elif tdiagnosis == 'SOD':
                 hpbl_avg    = parceldiff(hpbl, 'mean')
                 dTH         = parceldiff(pottemp, 'diff')
 
@@ -432,7 +432,7 @@ def main_diagnosis(
             ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
             ##  - 2.3)-KAS: Keune and Schumacher
-            if diagnosis == 'KAS':
+            if tdiagnosis == 'KAS':
 
                 ## (b) precipitation
                 if ( dq < cprec_dqv and 
@@ -475,7 +475,7 @@ def main_diagnosis(
                         ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
 
             ##  - 2.3)-SOD: Sodemann et al., 2008
-            elif diagnosis == 'SOD':
+            elif tdiagnosis == 'SOD':
          
                 ## (b) precipitation
                 if ( dq < 0 and 
@@ -495,7 +495,7 @@ def main_diagnosis(
                     ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
 
             ##  - 2.3)-SAJ: Stohl and James, 2004
-            elif diagnosis == 'SAJ':
+            elif tdiagnosis == 'SAJ':
 
                 ## (b) precipitation
                 if ( dq < 0 ):
@@ -508,11 +508,11 @@ def main_diagnosis(
         # Convert units
         if verbose:
             print(" * Converting units...")
-        if diagnosis == 'KAS' or diagnosis == 'SOD':
+        if tdiagnosis == 'KAS' or tdiagnosis == 'SOD':
             ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
             ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
             ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
-        elif diagnosis =='SAJ':
+        elif tdiagnosis =='SAJ':
             # first calculate column sums, assign to E or P according to sign
             colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
             colsum_pos = np.zeros_like(colsum)
