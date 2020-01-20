@@ -55,7 +55,8 @@ exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
-exec(open("02_attribution.py").read()) ### PRELIM
+exec(open("02_attribution.py").read())
+exec(open("hamsterfunctions.py").read())
 
 ## (2) get date, thresholds and flags from command line (job script) 
 #      note: this is where we set the default values now. 
@@ -63,25 +64,49 @@ args    = read_cmdargs()
 verbose = args.verbose
 
 ## (3) RUN main script with arguments
-main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath="/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/sampledata",#ipath,
-          ifile_base=["pom_ecoreg5_traj10d_AUXTRAJ_"],#ibase, ### NOTE, must feed in list as of now
+
+main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+          ipath=ipath,
+          ifile_base=ibase, 
           opath=opath,
-          ofile_base="test",#args.expid,
+          ofile_base=args.expid,
           mode=args.mode,
           gres=args.gres,
           diagnosis=args.diagnosis,
-          ctraj_len=10, ### PRELIM
           cheat_dtemp=args.cheat_dtemp,
-          cheat_cc=args.cheat_cc, 
+          cheat_cc=args.cheat_cc,
           cevap_cc=args.cevap_cc,
-          cevap_hgt=args.cevap_hgt, 
+          cevap_hgt=args.cevap_hgt,
           cheat_hgt=args.cheat_hgt,
-          cprec_dqv=args.cprec_dqv, 
-          cprec_dtemp=args.cprec_dtemp, 
+          cprec_dqv=args.cprec_dqv,
+          cprec_dtemp=args.cprec_dtemp,
           cprec_rh=args.cprec_rh,
           refdate=args.refdate,
           fwrite_netcdf=args.write_netcdf,
-          ftimethis=args.timethis, 
+          ftimethis=args.timethis,
           fcc_advanced=args.cc_advanced,
           fvariable_mass=args.variable_mass)
+
+
+#main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+#          ipath=ipath,
+#          ifile_base=ibase,
+#          opath=opath,
+#          ofile_base=args.expid,
+#          mode=args.mode,
+#          gres=args.gres,
+#          diagnosis=args.diagnosis,
+#          ctraj_len=10, ### PRELIM
+#          cheat_dtemp=args.cheat_dtemp,
+#          cheat_cc=args.cheat_cc, 
+#          cevap_cc=args.cevap_cc,
+#          cevap_hgt=args.cevap_hgt, 
+#          cheat_hgt=args.cheat_hgt,
+#          cprec_dqv=args.cprec_dqv, 
+#          cprec_dtemp=args.cprec_dtemp, 
+#          cprec_rh=args.cprec_rh,
+#          refdate=args.refdate,
+#          fwrite_netcdf=args.write_netcdf,
+#          ftimethis=args.timethis, 
+#          fcc_advanced=args.cc_advanced,
+#          fvariable_mass=args.variable_mass)
