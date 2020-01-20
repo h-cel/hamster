@@ -1,0 +1,11 @@
+# This file contains all required paths to run hamster
+
+# INPUT path
+ipath = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal" 
+
+# INPUT file name base
+ibase = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
+
+# OUTPUT path
+opath = "/scratch/gent/vo/000/gvo00090/vsc42561/data/flexpart/hamster/01_diagnosis" 
+#opath = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis"

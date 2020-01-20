@@ -10,7 +10,8 @@ To execute interactively:
 """
 
 ###########################################################################
-#############################    MODULES ##################################
+##--- MODULES
+###########################################################################
 
 import gzip
 import pandas as pd
@@ -22,26 +23,30 @@ import sys
 import argparse
 import time
 from datetime import datetime, timedelta
-from math import sin,cos,acos,atan,atan2,sqrt
+from math import sin,cos,acos,atan,atan2,sqrt,floor
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
+import imp
 
-###############################################################################
-## ------ USER SETTINGS
-###############################################################################
+###########################################################################
+##--- PATHS
+###########################################################################
 
-## Paths
-# work directory
-wpath           = "/kyukon/data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster"
-# path to input data
-ipath           = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"
-# path for output data
-opath           = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis/"
+## determine working directory
+wpath = os.getcwd()
 
+## load input and output paths & input file name base(s)
+with open(wpath+"/paths.txt") as f: 
+    content = imp.load_source('','',f) # load like a python module
+    ipath = content.ipath # input path
+    ibase = content.ibase # input file name base(s)
+    opath = content.opath # output path
+    # note: could load output file name base from txt file too,
+    # e.g. in addition to experiment name/ID from command line 
 
-###############################################################################
-# ------ END USER SETTINGS
-###############################################################################
+###########################################################################
+##--- MAIN
+###########################################################################
 
 os.chdir(wpath)
 
@@ -50,6 +55,7 @@ exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
+exec(open("02_attribution.py").read()) ### PRELIM
 
 ## (2) get date, thresholds and flags from command line (job script) 
 #      note: this is where we set the default values now. 
@@ -57,12 +63,15 @@ args    = read_cmdargs()
 verbose = args.verbose
 
 ## (3) RUN main script with arguments
-main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath=ipath, 
+main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+          ipath="/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/sampledata",#ipath,
+          ifile_base=["pom_ecoreg5_traj10d_AUXTRAJ_"],#ibase, ### NOTE, must feed in list as of now
           opath=opath,
+          ofile_base="test",#args.expid,
           mode=args.mode,
           gres=args.gres,
-          sfnam_base=args.expid,
+          diagnosis=args.diagnosis,
+          ctraj_len=10, ### PRELIM
           cheat_dtemp=args.cheat_dtemp,
           cheat_cc=args.cheat_cc, 
           cevap_cc=args.cevap_cc,
