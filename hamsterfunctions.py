@@ -228,9 +228,11 @@ def PBL_check(z, h, seth, tdiagnosis):
 
 def scale_mass(ary_val, ary_part, ary_rpart):
     ary_sval    = np.zeros(shape=(ary_val.shape)) 
-    for itime in range(ary_val.shape[0]):  
-        with np.errstate(divide='ignore', invalid='ignore'):
-            ary_sval[itime,:,:] = ary_val[itime,:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[itime,:,:] ) 
+    #for itime in range(ary_val.shape[0]):  
+    #    with np.errstate(divide='ignore', invalid='ignore'):
+    #        ary_sval[itime,:,:] = ary_val[itime,:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[itime,:,:] ) 
+    with np.errstate(divide='ignore', invalid='ignore'):
+         ary_sval[:,:] = ary_val[:,:] * np.nan_to_num( ary_rpart[:,:]/ary_part[:,:] ) 
     return(ary_sval)
 
 
@@ -292,10 +294,7 @@ def gridder(plon, plat, pval,
 
 
 
-def writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart):
-    if verbose:
-        print(" * Writing netcdf output...")
-                
+def writeemptync(ofile,fdate_seq,glon,glat):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -338,22 +337,25 @@ def writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart):
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
     longitudes[:]       = glon
     latitudes[:]        = glat
-    heats[:]            = ary_heat[:]
-    evaps[:]            = ary_evap[:]
-    precs[:]            = ary_prec[:]     
-    nparts[:]           = ary_npart[:]
-
     # close file
     nc_f.close()
-        
-    print("\n===============================================================")
-    print("\n Successfully written: "+ofile+" !")
-    print("\n===============================================================")
+    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
 
+
+def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart):
+    if verbose:
+        print(" * Writing to netcdf...")
+
+    nc_f = nc4.Dataset(ofile, 'r+')
+    nc_f['P'][ix,:,:]       = ary_prec
+    nc_f['E'][ix,:,:]       = ary_evap
+    nc_f['H'][ix,:,:]       = ary_heat
+    nc_f['n_part'][ix,:,:]  = ary_npart
+    nc_f.close()
 
 def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart):
     if verbose:
-        print(" * Writing netcdf output...")
+        print(" * Creating empty netcdf file...")
                 
     # convert date objects to datetime objects if necessary
     if type(fdate_seq[0]) == datetime.date:

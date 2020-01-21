@@ -101,15 +101,12 @@ def main_diagnosis(
 
     # TESTMODE
     if mode == "test":
-        ntime       = 1
+        ntime       = 5
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
 
-    ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ntime,glat.size,glon.size))
-    ary_evap     = np.zeros(shape=(ntime,glat.size,glon.size))
-    ary_prec     = np.zeros(shape=(ntime,glat.size,glon.size))
-    ary_npart    = np.zeros(shape=(ntime,glat.size,glon.size))
+    if fwrite_netcdf:
+        writeemptync(ofile,fdate_seq,glon,glat)
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
@@ -121,6 +118,12 @@ def main_diagnosis(
     if verbose:
         print("\n=== \t Start main program...\n")
     for ix in range(ntime):
+
+        # pre-allocate arrays
+        ary_heat     = np.zeros(shape=(glat.size,glon.size))
+        ary_evap     = np.zeros(shape=(glat.size,glon.size))
+        ary_prec     = np.zeros(shape=(glat.size,glon.size))
+        ary_npart    = np.zeros(shape=(glat.size,glon.size))
         if verbose:
                 print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdate_seq[ix]))
@@ -132,7 +135,6 @@ def main_diagnosis(
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
-        #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
             ntot    = range(1000)
         else:
@@ -160,7 +162,7 @@ def main_diagnosis(
             ## - 2.3) diagnose fluxes
 
             ## (a) number of parcels
-            ary_npart[ix,:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
+            ary_npart[:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
 
             ##  - 2.3)-KAS: Keune and Schumacher
             if tdiagnosis == 'KAS':
@@ -169,7 +171,7 @@ def main_diagnosis(
                 if ( dq < cprec_dqv and 
                      q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
                      q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
-                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
                 ## (c) evaporation
                 if fcc_advanced:
@@ -180,13 +182,13 @@ def main_diagnosis(
                            (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
                          )
                        ):
-                        ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                        ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
                 else:
                     if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
                          ztra[1] <  max(cevap_hgt, hpbl_max)  and
                          (dTHe - dTH) > cheat_dtemp and
                          abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
-                        ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                        ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
                 ## (d) sensible heat
                 if fcc_advanced:
@@ -197,13 +199,13 @@ def main_diagnosis(
                            (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
                          )
                        ):
-                        ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+                        ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
                 else:
                     if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
                          ztra[1] <  max(cheat_hgt, hpbl_max) and 
                          (dTH > cheat_dtemp) and 
                          abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
-                        ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+                        ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
 
             ##  - 2.3)-SOD: Sodemann et al., 2008
             elif tdiagnosis == 'SOD':
@@ -211,60 +213,66 @@ def main_diagnosis(
                 ## (b) precipitation
                 if ( dq < 0 and 
                      q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
-                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
                 ## (c) evaporation
                 if ( dq > 0.0002 and 
                      (ztra[0]+ztra[1])/2 <  hpbl_avg
                    ):
-                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                    ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
     
                 ## (d) sensible heat (not used originally; analogous to evaporation)
                 if ( (dTH > cheat_dtemp) and 
                     (ztra[0]+ztra[1])/2 <  hpbl_avg
                    ):
-                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
+                    ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
 
             ##  - 2.3)-SAJ: Stohl and James, 2004
             elif tdiagnosis == 'SAJ':
 
                 ## (b) precipitation
                 if ( dq < 0 ):
-                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
     
                 ## (c) evaporation
                 if ( dq > 0 ):
-                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                    ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
 
         # Convert units
         if verbose:
             print(" * Converting units...")
         if tdiagnosis == 'KAS' or tdiagnosis == 'SOD':
-            ary_prec[ix,:,:] = convertunits(ary_prec[ix,:,:], garea, "P")
-            ary_evap[ix,:,:] = convertunits(ary_evap[ix,:,:], garea, "E")
-            ary_heat[ix,:,:] = convertunits(ary_heat[ix,:,:], garea, "H")
+            ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
+            ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
+            ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
         elif tdiagnosis =='SAJ':
             # first calculate column sums, assign to E or P according to sign
-            colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
+            colsum = ary_prec[:,:] + ary_evap[:,:]
             colsum_pos = np.zeros_like(colsum)
             colsum_neg = np.zeros_like(colsum)
             colsum_pos[np.where(colsum>0)] = colsum[np.where(colsum>0)]
             colsum_neg[np.where(colsum<0)] = colsum[np.where(colsum<0)]
-            ary_evap[ix,:,:] = convertunits(colsum_pos, garea, "E")
-            ary_prec[ix,:,:] = convertunits(colsum_neg, garea, "P")
+            ary_evap[:,:] = convertunits(colsum_pos, garea, "E")
+            ary_prec[:,:] = convertunits(colsum_neg, garea, "P")
 
-    # Scale with parcel mass
-    if fvariable_mass:
-        if verbose: 
-            print(" * Applying variable mass...")
-        ary_prec         = scale_mass(ary_prec, ary_npart, ary_rnpart)
-        ary_evap         = scale_mass(ary_evap, ary_npart, ary_rnpart)
-        ary_heat         = scale_mass(ary_heat, ary_npart, ary_rnpart)
+        # Scale with parcel mass
+        if fvariable_mass:
+            if verbose: 
+                print(" * Applying variable mass...")
+            ary_prec[:,:]         = scale_mass(ary_prec[:,:], ary_npart[:,:], ary_rnpart)
+            ary_evap[:,:]         = scale_mass(ary_evap[:,:], ary_npart[:,:], ary_rnpart)
+            ary_heat[:,:]         = scale_mass(ary_heat[:,:], ary_npart[:,:], ary_rnpart)
+
+        if fwrite_netcdf:
+            writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:])
 
     if ftimethis:
         megatoc = timeit.default_timer()
         if verbose:
             print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
-    
-    if fwrite_netcdf:
-        writenc(ofile,fdate_seq,glon,glat,ary_prec,ary_evap,ary_heat,ary_npart)
+
+    if verbose:
+        if fwrite_netcdf:
+            print("\n Successfully written: "+ofile+" !")
+
+        
