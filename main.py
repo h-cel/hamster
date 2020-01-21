@@ -22,7 +22,7 @@ import netCDF4 as nc4
 import sys
 import argparse
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from math import sin,cos,acos,atan,atan2,sqrt,floor
 from dateutil.relativedelta import relativedelta
 import datetime as datetime
@@ -62,7 +62,7 @@ exec(open("hamsterfunctions.py").read())
 #      note: this is where we set the default values now. 
 args    = read_cmdargs()
 verbose = args.verbose
-
+print(printsettings(args))
 ## (3) RUN main script with arguments
 
 main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
@@ -85,7 +85,8 @@ main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
           fwrite_netcdf=args.write_netcdf,
           ftimethis=args.timethis,
           fcc_advanced=args.cc_advanced,
-          fvariable_mass=args.variable_mass)
+          fvariable_mass=args.variable_mass,
+          strargs=printsettings(args))
 
 
 #main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 

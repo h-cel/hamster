@@ -20,7 +20,8 @@ def main_diagnosis(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
            refdate,
-           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass):
+           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass,
+           strargs):
 
     """
     comments
@@ -106,7 +107,7 @@ def main_diagnosis(
         fdate_seq   = fdate_seq[0:ntime]
 
     if fwrite_netcdf:
-        writeemptync(ofile,fdate_seq,glon,glat)
+        writeemptync(ofile,fdate_seq,glon,glat,strargs)
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
@@ -218,6 +219,7 @@ def main_diagnosis(
                 ## (c) evaporation
                 if ( dq > 0.0002 and 
                      (ztra[0]+ztra[1])/2 <  hpbl_avg
+                     # NOTE JESSICA: this seems to be inconsistent with function in hamsterfunctions.py
                    ):
                     ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
     

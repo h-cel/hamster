@@ -58,6 +58,24 @@ def read_cmdargs():
     args = parser.parse_args()  # namespace
     return args
 
+def printsettings(args):
+    if args.tdiagnosis in ['KAS']:
+        return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
+        "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
+        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
+        "[[OTHERS]]: cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)))
+    if args.tdiagnosis in ['SOD']:
+        return(str({"Diagnosis following Sodemann et al. (2008) with the following settings: " +
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
+        "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
+        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) + " "
+        "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"}))
+    if args.tdiagnosis in ['SAJ']:
+        return(str({"Diagnosis following Stohl and James (2004)." +
+        "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"}))
+
 
 def readpom(idate,     # run year
             ipath,      # input data path
@@ -294,7 +312,7 @@ def gridder(plon, plat, pval,
 
 
 
-def writeemptync(ofile,fdate_seq,glon,glat):
+def writeemptync(ofile,fdate_seq,glon,glat,strargs):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -319,7 +337,9 @@ def writeemptync(ofile,fdate_seq,glon,glat):
     nparts              = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
     
     # set attributes
-    nc_f.description    = "FLEXPART: 01_diagnosis of upward land surface fluxes and precipitation"
+    nc_f.description    = "01 - " + str(strargs)
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Dominik Schumacher and Jessica Keune)"
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
