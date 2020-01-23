@@ -50,6 +50,7 @@ def read_cmdargs():
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = parser.parse_args().ayyyy)
@@ -187,6 +188,32 @@ def readpottemp(parray):
     pres    = calc_pres(dens,temp)          # pressure (Pa)
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     return pottemp
+
+def glanceparcel(parray):
+
+    """
+    This is used to take a first glance at parcel properties,
+    and as of now, is called only for the first 4 timesteps.
+ 
+    Required for arriving air criterion (which goes back 4 steps).
+    However, this could be further optimized by only getting the
+    last 4 values of hpbl, as for the other variables here,
+    only the last / last 2 values are required at first.
+
+    work-in-progress.
+
+    """
+
+    ## parcel information
+    ztra    = parray[:,3]                   # height (m) 
+    hpbl    = parray[:,7]                   # ABL height (m)
+    temp    = parray[:,8]                   # temperature (K)
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    dens    = parray[:,6]                   # density (kg m-3)
+    pres    = calc_pres(dens,temp)          # pressure (Pa)
+
+    return ztra, hpbl, temp, qv, dens, pres
+
 
 def parceldiff(pvals, meval):
     # difference 

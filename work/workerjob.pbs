@@ -31,6 +31,7 @@ echo "--------------------------------------------------------------------------
 
 
 ## START JOB
+cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/paths.txt ${PBS_O_WORKDIR}/.
 cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WORKDIR}/.
 
 ##USAGE: python main.py RYYYY AYYYY AM (run year, analysis year, analysis month)
