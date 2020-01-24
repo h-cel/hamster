@@ -8,7 +8,8 @@
 *.pbs*
 
 # Copy of mainpy to work-dir
-work/main.py
+work/*.py
+work/paths.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
