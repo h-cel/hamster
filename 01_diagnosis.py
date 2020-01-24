@@ -216,12 +216,12 @@ def main_diagnosis(
 
                 ## evaporation
                 if (dq > 0.0002 and  
-                        (ztra[0]+ztra[1])/2 < 1.5*hpbl_avg):
+                        (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
     
                 ## sensible heat (not used originally; analogous to evaporation)
                 if ((dTH > cheat_dtemp) and 
-                        (ztra[0]+ztra[1])/2 < 1.5*hpbl_avg):
+                        (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat)
 
 
