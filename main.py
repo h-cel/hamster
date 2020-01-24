@@ -112,4 +112,5 @@ main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
           fdry=args.fallingdry,
           fmemento=args.memento,
           fcc_advanced=args.cc_advanced,
-          fvariable_mass=args.variable_mass)
+          fvariable_mass=args.variable_mass,
+          strargs=printsettings(args))
