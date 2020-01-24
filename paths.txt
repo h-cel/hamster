@@ -1,10 +1,13 @@
 # This file contains all required paths to run hamster
 
 # INPUT path
-ipath = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal" 
+ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal" 
+ipath_ATR = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/sampledata"
 
 # INPUT file name base
-ibase = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
+ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
+ibase_ATR = ["pom_ecoreg5_traj10d_AUXTRAJ_"]
 
 # OUTPUT path
-opath = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis"
+opath_DGN = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/01_diagnosis"
+opath_ATR = "/scratch/gent/vo/000/gvo00090/vsc42383/flexpart_data/hamster/02_attribution"
