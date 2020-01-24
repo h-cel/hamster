@@ -21,7 +21,8 @@ def main_attribution(
            cprec_dqv, cprec_dtemp, cprec_rh,
            refdate,
            fwrite_netcdf,ftimethis,
-           fdry,fmemento,fcc_advanced,fvariable_mass):
+           fdry,fmemento,fcc_advanced,fvariable_mass,
+           strargs):
 
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
@@ -99,17 +100,24 @@ def main_attribution(
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
     fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
     fuptdate_seq = np.unique([fdt.date() for fdt in fuptdatetime_seq]).tolist()
+    # keep a copy of datetime.date formatted list for arv_idx further below
+    fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
+    # convert these datetime.date objects to datetime.datetime objects for netCDF writing
+    for idt in range(len(fdate_seq)):
+        fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
+    for idt in range(len(fuptdate_seq)):
+        fuptdate_seq[idt] = datetime.datetime(fuptdate_seq[idt].year, fuptdate_seq[idt].month, fuptdate_seq[idt].day)
     # NOTE: better to keep these as lists to maintain consistency
 
+    # calculate number of time steps, also aggregated to daily resolution
     ntime           = len(fdatetime_seq)
     nupttime        = len(fuptdatetime_seq)
-
     ndaytime        = len(fdate_seq)
     ndayupttime     = len(fuptdate_seq)
 
     # TESTMODE
     if mode == "test":
-        ntime            = 1
+        ntime            = 4 #NOTE: use multiples of 4 only, else output is not saved 
         datetime_seq     = datetime_seq[:ntime]
         fdatetime_seq    = fdatetime_seq[:ntime]
         ndaytime         = 1
@@ -120,12 +128,12 @@ def main_attribution(
         ndayupttime      = (ctraj_len) + 1
         fuptdate_seq     = fuptdate_seq[:ndayupttime]
 
+    ## -- WRITE NETCDF OUTPUT (empty, to be filled)
+    if fwrite_netcdf:
+        writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs)
+
     # traj max len
     tml = nupttime - ntime
-
-    ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
-    ary_etop     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
@@ -134,7 +142,7 @@ def main_attribution(
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
 
     ## prepare parcel log to handle trajectories properly 
-    if fmemento:  
+    if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
         pIDlogH = -999*np.ones(shape=2000001).astype(int) 
 
     ## prepare uptake indices
@@ -164,13 +172,18 @@ def main_attribution(
             ntot    = range(nparticle)
 
         # figure out where to store data (on which arriving day)
-        arv_idx = np.where(np.asarray(fdate_seq)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
+        arv_idx = np.where(np.asarray(fdateasdate)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
+
+        # pre-allocate arrays (repeat at every 4th step)
+        if ix%4==0:
+            ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+            ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
 
             ## - 2.1) check how far back trajectory should be evaluated
-            # NOTE: this can be moved elsewhere...
+            # NOTE: this could be moved elsewhere...
             # for Hadv (not needed for E2P):
             if fmemento:
                 ID = int(ary[0,i,0])   
@@ -180,6 +193,7 @@ def main_attribution(
                 ihf_H = tml + 2
 
             ## - 2.2) read only the most basic parcel information
+            # NOTE: this could easily be done more efficiently
             ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
 
             ## - 2.3) diagnose fluxes
@@ -219,7 +233,7 @@ def main_attribution(
                         etop = ((qv[0]-qv[1])/qv[1])*dq_disc 
 
                     for itj in evap_idx: 
-                        ary_etop[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                        ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
 
                 ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
                 if ( ztra[0] < np.max(hpbl[:4]) ):
@@ -244,7 +258,7 @@ def main_attribution(
                     # loop through sensible heat uptakes
                     for itj in heat_idx:
                         #NOTE: hardcoded for writing daily data 
-                        ary_heat[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                        ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                     # update parcel log
                     if fmemento:
@@ -283,7 +297,7 @@ def main_attribution(
 
                     # loop through evaporative uptakes
                     for itj in evap_idx:
-                        ary_etop[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                        ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
   
     
                 ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
@@ -307,7 +321,7 @@ def main_attribution(
                     # loop through sensible heat uptakes
                     for itj in heat_idx:
                         #NOTE: hardcoded for writing daily data 
-                        ary_heat[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                        ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                     # update parcel log
                     if fmemento:
@@ -327,7 +341,7 @@ def main_attribution(
 
                 # add any moisture change along trajectory to respective column sum
                 for itj in range(ihf_H-1):
-                    ary_etop[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dq[itj], glon=glon, glat=glat)
+                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dq[itj], glon=glon, glat=glat)
 
                 # update parcel log
                 if fmemento:
@@ -335,12 +349,15 @@ def main_attribution(
 
 
         # Convert units, but only after the last time step of each day
-        if (ix+1)%4==0 and (tdiagnosis == 'KAS' or tdiagnosis == 'SOD'):
+        if ( (ix+1)%4==0 ):
             if verbose:
                 print(" * Converting units...")
-            ary_etop[arv_idx,:,:,:] = convertunits(ary_etop[arv_idx,:,:,:], garea, "E")
-            ary_heat[arv_idx,:,:,:] = convertunits(ary_heat[arv_idx,:,:,:], garea, "H")
-            
+            ary_etop[:,:,:] = convertunits(ary_etop[:,:,:], garea, "E")
+            ary_heat[:,:,:] = convertunits(ary_heat[:,:,:], garea, "H")
+    
+            if fwrite_netcdf:
+                writenc4D(ofile,arv_idx,ary_etop,ary_heat)
+        
 #TODO: decide what to do with parcel mass scaling here
 #    # Scale with parcel mass
 #    if fvariable_mass:
@@ -355,5 +372,6 @@ def main_attribution(
         if verbose:
             print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
-    if fwrite_netcdf:
-        writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat)
+    if verbose:
+        if fwrite_netcdf:
+            print("\n Successfully written: "+ofile+" !")

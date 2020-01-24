@@ -464,18 +464,8 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart):
     nc_f['n_part'][ix,:,:]  = ary_npart
     nc_f.close()
 
-def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat):
-    if verbose:
-        print(" * Creating empty netcdf file...")
+def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs):
                 
-    # convert date objects to datetime objects if necessary
-    if type(fdate_seq[0]) == datetime.date:
-        for idt in range(len(fdate_seq)):
-            fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
-    if type(fuptdate_seq[0]) == datetime.date:
-        for idt in range(len(fuptdate_seq)):
-            fuptdate_seq[idt] = datetime.datetime(fuptdate_seq[idt].year, fuptdate_seq[idt].month, fuptdate_seq[idt].day)
-
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -492,15 +482,17 @@ def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat):
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    atimes              = nc_f.createVariable('arrival-time', 'i4', 'arrival-time')
-    utimes              = nc_f.createVariable('uptake-time', 'i4', 'uptake-time')
+    atimes              = nc_f.createVariable('arrival-time', 'f4', 'arrival-time')
+    utimes              = nc_f.createVariable('uptake-time', 'f4', 'uptake-time')
     latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
     heats               = nc_f.createVariable('H', 'f4', ('arrival-time','uptake-time','lat','lon'))
     etops               = nc_f.createVariable('E2P', 'f4', ('arrival-time','uptake-time','lat','lon'))
     
     # set attributes
-    nc_f.description    = "FLEXPART: 02_attribution of advected surface sensible heat and evaporative moisture resulting in precipitation"
+    nc_f.description    = "02 - " + str(strargs)
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Jessica Keune and Dominik Schumacher)"
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.units        = 'hours since 1900-01-01 00:00:00'
@@ -513,16 +505,22 @@ def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat):
     etops.long_name	= 'evaporation resulting in precipitation'
   
     # write data
-    atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)
-    utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)
-    longitudes[:]       = glon
-    latitudes[:]        = glat
-    heats[:]            = ary_heat[:]
-    etops[:]            = ary_etop[:]     
+    atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)[:]
+    utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)[:]
+    longitudes[:]       = glon[:]
+    latitudes[:]        = glat[:]
         
     # close file
     nc_f.close()
+
+    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(len(fuptdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+
         
-    print("\n===============================================================")
-    print("\n Successfully written: "+ofile+" !")
-    print("\n===============================================================")
+def writenc4D(ofile,ix,ary_etop,ary_heat):
+    if verbose:
+        print(" * Writing to netcdf...")
+
+    nc_f = nc4.Dataset(ofile, 'r+')
+    nc_f['E2P'][ix,:,:,:]     = ary_etop[:,:,:]
+    nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
+    nc_f.close()
