@@ -38,11 +38,12 @@ wpath = os.getcwd()
 ## load input and output paths & input file name base(s)
 with open(wpath+"/paths.txt") as f: 
     content = imp.load_source('','',f) # load like a python module
-    ipath = content.ipath # input path
-    ibase = content.ibase # input file name base(s)
-    opath = content.opath # output path
-    # note: could load output file name base from txt file too,
-    # e.g. in addition to experiment name/ID from command line 
+    ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
+    ibase_DGN = content.ibase_DGN # input file name base(s)
+    opath_DGN = content.opath_DGN # output path
+    ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
+    ibase_ATR = content.ibase_ATR 
+    opath_ATR = content.opath_ATR 
 
 ###########################################################################
 ##--- MAIN
@@ -65,38 +66,38 @@ verbose = args.verbose
 print(printsettings(args))
 
 ## (3) RUN main script with arguments
-#main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-#          ipath=ipath,
-#          ifile_base=ibase, 
-#          opath=opath,
-#          ofile_base=args.expid,
-#          mode=args.mode,
-#          gres=args.gres,
-#          tdiagnosis=args.tdiagnosis,
-#          cheat_dtemp=args.cheat_dtemp,
-#          cheat_cc=args.cheat_cc,
-#          cevap_cc=args.cevap_cc,
-#          cevap_hgt=args.cevap_hgt,
-#          cheat_hgt=args.cheat_hgt,
-#          cprec_dqv=args.cprec_dqv,
-#          cprec_dtemp=args.cprec_dtemp,
-#          cprec_rh=args.cprec_rh,
-#          refdate=args.refdate,
-#          fwrite_netcdf=args.write_netcdf,
-#          ftimethis=args.timethis,
-#          fcc_advanced=args.cc_advanced,
-#          fvariable_mass=args.variable_mass,
-#          strargs=printsettings(args))
-
-main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath=ipath,
-          ifile_base=ibase,
-          opath=opath,
+main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+          ipath=ipath_DGN,
+          ifile_base=ibase_DGN, 
+          opath=opath_DGN,
           ofile_base=args.expid,
           mode=args.mode,
           gres=args.gres,
           tdiagnosis=args.tdiagnosis,
-          ctraj_len=10, ### PRELIM
+          cheat_dtemp=args.cheat_dtemp,
+          cheat_cc=args.cheat_cc,
+          cevap_cc=args.cevap_cc,
+          cevap_hgt=args.cevap_hgt,
+          cheat_hgt=args.cheat_hgt,
+          cprec_dqv=args.cprec_dqv,
+          cprec_dtemp=args.cprec_dtemp,
+          cprec_rh=args.cprec_rh,
+          refdate=args.refdate,
+          fwrite_netcdf=args.write_netcdf,
+          ftimethis=args.timethis,
+          fcc_advanced=args.cc_advanced,
+          fvariable_mass=args.variable_mass,
+          strargs=printsettings(args))
+
+main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+          ipath=ipath_ATR,
+          ifile_base=ibase_ATR,
+          opath=opath_ATR,
+          ofile_base=args.expid,
+          mode=args.mode,
+          gres=args.gres,
+          tdiagnosis=args.tdiagnosis,
+          ctraj_len=args.ctraj_len,
           cheat_dtemp=args.cheat_dtemp,
           cheat_cc=args.cheat_cc, 
           cevap_cc=args.cevap_cc,
@@ -109,5 +110,6 @@ main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
           fwrite_netcdf=args.write_netcdf,
           ftimethis=args.timethis, 
           fdry=args.fallingdry,
+          fmemento=args.memento,
           fcc_advanced=args.cc_advanced,
           fvariable_mass=args.variable_mass)
