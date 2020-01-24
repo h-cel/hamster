@@ -38,6 +38,7 @@ def read_cmdargs():
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
     parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD, SAJ)",                              type = str,     default = "KAS")
+    parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
     parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
@@ -51,6 +52,7 @@ def read_cmdargs():
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = parser.parse_args().ayyyy)
@@ -400,7 +402,7 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart):
     nc_f['n_part'][ix,:,:]  = ary_npart
     nc_f.close()
 
-def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart):
+def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat):
     if verbose:
         print(" * Creating empty netcdf file...")
                 
@@ -434,7 +436,6 @@ def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart
     longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
     heats               = nc_f.createVariable('H', 'f4', ('arrival-time','uptake-time','lat','lon'))
     etops               = nc_f.createVariable('E2P', 'f4', ('arrival-time','uptake-time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', 'f4', ('arrival-time','uptake-time','lat','lon'))
     
     # set attributes
     nc_f.description    = "FLEXPART: 02_attribution of advected surface sensible heat and evaporative moisture resulting in precipitation"
@@ -448,9 +449,7 @@ def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart
     heats.long_name	= 'surface sensible heat flux'
     etops.units         = 'mm'
     etops.long_name	= 'evaporation resulting in precipitation'
-    nparts.units        = 'int'
-    nparts.long_name    = 'number of parcels (mid pos.)'
-    
+  
     # write data
     atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)
     utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)
@@ -458,7 +457,6 @@ def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart
     latitudes[:]        = glat
     heats[:]            = ary_heat[:]
     etops[:]            = ary_etop[:]     
-    nparts[:]           = ary_npart[:]
         
     # close file
     nc_f.close()

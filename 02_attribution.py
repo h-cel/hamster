@@ -17,16 +17,15 @@ def main_attribution(
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
-           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
+           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
            refdate,
-           fwrite_netcdf,ftimethis,fdry,fcc_advanced,fvariable_mass):
+           fwrite_netcdf,ftimethis,
+           fdry,fmemento,fcc_advanced,fvariable_mass):
 
+    # TODO: add missing features
     if fcc_advanced or fvariable_mass:
-        raise SystemExit("---- ABORTED: no can do, master")
-    else:
-        print("-------------- INFO: diagnosis type = ",tdiagnosis)   
-
+        raise SystemExit("---- ABORTED: no can do, not implemented!")
  
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
@@ -96,12 +95,6 @@ def main_attribution(
     while iuptdatetime < datetime_end - datetime.timedelta(hours=3):
         fuptdatetime_seq.append(iuptdatetime)
         iuptdatetime += timestep
-  
-    """
-    issue: arrays become HUGE if using 6-hourly res for TWO time axes,
-           yet particle mass scaling appears to be implemented
-           at 6-hourly resolution as of now.....
-    """
 
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
     fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
@@ -127,17 +120,12 @@ def main_attribution(
         ndayupttime      = (ctraj_len) + 1
         fuptdate_seq     = fuptdate_seq[:ndayupttime]
 
-    print("PRELIM: ntime, ndaytime, nupttime, ndayupttime =", ntime, ndaytime, nupttime, ndayupttime)
-
     # traj max len
     tml = nupttime - ntime
-
-    print("tml=", tml)
 
     ## pre-allocate arrays
     ary_heat     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
     ary_etop     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
-    ary_npart    = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
@@ -145,12 +133,12 @@ def main_attribution(
     if fvariable_mass:
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
 
-    ## prepare parcel log to handle trajectories properly   
-    pIDlogH = -np.ones(shape=2000001).astype(int) 
+    ## prepare parcel log to handle trajectories properly 
+    if fmemento:  
+        pIDlogH = -999*np.ones(shape=2000001).astype(int) 
 
     ## prepare uptake indices
     upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
-    print("uptake_indices=",upt_idx)
 
     ## loop over time to read in files
     if verbose:
@@ -177,8 +165,6 @@ def main_attribution(
 
         # figure out where to store data (on which arriving day)
         arv_idx = np.where(np.asarray(fdate_seq)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
- 
-        print("arv_idx=",arv_idx)
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
@@ -186,12 +172,12 @@ def main_attribution(
             ## - 2.1) check how far back trajectory should be evaluated
             # NOTE: this can be moved elsewhere...
             # for Hadv (not needed for E2P):
-            ID = int(ary[0,i,0])   
-            istepH = pIDlogH[ID]
-            if istepH < 0:
-                ihf_H = 4*ctraj_len + 2
+            if fmemento:
+                ID = int(ary[0,i,0])   
+                istepH = pIDlogH[ID]
+                ihf_H = min((ix-istepH+1), tml + 2) 
             else:
-                ihf_H = min((ix-istepH+1), 4*ctraj_len + 2) 
+                ihf_H = tml + 2
 
             ## - 2.2) read only the most basic parcel information
             ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
@@ -239,13 +225,13 @@ def main_attribution(
                 if ( ztra[0] < np.max(hpbl[:4]) ):
 
                     # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
                     
                     # calculate all required changes along trajectory
                     dq          = trajparceldiff(qv[:], 'diff')
                     dTH         = trajparceldiff(pottemp[:], 'diff')
                     
-                    # identify sensible heat uptakes
+                    # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
                     in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
                     heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
                     heat_plaus = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
@@ -261,7 +247,8 @@ def main_attribution(
                         ary_heat[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                     # update parcel log
-                    pIDlogH[ID] = ix # NOTE: double-check
+                    if fmemento:
+                        pIDlogH[ID] = ix # NOTE: double-check
 
 
             ##  - 2.3)-SOD: Sodemann et al., 2008
@@ -303,12 +290,12 @@ def main_attribution(
                 if ( ztra[0] < np.max(hpbl[:4]) ):
 
                     # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
                     # calculate all required changes along trajectory
                     dTH         = trajparceldiff(pottemp[:], 'diff')
 
-                    # identify sensible heat uptakes
+                    # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
                     in_PBL    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
                     heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
                     heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
@@ -323,22 +310,29 @@ def main_attribution(
                         ary_heat[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                     # update parcel log
-                    pIDlogH[ID] = ix # NOTE: double-check
+                    if fmemento:
+                        pIDlogH[ID] = ix # NOTE: double-check
 
 
             ##  - 2.3)-SAJ: Stohl and James, 2004
             elif tdiagnosis == 'SAJ':
 
-                """
-                to be added.
-                """
+                ## (a) E-P based on ALL parcels residing over target region, no precipitation-criterion used
 
+                # read full parcel information (but only what is needed; ihf_H)
+                lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
-## TODO: make script smarter, grab coordinates only if not already done so
-#            ##  - 2.3) 
-#            ## (c) number of parcels
-#            for itj in range(tml+1): # NOT tml+2 !!!
-#                ary_npart[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=int(1), glon=glon, glat=glat)
+                # calculate all required changes along trajectory
+                dq          = trajparceldiff(qv[:], 'diff')
+
+                # add any moisture change along trajectory to respective column sum
+                for itj in range(ihf_H-1):
+                    ary_etop[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dq[itj], glon=glon, glat=glat)
+
+                # update parcel log
+                if fmemento:
+                    pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
+
 
         # Convert units, but only after the last time step of each day
         if (ix+1)%4==0 and (tdiagnosis == 'KAS' or tdiagnosis == 'SOD'):
@@ -346,18 +340,9 @@ def main_attribution(
                 print(" * Converting units...")
             ary_etop[arv_idx,:,:,:] = convertunits(ary_etop[arv_idx,:,:,:], garea, "E")
             ary_heat[arv_idx,:,:,:] = convertunits(ary_heat[arv_idx,:,:,:], garea, "H")
-            # NOTE: the above works for 3D arrays too thanks to numpy broadcasting!
-#        elif tdiagnosis =='SAJ':
-#            # first calculate column sums, assign to E or P according to sign
-#            colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
-#            colsum_pos = np.zeros_like(colsum)
-#            colsum_neg = np.zeros_like(colsum)
-#            colsum_pos[np.where(colsum>0)] = colsum[np.where(colsum>0)]
-#            colsum_neg[np.where(colsum<0)] = colsum[np.where(colsum<0)]
-#            ary_evap[ix,:,:] = convertunits(colsum_pos, garea, "E")
-#            ary_prec[ix,:,:] = convertunits(colsum_neg, garea, "P")
-
-    # Scale with parcel mass
+            
+#TODO: decide what to do with parcel mass scaling here
+#    # Scale with parcel mass
 #    if fvariable_mass:
 #        if verbose: 
 #            print(" * Applying variable mass...")
@@ -371,4 +356,4 @@ def main_attribution(
             print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
     if fwrite_netcdf:
-        writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart)
+        writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat)
