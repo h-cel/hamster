@@ -130,9 +130,13 @@ def readpom(idate,     # run year
     return(dataar)
 
 
+def checkpbl(ztra,hpbl,maxhgt):
+    if (ztra < max(np.max(hpbl),maxhgt)).all():
+        return True
+    else:
+        return False
+
 def readparcel(parray):
-    
-    ## parcel information
     lats    = parray[:,2]                   # latitude
     lons    = parray[:,1]                   # longitude
     lons[lons>180.0] -= 360                 # transform coordinates from [0 ... 360] to [-180 ... 180]
@@ -148,6 +152,44 @@ def readparcel(parray):
 
     return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
 
+def readmidpoint(parray):
+    lats    = parray[:,2]                   # latitude
+    lons    = parray[:,1]                   # longitude
+    lons[lons>180.0] -= 360                 # transform coordinates from [0 ... 360] to [-180 ... 180]
+    lat_mid,lon_mid = midpoint_on_sphere(lats[0],lons[0],lats[1],lons[1]) # use own function to calculate midpoint position
+    if (lon_mid>179.5): 
+        lon_mid -= 360      # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    return lat_mid, lon_mid
+
+def readsparcel(parray):
+    # reads standard output that is always needed
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    temp    = parray[:,8]                   # temperature (K)
+    hpbl    = parray[:,7]                   # ABL height (m)
+    ztra    = parray[:,3]                   # height (m)
+    return qv, temp, ztra, hpbl
+
+def readpres(parray):
+    temp    = parray[:,8]                   # temperature (K)
+    dens    = parray[:,6]                   # density (kg m-3)
+    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    return pres
+
+def readepottemp(parray):
+    temp    = parray[:,8]                   # temperature (K)
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    dens    = parray[:,6]                   # density (kg m-3)
+    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
+    return epottemp
+
+def readpottemp(parray):
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    dens    = parray[:,6]                   # density (kg m-3)
+    temp    = parray[:,8]                   # temperature (K)
+    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
+    return pottemp
 
 def glanceparcel(parray):
 
@@ -340,6 +382,26 @@ def gridder(plon, plat, pval,
     return(gval)
 
 
+def mgridder(mlon, mlat, pval,
+            glat, glon):
+    """
+    INPUT
+        - plon, plat: parcel longitutde and latitude
+        - glon, glat: grid longitude and latitutde
+        - pval      : parcel value to be assigned to grid
+    ACTION
+        1. calculated midpoint of two coordinates
+        2. assigns val to gridcell corresponding to midpoint
+    RETURN
+        - array of dimension (glat.size x glon.size) with 0's and one value assigned
+    """
+    # get grid index
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    # and assign pval to gridcell (init. with 0's)
+    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
+    gval[ind_lat,ind_lon]    += pval
+    return(gval)
 
 def writeemptync(ofile,fdate_seq,glon,glat,strargs):
     # delete nc file if it is present (avoiding error message)

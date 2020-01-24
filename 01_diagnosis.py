@@ -84,7 +84,8 @@ def main_diagnosis(
     ## start timer
     if ftimethis:
         megatic = timeit.default_timer()
-    
+
+    ## -- GRID
     glon, glat, garea = makegrid(resolution=gres)
 
     ## -- DATES
@@ -102,22 +103,25 @@ def main_diagnosis(
 
     # TESTMODE
     if mode == "test":
-        ntime       = 5
+        ntime       = 4
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
 
+    ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
         writeemptync(ofile,fdate_seq,glon,glat,strargs)
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
+
     # read in reference distribution of parcels
     if fvariable_mass:
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
     
-    ## loop over time to read in files
+    ## ------- LOOP OVER DATES (FILES) 
     if verbose:
         print("\n=== \t Start main program...\n")
+
     for ix in range(ntime):
 
         # pre-allocate arrays
@@ -125,120 +129,111 @@ def main_diagnosis(
         ary_evap     = np.zeros(shape=(glat.size,glon.size))
         ary_prec     = np.zeros(shape=(glat.size,glon.size))
         ary_npart    = np.zeros(shape=(glat.size,glon.size))
+
         if verbose:
-                print("--------------------------------------------------------------------------------------")
-        print("Processing "+str(fdate_seq[ix]))
-        ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary = readpom( idate    = date_seq[ix], 
-                       ipath    = ipath+"/"+str(ryyyy), 
-                       ifile_base = ifile_base)
+            print("--------------------------------------------------------------------------------------")
+            print("Processing "+str(fdate_seq[ix]))
+
+        ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
+        ary         = readpom( idate        = date_seq[ix], 
+                               ipath        = ipath+"/"+str(ryyyy), 
+                               ifile_base   = ifile_base)
         nparticle   = ary.shape[1]
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
+        ## TEST mode: less parcels
         if mode == "test":
             ntot    = range(1000)
         else:
             ntot    = range(nparticle)
 
-        ## 2) diagnose P, E, H and npart per grid cell
+        #smalltic = timeit.default_timer()
+
+        ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
         for i in ntot:
 
-            ## - 2.1) read parcel information
-            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
+            ## get midpoint at the very beginning
+            lat_mid, lon_mid = readmidpoint(ary[:,i,:])
+            ## log number of parcels
+            ary_npart[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=int(1), glon=glon, glat=glat)
 
-            ## - 2.2) parcel changes / criteria
-            dq          = parceldiff(qv, 'diff') 
-            if tdiagnosis == 'KAS':
-                hpbl_max    = parceldiff(hpbl, 'max')
-                dTH         = parceldiff(pottemp, 'diff')
-                dTHe        = parceldiff(epottemp, 'diff')
-                #dz          = parceldiff(ztra, 'diff')
-                if fcc_advanced:
-                    dT          = parceldiff(temp, 'diff')
-            elif tdiagnosis == 'SOD':
-                hpbl_avg    = parceldiff(hpbl, 'mean')
-                dTH         = parceldiff(pottemp, 'diff')
-
-            ## - 2.3) diagnose fluxes
-
-            ## (a) number of parcels
-            ary_npart[:,:] += gridder(plon=lons, plat=lats, pval=int(1), glon=glon, glat=glat)
-
-            ##  - 2.3)-KAS: Keune and Schumacher
+            ## read only necessary parcel information
+            qv, temp, ztra, hpbl    = readsparcel(ary[:,i,:])
+            dq = parceldiff(qv, 'diff') 
+            dT = parceldiff(temp, 'diff')
+            
+            ##  KAS: KEUNE AND SCHUMACHER
             if tdiagnosis == 'KAS':
 
-                ## (b) precipitation
-                if ( dq < cprec_dqv and 
-                     q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                     q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
-                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                # precipitation
+                if (dq < cprec_dqv):
+                    pres            = readpres(ary[:,i,:])
+                    if ( q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                         q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                         ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
 
-                ## (c) evaporation
-                if fcc_advanced:
-                    if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
-                         ztra[1] <  max(cevap_hgt, hpbl_max)  and
-                         (dTHe - dTH) > cheat_dtemp and
-                         ( (dT > 0 and dT       < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])) or
-                           (dT < 0 and abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]))
-                         )
-                       ):
-                        ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-                else:
-                    if ( ztra[0] <  max(cevap_hgt, hpbl_max)  and
-                         ztra[1] <  max(cevap_hgt, hpbl_max)  and
-                         (dTHe - dTH) > cheat_dtemp and
-                         abs(dTH) < cevap_cc * (dq) * dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1]) ):
-                        ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                # evaporation and sensible heat 
+                if ( checkpbl(ztra,hpbl,cevap_hgt) or checkpbl(ztra,hpbl,cheat_hgt) ):
+                    if ( dq > 0 or dT > 0):
+                        pottemp             = readpottemp(ary[:,i,:])
+                        dTH                 = parceldiff(pottemp, 'diff')
 
-                ## (d) sensible heat
-                if fcc_advanced:
-                    if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
-                         ztra[1] <  max(cheat_hgt, hpbl_max) and 
-                         (dTH > cheat_dtemp) and 
-                         ( (dT > 0 and abs(dq) < cheat_cc * (dT)  * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)) or
-                           (dT < 0 and abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF))
-                         )
-                       ):
-                        ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
-                else:
-                    if ( ztra[0] <  max(cheat_hgt, hpbl_max) and 
-                         ztra[1] <  max(cheat_hgt, hpbl_max) and 
-                         (dTH > cheat_dtemp) and 
-                         abs(dq) < cheat_cc * (dTH) * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF) ):
-                        ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat) 
+                        # sensible heat
+                        if ( dT > 0 and checkpbl(ztra,hpbl,cheat_hgt)):
+                            dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
+                            if fcc_advanced:
+                                if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
+                                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat) 
+                            else:
+                                if  ((dTH > cheat_dtemp) and abs(dq) < dTH*dqmax ):
+                                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat) 
 
-            ##  - 2.3)-SOD: Sodemann et al., 2008
+                        # evaporation
+                        if ( dq > 0 and checkpbl(ztra,hpbl,cevap_hgt)):
+                            epottemp        = readepottemp(ary[:,i,:])
+                            dTHe            = parceldiff(epottemp, 'diff')
+                            dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
+                            if fcc_advanced:
+                                if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
+                                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                            else:
+                                if ( (dTHe - dTH) > cheat_dtemp and abs(dTH) < dq*dTmax ):
+                                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+
+
+            ## SOD: SODEMANN ET AL., 2008
             elif tdiagnosis == 'SOD':
-         
-                ## (b) precipitation
-                if ( dq < 0 and 
-                     q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
-                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+        
+                # note: not optimized wrt runtime
+                lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
+                dTH             = parceldiff(pottemp, 'diff')
 
-                ## (c) evaporation
-                if ( dq > 0.0002 and 
-                     (ztra[0]+ztra[1])/2 <  hpbl_avg
-                     # NOTE JESSICA: this seems to be inconsistent with function in hamsterfunctions.py
-                   ):
-                    ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                ## precipitation
+                if (dq < 0 and 
+                        q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
+                    ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+
+                ## evaporation
+                if (dq > 0.0002 and  
+                        (ztra[0]+ztra[1])/2 < 1.5*hpbl_avg):
+                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
     
-                ## (d) sensible heat (not used originally; analogous to evaporation)
-                if ( (dTH > cheat_dtemp) and 
-                    (ztra[0]+ztra[1])/2 <  hpbl_avg
-                   ):
-                    ary_heat[:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
+                ## sensible heat (not used originally; analogous to evaporation)
+                if ((dTH > cheat_dtemp) and 
+                        (ztra[0]+ztra[1])/2 < 1.5*hpbl_avg):
+                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat)
 
-            ##  - 2.3)-SAJ: Stohl and James, 2004
+
+            ## SAJ: STOHL AND JAMES, 2004
             elif tdiagnosis == 'SAJ':
 
-                ## (b) precipitation
-                if ( dq < 0 ):
-                    ary_prec[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-    
-                ## (c) evaporation
-                if ( dq > 0 ):
-                    ary_evap[:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
+                ## precipitation AND evaporation
+                ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+
+        #smalltoc = timeit.default_timer()
+        #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 
         # Convert units
         if verbose:
@@ -248,14 +243,10 @@ def main_diagnosis(
             ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
             ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
         elif tdiagnosis =='SAJ':
-            # first calculate column sums, assign to E or P according to sign
-            colsum = ary_prec[:,:] + ary_evap[:,:]
-            colsum_pos = np.zeros_like(colsum)
-            colsum_neg = np.zeros_like(colsum)
-            colsum_pos[np.where(colsum>0)] = colsum[np.where(colsum>0)]
-            colsum_neg[np.where(colsum<0)] = colsum[np.where(colsum<0)]
-            ary_evap[:,:] = convertunits(colsum_pos, garea, "E")
-            ary_prec[:,:] = convertunits(colsum_neg, garea, "P")
+            ary_evap[ary_evap<0]= 0
+            ary_prec[ary_prec>0]= 0
+            ary_evap[:,:]   = convertunits(ary_evap, garea, "E")
+            ary_prec[:,:]   = convertunits(ary_prec, garea, "P")
 
         # Scale with parcel mass
         if fvariable_mass:
