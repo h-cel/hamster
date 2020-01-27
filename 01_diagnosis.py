@@ -176,6 +176,7 @@ def main_diagnosis(
                 # evaporation and sensible heat 
                 if ( checkpbl(ztra,hpbl,cevap_hgt) or checkpbl(ztra,hpbl,cheat_hgt) ):
                     if ( dq > 0 or dT > 0):
+                        pres                = readpres(ary[:,i,:])
                         pottemp             = readpottemp(ary[:,i,:])
                         dTH                 = parceldiff(pottemp, 'diff')
 
