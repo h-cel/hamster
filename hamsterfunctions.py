@@ -403,6 +403,12 @@ def mgridder(mlon, mlat, pval,
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
+def midpindex(mlon,mlat,glon,glat):
+    # get grid index
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    return ind_lat, ind_lon
+
 def writeemptync(ofile,fdate_seq,glon,glat,strargs):
     # delete nc file if it is present (avoiding error message)
     try:

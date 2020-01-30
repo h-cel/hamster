@@ -155,8 +155,9 @@ def main_diagnosis(
 
             ## get midpoint at the very beginning
             lat_mid, lon_mid = readmidpoint(ary[:,i,:])
+            lat_ind, lon_ind = midpindex(mlon=lon_mid,mlat=lat_mid,glon=glon,glat=glat)
             ## log number of parcels
-            ary_npart[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=int(1), glon=glon, glat=glat)
+            ary_npart[lat_ind,lon_ind] += int(1)
 
             ## read only necessary parcel information
             qv, temp, ztra, hpbl    = readsparcel(ary[:,i,:])
@@ -171,7 +172,7 @@ def main_diagnosis(
                     pres            = readpres(ary[:,i,:])
                     if ( q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
                          q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
-                         ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                         ary_prec[lat_ind,lon_ind] += dq
 
                 # evaporation and sensible heat 
                 if ( checkpbl(ztra,hpbl,cevap_hgt) or checkpbl(ztra,hpbl,cheat_hgt) ):
@@ -185,10 +186,10 @@ def main_diagnosis(
                             dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
                             if fcc_advanced:
                                 if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
-                                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat) 
+                                    ary_heat[lat_ind,lon_ind] += dTH
                             else:
                                 if  ((dTH > cheat_dtemp) and abs(dq) < dTH*dqmax ):
-                                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat) 
+                                    ary_heat[lat_ind,lon_ind] += dTH
 
                         # evaporation
                         if ( dq > 0 and checkpbl(ztra,hpbl,cevap_hgt)):
@@ -197,10 +198,10 @@ def main_diagnosis(
                             dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
                             if fcc_advanced:
                                 if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
-                                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                                    ary_evap[lat_ind,lon_ind] += dq
                             else:
                                 if ( (dTHe - dTH) > cheat_dtemp and abs(dTH) < dq*dTmax ):
-                                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                                    ary_evap[lat_ind,lon_ind] += dq
 
 
             ## SOD: SODEMANN ET AL., 2008
@@ -213,25 +214,25 @@ def main_diagnosis(
                 ## precipitation
                 if (dq < 0 and 
                         q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
-                    ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                    ary_prec[lat_ind,lon_ind] += dq
 
                 ## evaporation
                 if (dq > 0.0002 and  
                         (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
-                    ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                    ary_evap[lat_ind,lon_ind] += dq
     
                 ## sensible heat (not used originally; analogous to evaporation)
                 if ((dTH > cheat_dtemp) and 
                         (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
-                    ary_heat[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dTH, glon=glon, glat=glat)
+                    ary_heat[lat_ind,lon_ind] += dTH
 
 
             ## SAJ: STOHL AND JAMES, 2004
             elif tdiagnosis == 'SAJ':
 
                 ## precipitation AND evaporation
-                ary_prec[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
-                ary_evap[:,:] += mgridder(mlon=lon_mid, mlat=lat_mid, pval=dq, glon=glon, glat=glat)
+                ary_prec[lat_ind,lon_ind] += dq
+                ary_evap[lat_ind,lon_ind] += dq
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
