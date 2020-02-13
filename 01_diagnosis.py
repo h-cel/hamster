@@ -208,7 +208,8 @@ def main_diagnosis(
             elif tdiagnosis == 'SOD':
         
                 # note: not optimized wrt runtime
-                lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:,i,:])
+                pres            = readpres(ary[:,i,:])
+                pottemp         = readpottemp(ary[:,i,:])
                 dTH             = parceldiff(pottemp, 'diff')
 
                 ## precipitation
