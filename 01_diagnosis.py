@@ -227,6 +227,26 @@ def main_diagnosis(
                         (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[lat_ind,lon_ind] += dTH
 
+            ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
+            elif tdiagnosis == 'SOD2':
+        
+                # note: not optimized wrt runtime
+                pres            = readpres(ary[:,i,:])
+                pottemp         = readpottemp(ary[:,i,:])
+                dTH             = parceldiff(pottemp, 'diff')
+
+                ## precipitation
+                if (dq < 0 and 
+                        q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
+                    ary_prec[lat_ind,lon_ind] += dq
+
+                ## evaporation
+                if (dq > 0.0001): 
+                    ary_evap[lat_ind,lon_ind] += dq
+    
+                ## sensible heat (not used originally; analogous to evaporation)
+                if (dTH > cheat_dtemp):
+                    ary_heat[lat_ind,lon_ind] += dTH
 
             ## SAJ: STOHL AND JAMES, 2004
             elif tdiagnosis == 'SAJ':
@@ -241,7 +261,7 @@ def main_diagnosis(
         # Convert units
         if verbose:
             print(" * Converting units...")
-        if tdiagnosis == 'KAS' or tdiagnosis == 'SOD':
+        if tdiagnosis == 'KAS' or tdiagnosis == 'SOD' or tdiagnosis == 'SOD2':
             ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
             ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
             ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")

@@ -37,7 +37,7 @@ def read_cmdargs():
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
-    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD, SAJ)",                              type = str,     default = "KAS")
+    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2, SAJ)",                              type = str,     default = "KAS")
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
@@ -75,6 +75,13 @@ def printsettings(args):
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
         "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) + " "
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"}))
+    if args.tdiagnosis in ['SOD2']:
+        return(str({"Diagnosis following Sodemann (2020) with the following settings: " +
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
+        "[[EVAPORATION]] cevap_dqv = 0.1, " +
+        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) + " "
+        "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"}))
     if args.tdiagnosis in ['SAJ']:
         return(str({"Diagnosis following Stohl and James (2004)." +
         "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"}))
