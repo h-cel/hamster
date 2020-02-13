@@ -183,23 +183,21 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
         lon_mid = 180 + phi*(180/PI)
 
     if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
-
     return(lat_mid, lon_mid)
 
-def midpoint_on_sphere2(y1, x1, y2, x2):
+def midpoint_on_sphere2(lat1, lon1, lat2, lon2):
     #Input values as degrees
-    #Convert to radians
-    lat1 = math.radians(x1)
-    lon1 = math.radians(x2)
-    lat2 = math.radians(y1)
-    lon2 = math.radians(y2)
-    bx = math.cos(lat2) * math.cos(lon2 - lon1)
-    by = math.cos(lat2) * math.sin(lon2 - lon1)
-    lat3 = math.atan2(math.sin(lat1) + math.sin(lat2), \
-           math.sqrt((math.cos(lat1) + bx) * (math.cos(lat1) \
-           + bx) + by**2))
-    lon3 = lon1 + math.atan2(by, math.cos(lat1) + bx)
-    return math.degrees(lat3), math.degrees(lon3)
+    # following http://www.movable-type.co.uk/scripts/latlong.html
+    lat1    = math.radians(lat1)
+    lon1    = math.radians(lon1)
+    lat2    = math.radians(lat2)
+    lon2    = math.radians(lon2)
+    bx      = math.cos(lat2) * math.cos(lon2 - lon1)
+    by      = math.cos(lat2) * math.sin(lon2 - lon1)
+    latm    = math.atan2(math.sin(lat1) + math.sin(lat2), math.sqrt((math.cos(lat1) + bx) * (math.cos(lat1) + bx) + by**2))
+    lonm    = lon1 + math.atan2(by, math.cos(lat1) + bx)
+    return math.degrees(latm), math.degrees(lonm)
+
 
 def q2rh(q_kgkg,p_Pa,T_K):
     """
