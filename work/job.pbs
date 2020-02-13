@@ -37,4 +37,8 @@ cp /data/gent/vo/000/gvo00090/vsc42383/tools/flexpart/hamster/main.py ${PBS_O_WO
 ## USAGE: python main.py --(options)
 time python main.py --ayyyy 2002 --am 12 --mode test --expid testname --variable_mass False
 
+## for profiling use: 
+#time python -m cProfile -o profile_output main.py --ayyyy 2012 --am 12 --mode test --expid testname
+## visualize output with: > snakeviz profile_output
+
 exit 0
