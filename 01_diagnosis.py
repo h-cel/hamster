@@ -103,7 +103,7 @@ def main_diagnosis(
 
     # TESTMODE
     if mode == "test":
-        ntime       = 4
+        ntime       = 1
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
 
@@ -122,14 +122,14 @@ def main_diagnosis(
     if verbose:
         print("\n=== \t Start main program...\n")
 
+    # pre-allocate arrays
+    ary_heat     = np.zeros(shape=(glat.size,glon.size))
+    ary_evap     = np.zeros(shape=(glat.size,glon.size))
+    ary_prec     = np.zeros(shape=(glat.size,glon.size))
+    ary_npart    = np.zeros(shape=(glat.size,glon.size))
+
     for ix in range(ntime):
-
-        # pre-allocate arrays
-        ary_heat     = np.zeros(shape=(glat.size,glon.size))
-        ary_evap     = np.zeros(shape=(glat.size,glon.size))
-        ary_prec     = np.zeros(shape=(glat.size,glon.size))
-        ary_npart    = np.zeros(shape=(glat.size,glon.size))
-
+        
         if verbose:
             print("--------------------------------------------------------------------------------------")
             print("Processing "+str(fdate_seq[ix]))
@@ -144,7 +144,7 @@ def main_diagnosis(
 
         ## TEST mode: less parcels
         if mode == "test":
-            ntot    = range(1000)
+            ntot    = range(nparticle)#range(1000)
         else:
             ntot    = range(nparticle)
 
@@ -154,8 +154,8 @@ def main_diagnosis(
         for i in ntot:
 
             ## get midpoint at the very beginning
-            lat_mid, lon_mid = readmidpoint(ary[:,i,:])
-            lat_ind, lon_ind = midpindex(mlon=lon_mid,mlat=lat_mid,glon=glon,glat=glat)
+            #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
+            lat_ind, lon_ind = midpindex(ary[:,i,:],glon=glon,glat=glat)
             ## log number of parcels
             ary_npart[lat_ind,lon_ind] += int(1)
 
@@ -260,6 +260,12 @@ def main_diagnosis(
 
         if fwrite_netcdf:
             writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:])
+
+        # re-init. arrays
+        ary_npart[:,:]  = 0
+        ary_prec[:,:]   = 0
+        ary_evap[:,:]   = 0
+        ary_heat[:,:]   = 0
 
     if ftimethis:
         megatoc = timeit.default_timer()

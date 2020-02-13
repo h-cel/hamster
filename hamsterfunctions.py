@@ -131,7 +131,8 @@ def readpom(idate,     # run year
 
 
 def checkpbl(ztra,hpbl,maxhgt):
-    if (ztra < max(np.max(hpbl),maxhgt)).all():
+    #if (ztra < max(np.max(hpbl),maxhgt)).all():
+    if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
         return True
     else:
         return False
@@ -223,7 +224,7 @@ def parceldiff(pvals, meval):
         dpval   = pvals[0] - pvals[1]
     # mean
     if meval in ['mean']:
-        dpval   = np.mean(pvals)
+        dpval   = (pvals[0]+pvals[1])/2#np.mean(pvals)
     # mean
     if meval in ['max']:
         dpval   = np.max(pvals)
@@ -403,7 +404,13 @@ def mgridder(mlon, mlat, pval,
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-def midpindex(mlon,mlat,glon,glat):
+def midpindex(parray,glon,glat):
+    lats    = parray[:,2]                   # latitude
+    lons    = parray[:,1]                   # longitude
+    lons[lons>180.0] -= 360                 # transform coordinates from [0 ... 360] to [-180 ... 180]
+    mlat,mlon = midpoint_on_sphere2(lats[0],lons[0],lats[1],lons[1]) # use own function to calculate midpoint position
+    if (mlon>179.5):
+        mlon -= 360      # now shift all coords that otherwise would be allocated to +180 deg to - 180
     # get grid index
     ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
