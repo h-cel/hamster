@@ -47,6 +47,7 @@ def read_cmdargs():
     parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            type = float,   default = 0.7)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         type = float,   default = 0)
+    parser.add_argument('--cpbl_strict','-pbl', help = "1: both within max, 2: one within max, 3: not used",            type = int,     default = 1)
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
@@ -67,7 +68,7 @@ def printsettings(args):
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
         "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)))
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)))
     if args.tdiagnosis in ['SOD']:
         return(str({"Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
@@ -137,12 +138,20 @@ def readpom(idate,     # run year
     return(dataar)
 
 
-def checkpbl(ztra,hpbl,maxhgt):
-    #if (ztra < max(np.max(hpbl),maxhgt)).all():
-    if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
+def checkpbl(cpbl,ztra,hpbl,maxhgt):
+    if (cpbl == 1):
+        #if (ztra < max(np.max(hpbl),maxhgt)).all():
+        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
+            return True
+        else:
+            return False
+    if (cpbl == 2):
+        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).any():
+            return True
+        else:
+            return False
+    if (cpbl == 3):
         return True
-    else:
-        return False
 
 def readparcel(parray):
     lats    = parray[:,2]                   # latitude

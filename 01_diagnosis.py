@@ -19,6 +19,7 @@ def main_diagnosis(
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
+           cpbl_strict,
            refdate,
            fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass,
            strargs):
@@ -175,14 +176,14 @@ def main_diagnosis(
                          ary_prec[lat_ind,lon_ind] += dq
 
                 # evaporation and sensible heat 
-                if ( checkpbl(ztra,hpbl,cevap_hgt) or checkpbl(ztra,hpbl,cheat_hgt) ):
+                if ( checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt) or checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt) ):
                     if ( dq > 0 or dT > 0):
                         pres                = readpres(ary[:,i,:])
                         pottemp             = readpottemp(ary[:,i,:])
                         dTH                 = parceldiff(pottemp, 'diff')
 
                         # sensible heat
-                        if ( dT > 0 and checkpbl(ztra,hpbl,cheat_hgt)):
+                        if ( dT > 0 and checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt)):
                             dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
                             if fcc_advanced:
                                 if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
@@ -192,7 +193,7 @@ def main_diagnosis(
                                     ary_heat[lat_ind,lon_ind] += dTH
 
                         # evaporation
-                        if ( dq > 0 and checkpbl(ztra,hpbl,cevap_hgt)):
+                        if ( dq > 0 and checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt)):
                             epottemp        = readepottemp(ary[:,i,:])
                             dTHe            = parceldiff(epottemp, 'diff')
                             dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])

@@ -22,6 +22,7 @@ import netCDF4 as nc4
 import sys
 import argparse
 import time
+import math as math
 from datetime import datetime, timedelta, date
 from math import sin,cos,acos,atan,atan2,sqrt,floor
 from dateutil.relativedelta import relativedelta
@@ -82,6 +83,7 @@ main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
           cprec_dqv=args.cprec_dqv,
           cprec_dtemp=args.cprec_dtemp,
           cprec_rh=args.cprec_rh,
+          cpbl_strict=args.cpbl_strict,
           refdate=args.refdate,
           fwrite_netcdf=args.write_netcdf,
           ftimethis=args.timethis,
