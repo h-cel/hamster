@@ -162,30 +162,30 @@ def main_diagnosis(
 
             ## read only necessary parcel information
             qv, temp, ztra, hpbl    = readsparcel(ary[:,i,:])
-            dq = parceldiff(qv, 'diff') 
-            dT = parceldiff(temp, 'diff')
+            dq                      = parceldiff(qv, 'diff') 
+            pottemp                 = readpottemp(ary[:,i,:])
+            dTH                     = parceldiff(pottemp, 'diff')
             
             ##  KAS: KEUNE AND SCHUMACHER
             if tdiagnosis == 'KAS':
 
                 # precipitation
                 if (dq < cprec_dqv):
-                    pres            = readpres(ary[:,i,:])
+                    pres = readpres(ary[:,i,:])
                     if ( q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
                          q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
                          ary_prec[lat_ind,lon_ind] += dq
 
                 # evaporation and sensible heat 
                 if ( checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt) or checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt) ):
-                    if ( dq > 0 or dT > 0):
+                    if ( dq > 0 or dTH > 0):
                         pres                = readpres(ary[:,i,:])
-                        pottemp             = readpottemp(ary[:,i,:])
-                        dTH                 = parceldiff(pottemp, 'diff')
 
                         # sensible heat
-                        if ( dT > 0 and checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt)):
+                        if ( dTH > 0 and checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt)):
                             dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
                             if fcc_advanced:
+                                dT = parceldiff(temp, 'diff')
                                 if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
                                     ary_heat[lat_ind,lon_ind] += dTH
                             else:
@@ -198,6 +198,7 @@ def main_diagnosis(
                             dTHe            = parceldiff(epottemp, 'diff')
                             dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
                             if fcc_advanced:
+                                dT = parceldiff(temp, 'diff')
                                 if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
                                     ary_evap[lat_ind,lon_ind] += dq
                             else:
