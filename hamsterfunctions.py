@@ -133,7 +133,7 @@ def readpom(idate,     # run year
             else:
                 dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
             # flip time axis    (TODO: flip axis depending on forward/backward flag)
-            dataar          = dataar[::-1,:,:]
+    dataar          = dataar[::-1,:,:]
 
     return(dataar)
 
