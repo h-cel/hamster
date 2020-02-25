@@ -156,16 +156,16 @@ def main_diagnosis(
 
             ## get midpoint at the very beginning
             #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
-            lat_ind, lon_ind = midpindex(ary[:,i,:],glon=glon,glat=glat)
+            lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat) # :2 for clarity, not needed
             ## log number of parcels
             ary_npart[lat_ind,lon_ind] += int(1)
 
             ## read only necessary parcel information
-            qv, temp, ztra, hpbl    = readsparcel(ary[:,i,:])
+            qv, temp, ztra, hpbl    = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
             dq                      = parceldiff(qv, 'diff') 
-            pottemp                 = readpottemp(ary[:,i,:])
+            pottemp                 = readpottemp(ary[:2,i,:])
             dTH                     = parceldiff(pottemp, 'diff')
-            
+
             ##  KAS: KEUNE AND SCHUMACHER
             if tdiagnosis == 'KAS':
 
@@ -204,7 +204,6 @@ def main_diagnosis(
                             else:
                                 if ( (dTHe - dTH) > cheat_dtemp and abs(dTH) < dq*dTmax ):
                                     ary_evap[lat_ind,lon_ind] += dq
-
 
             ## SOD: SODEMANN ET AL., 2008
             elif tdiagnosis == 'SOD':
