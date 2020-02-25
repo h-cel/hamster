@@ -388,8 +388,9 @@ def gridder(plon, plat, pval,
         - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # 1. calculate midpoint
-    lat_mid,lon_mid = midpoint_on_sphere(plat[0],plon[0],plat[1],plon[1]) # use own function to calculate midpoint position
-    if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    lat_mid,lon_mid = midpoint_on_sphere2(plat[0],plon[0],plat[1],plon[1]) # calculate midpoint position
+    if (lon_mid>179.5):  lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    if (lon_mid<-180.5): lon_mid += 360    # same for the other direction; only correct for 1deg grid (as below)!
     # 2. get grid index
     ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
@@ -427,6 +428,8 @@ def midpindex(parray,glon,glat):
     mlat,mlon = midpoint_on_sphere2(lats[0],lons[0],lats[1],lons[1]) # use own function to calculate midpoint position
     if (mlon>179.5):
         mlon -= 360      # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    elif (mlon<-180.5):
+        mlon += 360      # same for the other direction; only correct for 1deg grid (as below)!
     # get grid index
     ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
     ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
