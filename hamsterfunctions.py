@@ -55,6 +55,9 @@ def read_cmdargs():
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--setnegzero', '-sz',  help = "set negative ERA-I E & H fluxes to zero (flag)",                type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--inspect',    '-in',  help = "TOBEREMOVED: show some extra plots for biascorrection (flag)",  type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--frankenstein','-fr', help = "PRELIM: pom mask.dat used for P-scaling (flag)",                type = str2bol, default = True,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = parser.parse_args().ayyyy)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = str(parser.parse_args().ryyyy)+"123118")
@@ -556,3 +559,295 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
     nc_f['E2P'][ix,:,:,:]     = ary_etop[:,:,:]
     nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
+
+def basicplot(array, lats, lons, title, coastlines=True, colorbar=True):
+    """
+    does exactly what the name suggests, 
+    produces a very basic plot.
+    
+    array.shape == lats.size,lons.size
+    
+    data must be on a regular lat/lon grid!
+    """
+    # use pcolor if it doesnt work
+    from matplotlib import pyplot as plt
+    import cartopy.crs as ccrs
+    
+    ## obtain resolution and check if this is a 
+    if (abs(lats[1]-lats[0]) == abs(lons[1]-lons[0])):
+        res = abs(lats[1]-lats[0])
+    else:
+        raise SystemExit("------ ERROR: input coordinates not as required, ABORTING!")
+
+    ## create quadrilateral corner coords (dimensions of X & Y one greater than array!)
+    cornerlats = np.unique((lats-res/2).tolist()+(lats+res/2).tolist())
+    cornerlons = np.unique((lons-res/2).tolist()+(lons+res/2).tolist())
+    
+    ## prepare figure & plot, add coastlines if desired
+    plt.figure()
+    ax = plt.axes(projection=ccrs.PlateCarree())
+    plot_data = ax.pcolormesh(cornerlons, cornerlats, array, 
+                              transform=ccrs.PlateCarree())
+    if coastlines:
+        from cartopy.feature import NaturalEarthFeature
+        coast = NaturalEarthFeature(category='physical', scale='50m',
+                                    facecolor='none', name='coastline')
+        ax.add_feature(coast, edgecolor='gray')
+    if colorbar:
+        plt.colorbar(plot_data, ax=ax, orientation = "horizontal")
+    plt.title(title)
+    plt.show()
+
+
+def regrid_2Dto1deg(data, lats_in, lons_in, nmin_perpixel=1):
+    """
+    input: data with axes lats x lons, lons [-180 .. 180]
+    action: regrid to regular 1 degree grid
+    
+    ===> CAUTION: lats, lons must increase monotonically!
+    
+    DSc, April 2019, alpha version
+    """
+    
+    ## check if input coordinates do increase monotonically...
+    if np.all(np.diff(lats_in)>0) and np.all(np.diff(lons_in)>0):
+        pass
+    else:
+        print("---------- WARNING: function cannot handle input coordinates!")
+        return(False,False,False)
+    
+    ## proceed
+    lats_rounded     = np.round(lats_in)
+    lats_new         = np.unique(lats_rounded)
+    lons_rounded     = np.round(lons_in)
+
+    if lons_rounded[-1] == 180 and lons_rounded[0] == -180:
+        lons_rounded[lons_rounded==180] = -180  # set 180 to -180 degrees !
+    lons_new         = np.unique(lons_rounded)
+    
+    data_rg = np.zeros(shape=(lats_new.size, lons_new.size))
+    
+    ## loop through
+    for jlat in range(lats_new.size):
+        xlat = np.where(lats_rounded==lats_new[jlat])[0]
+        for jlon in range(lons_new.size):
+            xlon = np.where(lons_rounded==lons_new[jlon])[0]
+            
+            #######################################
+            if xlat.size*xlon.size>nmin_perpixel:
+                pass
+            else:
+                continue
+            #######################################
+            
+            if xlat.size==1 or xlon.size==1: # values at boundaries might be wrong.. (not double-checked)
+                data_rg[jlat,jlon] = np.nanmean(data[xlat,xlon])
+            else: # feeding in xlat, xlon directly results in weird shapes..
+                data_rg[jlat,jlon] = np.nanmean(data[xlat[0]:xlat[-1]+1,xlon[0]:xlon[-1]+1])
+                
+    return(data_rg, lats_new, lons_new)
+    
+def freakshow(pommaskpath):
+    """
+    
+    this function is appropriately called 'freakshow',
+    because it is 
+     - terribly ugly,
+     - has only been checked for two ANYAS ecoregions (NGP, AUS)
+    
+    maskpath: should point to XXXXXXXX_mask.dat produced by particle-o-matic
+    
+    RETURNS:
+        
+        1 x 1° gridded mask as obtained from particle-o-matic,
+        including coordinates
+    """
+
+    ## load mask file
+    import pandas as pd
+    mask = np.asarray(pd.read_table(pommaskpath, sep="\s", engine='python', header=None))
+    
+    
+    ## data are on a regular 0.2 x 0.2° grid, [90 .. -90], [0 .. 360] 
+    dy = 180/mask.shape[0] 
+    dx = 360/mask.shape[1]
+    mask = np.flip(mask, axis=0) # flip latitudinal axis already
+    assume_lats = np.arange(-90, 90+dy, dy) 
+    assume_lons = np.arange(  0,   360, dx)
+    ## regrid lons from 0 .. 359 to -180 .. 179
+    mask_bu        = np.copy(mask)
+    assume_lons_bu = np.copy(assume_lons)
+    assume_lons[:int(assume_lons.size/2)] = assume_lons_bu[int(assume_lons.size/2):] - 360
+    assume_lons[int(assume_lons.size/2):] = assume_lons_bu[:int(assume_lons.size/2)]
+    mask[:,:int(assume_lons.size/2)] = mask_bu[:,int(assume_lons.size/2):]
+    mask[:,int(assume_lons.size/2):] = mask_bu[:,:int(assume_lons.size/2)]
+    
+    ## use this crap function for regridding from 0.2 to 1.0°
+    mask1deg, lat1deg, lon1deg = regrid_2Dto1deg(data=mask, lats_in=assume_lats, lons_in=assume_lons, nmin_perpixel=1)
+    
+    ## now ditch some pixels and pray it ends up making sense
+    mask1deg[(mask1deg>0) & (mask1deg<0.5)] = 0
+    mask1deg[(mask1deg>=0.5)]          = 1
+
+    return(mask1deg, lat1deg, lon1deg)
+    
+
+def eraloader_12hourly(var, fullpath, maskpos, uptake_dates, lats, lons):
+    """
+    only for single years so far!!!
+    """
+    with nc4.Dataset(fullpath, mode='r') as f: # sshf_12hourly, tp_12hourly
+        
+        reflats = np.asarray(f['latitude'][:])
+        reflons = np.asarray(f['longitude'][:])
+        
+        reftime = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) 
+        refdates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
+
+        ## first figure out what is needed!
+        jbeg = np.min(np.where(refdates == uptake_dates[0])) 
+        jend = np.max(np.where(refdates == uptake_dates[-1])) # 12-hourly input here!
+        
+        array = np.asarray(f[var][jbeg:jend+1,:,:])
+        reftime  = reftime[jbeg:jend+1]
+        refdates = refdates[jbeg:jend+1]
+        
+        ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
+        if maskpos:
+            array[array>0] = np.NaN
+            
+        ## aggregate to daily
+        refudates = np.unique(refdates)
+        daily = np.empty(shape=(refudates.size, reflats.size, reflons.size))
+        for i in range(refudates.size):
+            rud = refudates[i]
+            daily[i,:,:] = np.nansum(array[np.where(refdates==rud)[0],:,:], axis=0) 
+        if not np.array_equal(refudates, uptake_dates):
+            raise SystemExit("---- no good")
+    
+        ## regrid (flip LATS; LON 0 .. 359 to -180 .. 179)
+        reflats = np.flipud(reflats)
+        daily  = np.flip(daily, axis=1)
+        #-- above: flipping latitudes, below: from 0 .. 359 to -180 .. 179
+        daily_bu  = np.copy(daily)
+        reflons_bu = np.copy(reflons)
+        reflons[:int(reflons.size/2)] = reflons_bu[int(reflons.size/2):] - 360
+        reflons[int(reflons.size/2):] = reflons_bu[:int(reflons.size/2)]
+        daily[:,:,:int(reflons.size/2)] = daily_bu[:,:,int(reflons.size/2):]
+        daily[:,:,int(reflons.size/2):] = daily_bu[:,:,:int(reflons.size/2)]
+    
+        # check        
+        if not (np.array_equal(lats, reflats) or not np.array_equal(lons, reflons)):
+            raise SystemExit("---------- FATAL ERROR: regridded ERA-I coordinates don't match!")
+            
+        ## units... and sign
+        if var=='e' and f[var].units == "m of water equivalent":
+            daily *= -1e3 # flip sign
+        elif var=='tp' and f[var].units == "m":
+            daily *= 1e3
+        elif var=='sshf' and f[var].units == "J m**-2":
+            daily /= -86400 # flip sign
+        else:
+            raise SystemExit("---- aborted: no can do.")
+        
+        return daily
+    
+def alphascreener(alpha, var):
+    from matplotlib import pyplot as plt
+    alphasum = np.nansum(alpha, axis=0)
+    plt.figure()
+    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
+    plt.title(var+' :: alphas summed over arrival days -- auto range')
+    plt.show()
+    plt.figure()
+    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
+    plt.title(var+' :: same as above, manual plotting range')
+    plt.ylim(0,2e2)
+    plt.show()
+    print("--- this value should not really exceed 1.0 ===>", np.nanmax(alphasum))
+
+def nanweight3Dary(array, weights):
+    """
+    purpose: weight 3-dim array and sum up along spatial dimensions
+                if array does not contain data, corresponding weight is
+                NOT taken into account as to not distort the average
+    input:   3D array (time x lat x lon), weights of same shape
+    output:  weighted averages, 1D (timeseries)
+    """
+    array   = array.reshape(array.shape[0],array.shape[1]*array.shape[2])
+    weights = weights.reshape(array.shape)
+    weightsum = np.zeros(shape=array.shape[0])
+    for ii in range(array.shape[0]):    
+        weightsum[ii] = np.nansum(weights[ii,np.where(~np.isnan(weights[ii,]*array[ii,]))])
+    return( np.nansum(weights*array, axis=1)/weightsum )
+    
+def writefinalnc(ofile,fdate_seq,glon,glat,
+                 Had, Had_Hs,
+                 E2P, E2P_Es, E2P_Ps, E2P_EPs):#strargs):
+    
+    # delete nc file if it is present (avoiding error message)
+    try:
+        os.remove(ofile)
+    except OSError:
+        pass
+
+    # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+
+    ### create dimensions ###
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('lat', glat.size)
+    nc_f.createDimension('lon', glon.size)
+
+    # create variables
+    times               = nc_f.createVariable('time', 'i4', 'time')
+    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
+    heats               = nc_f.createVariable('Had', 'f4', ('time','lat','lon'))
+    heats_Hs            = nc_f.createVariable('Had_Hs', 'f4', ('time','lat','lon'))
+    evaps               = nc_f.createVariable('E2P', 'f4', ('time','lat','lon'))
+    evaps_Es            = nc_f.createVariable('E2P_Es', 'f4', ('time','lat','lon'))
+    evaps_Ps            = nc_f.createVariable('E2P_Ps', 'f4', ('time','lat','lon'))
+    evaps_EPs           = nc_f.createVariable('E2P_EPs', 'f4', ('time','lat','lon'))
+    
+ 
+    # set attributes
+    nc_f.description    = "---- missing as of now :/"#"03 - " + str(strargs)
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Dominik Schumacher and Jessica Keune)"
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    heats.units         = 'W m-2'
+    heats.long_name     = 'advected surface sensible heat'
+    heats_Hs.units      = 'W m-2'
+    heats_Hs.long_name  = 'advected surface sensible heat, H-scaled' # this is garbage, I know
+    evaps.units         = 'mm'
+    evaps.long_name     = 'evaporation resulting in precipitation'
+    evaps_Es.units      = 'mm'
+    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-scaled'
+    evaps_Ps.units      = 'mm'
+    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-scaled'
+    evaps_EPs.units     = 'mm'
+    evaps_EPs.long_name = 'evaporation resulting in precipitation, E&P-scaled'
+
+
+    # write data
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    latitudes[:]        = glat
+    longitudes[:]       = glon
+    
+    heats[:]      = Had[:]
+    heats_Hs[:]   = Had_Hs[:]
+    
+    evaps[:]      = E2P[:]
+    evaps_Es[:]   = E2P_Es[:]
+    evaps_Ps[:]   = E2P_Ps[:]
+    evaps_EPs[:]  = E2P_EPs[:]
+      
+    # close file
+    nc_f.close()
+    
+    # print info
+    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")

@@ -45,6 +45,7 @@ with open(wpath+"/paths.txt") as f:
     ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
     ibase_ATR = content.ibase_ATR 
     opath_ATR = content.opath_ATR 
+    opath_BIA = content.opath_BIA
 
 ###########################################################################
 ##--- MAIN
@@ -58,6 +59,7 @@ exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
 exec(open("01_diagnosis.py").read())
 exec(open("02_attribution.py").read())
+exec(open("03_biascorrection.py").read())
 exec(open("hamsterfunctions.py").read())
 
 ## (2) get date, thresholds and flags from command line (job script) 
@@ -116,3 +118,15 @@ main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
           fcc_advanced=args.cc_advanced,
           fvariable_mass=args.variable_mass,
           strargs=printsettings(args))
+
+main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+           ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
+           opathA=opath_ATR, ofileA_base="FXv",#args.expid,         # attribution
+           opathD=opath_DGN, ofileD_base="FXv_diag_r",#args.expid,  # diagnosis
+           ipathR="/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1", # reference data 
+           opath=opath_BIA, ofile_base=args.expid, # output
+           set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
+           verbose=args.verbose,
+           inspect_alphas=args.inspect,
+           go_frankenstein=args.frankenstein,
+           fwrite_netcdf=args.write_netcdf)

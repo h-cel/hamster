@@ -117,6 +117,32 @@ def gridded_area_exact(lats_centr, res, nlon):
     ary_area = np.swapaxes(np.tile(areas, (nlon,1)), 0,1)
     return(ary_area)
 
+
+def gridded_area_exact_1D_TEMPORARY(lats_centr, res, R):
+    """
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    this shall be removed soon,
+    the only reason it's here is that I need the 1D version somewhere
+    in 03_biascorrection (and actually also 2D, but I still call 
+    this crap for now and then stupidly repeat & reshape)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    """
+
+    ## UGLY but it's getting too late
+    R = EARTHRADIUS
+
+    ## make use of numpy vectorization
+    lats1 = (lats_centr+(res/2))*np.pi/180 # np.sin requires radians
+    lats2 = (lats_centr-(res/2))*np.pi/180
+    areas = (np.pi/180)*(R**2)*np.abs(np.sin(lats1)-np.sin(lats2))*res
+
+    ## overwrite any areas of 0 (at the poles) with np.NaN to prevent problems
+    try:
+        areas[np.where(areas==0.)] = np.NaN # only works for arrays
+    except TypeError:
+        pass # simply ignore if it's a float
+    return(areas)
+
 def midpoint_on_sphere(lat1,lon1,lat2,lon2):
 
     """
