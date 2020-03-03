@@ -227,10 +227,10 @@ def main_attribution(
                     evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
                     evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
                     
-                   
                     if evap_idx.size>0:
-                        dq_disc = linear_discounter(v=qv[:ihf_E], min_gain=0, min_loss=0)
-                        etop = ((qv[0]-qv[1])/qv[1])*dq_disc 
+                        dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                        dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                        etop        = ((qv[0]-qv[1])/qv[1])*dq_disc
 
                     for itj in evap_idx: 
                         ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -292,8 +292,9 @@ def main_attribution(
 
                     # discount uptakes linearly, scale with precipitation fraction
                     if evap_idx.size>0:
-                        dq_disc = linear_discounter(v=qv[:ihf_E], min_gain=0, min_loss=0)
-                        etop = ((qv[0]-qv[1])/qv[1])*dq_disc 
+                        dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                        dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                        etop        = ((qv[0]-qv[1])/qv[1])*dq_disc 
 
                     # loop through evaporative uptakes
                     for itj in evap_idx:
