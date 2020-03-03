@@ -128,6 +128,9 @@ def main_diagnosis(
     ary_evap     = np.zeros(shape=(glat.size,glon.size))
     ary_prec     = np.zeros(shape=(glat.size,glon.size))
     ary_npart    = np.zeros(shape=(glat.size,glon.size))
+    ary_pnpart   = np.zeros(shape=(glat.size,glon.size))
+    ary_enpart   = np.zeros(shape=(glat.size,glon.size))
+    ary_hnpart   = np.zeros(shape=(glat.size,glon.size))
 
     for ix in range(ntime):
         
@@ -175,6 +178,7 @@ def main_diagnosis(
                     if ( q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
                          q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
                          ary_prec[lat_ind,lon_ind] += dq
+                         ary_pnpart[lat_ind,lon_ind] += 1
 
                 # evaporation and sensible heat 
                 if ( checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt) or checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt) ):
@@ -188,9 +192,11 @@ def main_diagnosis(
                                 dT = parceldiff(temp, 'diff')
                                 if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
                                     ary_heat[lat_ind,lon_ind] += dTH
+                                    ary_hnpart[lat_ind,lon_ind] += 1
                             else:
                                 if  ((dTH > cheat_dtemp) and abs(dq) < dTH*dqmax ):
                                     ary_heat[lat_ind,lon_ind] += dTH
+                                    ary_hnpart[lat_ind,lon_ind] += 1
 
                         # evaporation
                         if ( dq > 0 and checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt)):
@@ -201,9 +207,11 @@ def main_diagnosis(
                                 dT = parceldiff(temp, 'diff')
                                 if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
                                     ary_evap[lat_ind,lon_ind] += dq
+                                    ary_enpart[lat_ind,lon_ind] += 1
                             else:
                                 if ( (dTHe - dTH) > cheat_dtemp and abs(dTH) < dq*dTmax ):
                                     ary_evap[lat_ind,lon_ind] += dq
+                                    ary_enpart[lat_ind,lon_ind] += 1
 
             ## SOD: SODEMANN ET AL., 2008
             elif tdiagnosis == 'SOD':
@@ -217,16 +225,19 @@ def main_diagnosis(
                 if (dq < 0 and 
                         q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
                     ary_prec[lat_ind,lon_ind] += dq
+                    ary_pnpart[lat_ind,lon_ind] += 1
 
                 ## evaporation
                 if (dq > 0.0002 and  
                         (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_evap[lat_ind,lon_ind] += dq
+                    ary_enpart[lat_ind,lon_ind] += 1
     
                 ## sensible heat (not used originally; analogous to evaporation)
                 if ((dTH > cheat_dtemp) and 
                         (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[lat_ind,lon_ind] += dTH
+                    ary_hnpart[lat_ind,lon_ind] += 1
 
             ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
             elif tdiagnosis == 'SOD2':
@@ -240,14 +251,17 @@ def main_diagnosis(
                 if (dq < 0 and 
                         q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
                     ary_prec[lat_ind,lon_ind] += dq
+                    ary_pnpart[lat_ind,lon_ind] += 1
 
                 ## evaporation
                 if (dq > 0.0001): 
                     ary_evap[lat_ind,lon_ind] += dq
+                    ary_enpart[lat_ind,lon_ind] += 1
     
                 ## sensible heat (not used originally; analogous to evaporation)
                 if (dTH > cheat_dtemp):
                     ary_heat[lat_ind,lon_ind] += dTH
+                    ary_hnpart[lat_ind,lon_ind] += 1
 
             ## SAJ: STOHL AND JAMES, 2004
             elif tdiagnosis == 'SAJ':
@@ -281,10 +295,13 @@ def main_diagnosis(
             ary_heat[:,:]         = scale_mass(ary_heat[:,:], ary_npart[:,:], ary_rnpart)
 
         if fwrite_netcdf:
-            writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:])
+            writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:],ary_pnpart[:,:],ary_enpart[:,:],ary_hnpart[:,:])
 
         # re-init. arrays
         ary_npart[:,:]  = 0
+        ary_pnpart[:,:] = 0
+        ary_enpart[:,:] = 0
+        ary_hnpart[:,:] = 0
         ary_prec[:,:]   = 0
         ary_evap[:,:]   = 0
         ary_heat[:,:]   = 0
