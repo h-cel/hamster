@@ -68,65 +68,68 @@ args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args))
 
-## (3) RUN main script with arguments
-main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-          ipath=ipath_DGN,
-          ifile_base=ibase_DGN, 
-          opath=opath_DGN,
-          ofile_base=args.expid,
-          mode=args.mode,
-          gres=args.gres,
-          tdiagnosis=args.tdiagnosis,
-          cheat_dtemp=args.cheat_dtemp,
-          cheat_cc=args.cheat_cc,
-          cevap_cc=args.cevap_cc,
-          cevap_hgt=args.cevap_hgt,
-          cheat_hgt=args.cheat_hgt,
-          cprec_dqv=args.cprec_dqv,
-          cprec_dtemp=args.cprec_dtemp,
-          cprec_rh=args.cprec_rh,
-          cpbl_strict=args.cpbl_strict,
-          refdate=args.refdate,
-          fwrite_netcdf=args.write_netcdf,
-          ftimethis=args.timethis,
-          fcc_advanced=args.cc_advanced,
-          fvariable_mass=args.variable_mass,
-          strargs=printsettings(args))
+## (3) RUN main scripts with arguments
+if args.steps == 1 or args.steps == 4:
+    main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+              ipath=ipath_DGN,
+              ifile_base=ibase_DGN, 
+              opath=opath_DGN,
+              ofile_base=args.expid,
+              mode=args.mode,
+              gres=args.gres,
+              tdiagnosis=args.tdiagnosis,
+              cheat_dtemp=args.cheat_dtemp,
+              cheat_cc=args.cheat_cc,
+              cevap_cc=args.cevap_cc,
+              cevap_hgt=args.cevap_hgt,
+              cheat_hgt=args.cheat_hgt,
+              cprec_dqv=args.cprec_dqv,
+              cprec_dtemp=args.cprec_dtemp,
+              cprec_rh=args.cprec_rh,
+              cpbl_strict=args.cpbl_strict,
+              refdate=args.refdate,
+              fwrite_netcdf=args.write_netcdf,
+              ftimethis=args.timethis,
+              fcc_advanced=args.cc_advanced,
+              fvariable_mass=args.variable_mass,
+              strargs=printsettings(args))
 
-main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
-          ipath=ipath_ATR,
-          ifile_base=ibase_ATR,
-          opath=opath_ATR,
-          ofile_base=args.expid,
-          mode=args.mode,
-          gres=args.gres,
-          tdiagnosis=args.tdiagnosis,
-          ctraj_len=args.ctraj_len,
-          cheat_dtemp=args.cheat_dtemp,
-          cheat_cc=args.cheat_cc, 
-          cevap_cc=args.cevap_cc,
-          cevap_hgt=args.cevap_hgt, 
-          cheat_hgt=args.cheat_hgt,
-          cprec_dqv=args.cprec_dqv, 
-          cprec_dtemp=args.cprec_dtemp, 
-          cprec_rh=args.cprec_rh,
-          refdate=args.refdate,
-          fwrite_netcdf=args.write_netcdf,
-          ftimethis=args.timethis, 
-          fdry=args.fallingdry,
-          fmemento=args.memento,
-          fcc_advanced=args.cc_advanced,
-          fvariable_mass=args.variable_mass,
-          strargs=printsettings(args))
+if args.steps == 2 or args.steps == 4:
+    main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+              ipath=ipath_ATR,
+              ifile_base=ibase_ATR,
+              opath=opath_ATR,
+              ofile_base=args.expid,
+              mode=args.mode,
+              gres=args.gres,
+              tdiagnosis=args.tdiagnosis,
+              ctraj_len=args.ctraj_len,
+              cheat_dtemp=args.cheat_dtemp,
+              cheat_cc=args.cheat_cc, 
+              cevap_cc=args.cevap_cc,
+              cevap_hgt=args.cevap_hgt, 
+              cheat_hgt=args.cheat_hgt,
+              cprec_dqv=args.cprec_dqv, 
+              cprec_dtemp=args.cprec_dtemp, 
+              cprec_rh=args.cprec_rh,
+              refdate=args.refdate,
+              fwrite_netcdf=args.write_netcdf,
+              ftimethis=args.timethis, 
+              fdry=args.fallingdry,
+              fmemento=args.memento,
+              fcc_advanced=args.cc_advanced,
+              fvariable_mass=args.variable_mass,
+              strargs=printsettings(args))
 
-main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-           ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
-           opathA=opath_ATR, ofileA_base="FXv",#args.expid,         # attribution
-           opathD=opath_DGN, ofileD_base="FXv_diag_r",#args.expid,  # diagnosis
-           ipathR="/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1", # reference data 
-           opath=opath_BIA, ofile_base=args.expid, # output
-           set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
-           verbose=args.verbose,
-           inspect_alphas=args.inspect,
-           go_frankenstein=args.frankenstein,
-           fwrite_netcdf=args.write_netcdf)
+if args.steps == 3 or args.steps == 4:
+    main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+               ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
+               opathA=opath_ATR, ofileA_base="FXv",#args.expid,         # attribution
+               opathD=opath_DGN, ofileD_base="FXv_diag_r",#args.expid,  # diagnosis
+               ipathR="/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1", # reference data 
+               opath=opath_BIA, ofile_base=args.expid, # output
+               set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
+               verbose=args.verbose,
+               inspect_alphas=args.inspect,
+               go_frankenstein=args.frankenstein,
+               fwrite_netcdf=args.write_netcdf)

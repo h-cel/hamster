@@ -33,6 +33,7 @@ def read_cmdargs():
     DEP:    uses argparse
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('--steps',      '-st',  help = "steps performed (1: 01_diagnosis, ..., 4: all)",                type = int,     default = 4)
     parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
