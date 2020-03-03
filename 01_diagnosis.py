@@ -95,10 +95,12 @@ def main_diagnosis(
     timestep        = datetime.timedelta(hours=6)
     date_seq        = []
     fdate_seq       = []
+    mfdate_seq      = []
     idate           = date_bgn
     while idate < date_end:
         date_seq.append(idate.strftime('%Y%m%d%H'))
         fdate_seq.append(idate)
+        mfdate_seq.append(idate-timestep/2) # -dt/2 for backward run
         idate   += timestep
     ntime           = len(date_seq)
 
@@ -107,10 +109,11 @@ def main_diagnosis(
         ntime       = 1
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
+        mfdate_seq  = mfdate_seq[0:ntime]
 
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
-        writeemptync(ofile,fdate_seq,glon,glat,strargs)
+        writeemptync(ofile,mfdate_seq,glon,glat,strargs)
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
