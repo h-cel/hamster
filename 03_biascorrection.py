@@ -191,7 +191,7 @@ def main_biascorrection(
     ## P-scaling requires arrival region mask
     if go_frankenstein:
         mask, mlat, mlon = freakshow(pommaskpath=maskpath)
-        if verbose: basicplot(mask, mlat, mlon, title="frankenstein'ed mask from mask.dat")
+        #if verbose: basicplot(mask, mlat, mlon, title="frankenstein'ed mask from mask.dat")
     else:
         import warnings
         warnings.warn("----- user did not want to go Frankenstein, falling back to ecoregion mask (all HARDCODED)")
@@ -199,9 +199,9 @@ def main_biascorrection(
             mask = f['mask'][:]
             mlat = f['lat'][:]
             mlon = f['lon'][:]   
-        if verbose: basicplot(mask, mlat, mlon, title="actual masks (all ecoregions)")
+        #if verbose: basicplot(mask, mlat, mlon, title="actual masks (all ecoregions)")
         mask[(mask>0) & (mask!=1)] = 0 ## NOTE: HARDCODED FOR ECOREGION 1 (NGP)
-        if verbose: basicplot(mask, mlat, mlon, title="actual mask (NGP only)")
+        #if verbose: basicplot(mask, mlat, mlon, title="actual mask (NGP only)")
     
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
@@ -217,7 +217,18 @@ def main_biascorrection(
     alpha_Had = Had / Htot
     alpha_E2P = E2P / Etot 
     #******************************************************************************
-    
+   
+    ## NOTE: as of now, there is absolutely no check whatsoever concerning
+    ## the fractions; if e.g. only 3 6-hourly values are used to generate
+    ## daily diagnosis data, this can result in a division by zero above,
+    ## so that scaled data blows up to infinity (this actually happened).
+    ## hence, check if any alpha clearly exceeds 1, and warn the user
+    ## AGAIN that the output cannot be fully trusted (but continue)
+    if ( (np.any(alpha_Had > 1.0001) or np.any(math.isinf(alpha_Had))) or 
+         (np.any(alpha_E2P > 1.0001) or np.any(math.isinf(alpha_E2P))) ):
+        import warnings
+        warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
+ 
     ## have a look if you're curious
     if inspect_alphas:
         alphascreener(alpha_Had, var='Had')
