@@ -49,14 +49,20 @@ def main_biascorrection(
     
     
     ##--2. load diagnosis data ####################################################
+    ## NOTE: this was first coded with the intention of being able to deal with
+    ## basically any sort of attribution input, i.e. multi-monthly data..
+    ## should be cleaned up since we will, as discussed on 04-03-2020, stick
+    ## to the monthly format
+
+    ayears  =  np.asarray([ut.year  for ut in uptake_time])
+    amonths =  np.asarray([ut.month for ut in uptake_time])
+    uset = np.unique(np.column_stack((ayears, amonths)), axis=0)
+    uyears, umonths = uset[:,0], uset[:,1]
     
-    uyears  =  np.unique(np.asarray([ut.year  for ut in uptake_time]))
-    umonths =  np.unique(np.asarray([ut.month for ut in uptake_time]))
-    if uyears.size > 1:
-        raise SystemExit("------ script isn't smart enough for this yet, aborting!")
-    
-    for umon in umonths:
-        fnam = ofileD_base+str(uyears[0])[2:]+"_"+str(uyears[0])+"-"+str(umon).zfill(2)+".nc"
+    for jj in range(umonths.size):
+        uyr  = str(uyears[jj])
+        umon = str(umonths[jj])
+        fnam = ofileD_base+uyr[2:]+"_"+uyr+"-"+umon.zfill(2)+".nc"
         with nc4.Dataset(diagdir+"/"+fnam, mode="r") as f:
             Ex     = f['E'][:]
             Px     = f['P'][:]
@@ -95,7 +101,7 @@ def main_biascorrection(
             dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in time])
             udates = np.unique(dates)
         elif time[0].hour in [3, 9, 15, 21]:
-            ## probably wont ever be used (6-hourly but stored at 'real' uptake times)    
+            ## NOTE: this is the new norm! retain "old style" for now, though    
             pass 
         
         Etot = np.zeros(shape=(time.size, lats.size, lons.size))
@@ -109,10 +115,12 @@ def main_biascorrection(
             iud = udates[i]       
             sel = np.where(dates == iud)[0]
      
+            ## TODO: clean up; there should be a check whether 4 files are present, imo
             if sel.size != 4:
                 import warnings
-                warnings.warn("\n\n----------------- WARNING: last DIAGN day incomplete (need 00 UTC of next month), gotta skip it\n\n")
-                cutend = True
+                warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
+                #warnings.warn("\n\n----------------- WARNING: last DIAGN day incomplete (need 00 UTC of next month), gotta skip it\n\n")
+                #cutend = True
            
             Etot[i,:,:] = np.nansum(E[sel, :, :], axis=0) # nan likely unnecessary
             Ptot[i,:,:] = np.nansum(P[sel, :, :], axis=0)
