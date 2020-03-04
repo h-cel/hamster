@@ -96,7 +96,7 @@ def main_diagnosis(
     date_seq        = []
     fdate_seq       = []
     mfdate_seq      = []
-    idate           = date_bgn
+    idate           = date_bgn + timestep
     while idate <= date_end:
         date_seq.append(idate.strftime('%Y%m%d%H'))
         fdate_seq.append(idate)
