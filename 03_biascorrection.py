@@ -70,7 +70,7 @@ def main_biascorrection(
             timex  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
         
         ## concatenate 'em!
-        if umon == umonths[0]:
+        if umon == str(umonths[0]):
             E = np.copy(Ex)
             P = np.copy(Px)
             H = np.copy(Hx)
@@ -249,14 +249,14 @@ def main_biascorrection(
     # 3.) alright, now calculate how much more scaling is needed to match P too
     f_remain = Pratio / f_Escaled
     
-    if verbose:
-        from matplotlib import pyplot as plt
-        plt.figure
-        plt.plot(f_remain, label="remaining scaling factor")
-        plt.plot(Pratio, label="P ratio (REF/FLEX)")
-        plt.legend()
-        plt.title("note: ratio is negative because FLEX-P is <0")
-        plt.show()    
+#    if verbose:
+#        from matplotlib import pyplot as plt
+#        plt.figure
+#        plt.plot(f_remain, label="remaining scaling factor")
+#        plt.plot(Pratio, label="P ratio (REF/FLEX)")
+#        plt.legend()
+#        plt.title("note: ratio is negative because FLEX-P is <0")
+#        plt.show()    
     
     #******************************************************************************
     ## swap axes to enable numpy broadcasting; 
@@ -278,21 +278,21 @@ def main_biascorrection(
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
     
-    if verbose:
-        
-        basicplot(np.nanmean(Had, axis=0), lats, lons, 
-                  title="raw Had, daily mean")
-        basicplot(np.nanmean(Had_scaled, axis=0), lats, lons, 
-                  title="H-scaled Had, daily mean")
-    
-        basicplot(np.nanmean(E2P, axis=0), lats, lons, 
-                  title="raw E2P, daily mean")
-        basicplot(np.nanmean(E2P_Escaled, axis=0), lats, lons, 
-                  title="E-scaled E2P, daily mean")    
-        basicplot(np.nanmean(E2P_Pscaled, axis=0), lats, lons, 
-                  title="P-scaled E2P, daily mean")
-        basicplot(np.nanmean(E2P_EPscaled, axis=0), lats, lons, 
-                  title="E-P-scaled E2P, daily mean")
+#    if verbose:
+#        
+#        basicplot(np.nanmean(Had, axis=0), lats, lons, 
+#                  title="raw Had, daily mean")
+#        basicplot(np.nanmean(Had_scaled, axis=0), lats, lons, 
+#                  title="H-scaled Had, daily mean")
+#    
+#        basicplot(np.nanmean(E2P, axis=0), lats, lons, 
+#                  title="raw E2P, daily mean")
+#        basicplot(np.nanmean(E2P_Escaled, axis=0), lats, lons, 
+#                  title="E-scaled E2P, daily mean")    
+#        basicplot(np.nanmean(E2P_Pscaled, axis=0), lats, lons, 
+#                  title="P-scaled E2P, daily mean")
+#        basicplot(np.nanmean(E2P_EPscaled, axis=0), lats, lons, 
+#                  title="E-P-scaled E2P, daily mean")
     
     
     ##--6. save output ############################################################
