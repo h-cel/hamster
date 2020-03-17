@@ -55,9 +55,9 @@ which build up on each other. It is suggested to run them sequentially to obtain
 
 ### Prerequisites
 The only prerequisites are: 
-– Output from FLEXPART (driven with a reanalysis or output from a GCM/RCM)
-– Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
-– A file paths.txt which lists where the above data is found and where output will be dumped.
+* Output from a Lagrangian model that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
+* Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
+* A file paths.txt which lists where the above data is found and where output will be dumped.
 
 The file paths.txt is not coming with hamster. Users have to create the file theirselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
 ```
@@ -85,27 +85,12 @@ There are two options to perform the diagnosis for a single month,
 python main.py
 ```
 to run the script. 
-2. Run the script as a job on a cluster. use
-```
-qsub job.pbs 
-```
-to submit the job, which executes main.py
+
 Note that - without any flags - main.py is run with default values. Use 
 ```
 python main.py -h
 ```
 for more details on setting dates, thresholds and other options. 
-
-The modular setup of main.py enables to run multiple runs in parallel using the same script (prerequisite: worker environment)
-- [ ] adjust settings in work/dates.txt
-- [ ] adjust the work environment settings in work/workerjob.pbs
-- [ ] and submit the jobs. 
-```
-vi work/dates.py            # -- job settings (dates, thresholds, options, ...)
-vi work/workerjob.pbs       # -- job settings
-cd work 
-wsub workerjob.pbs
-``` 
 
 ### 2. Attribution
 The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
