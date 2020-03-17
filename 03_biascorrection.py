@@ -164,6 +164,7 @@ def main_biascorrection(
     ##--4. scale ##################################################################
     
     ## NOTE: this shall be removed once 01_diagnosis.py has been adjusted.
+    print("cutend= "+str(cutend))
     if cutend:
         Had  = Had[:-1,:-1,:,:]
         Htot = Htot[:-1,:,:]
@@ -185,13 +186,13 @@ def main_biascorrection(
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
     if fdebug: basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
-    mask[(mask>0) & (mask!=maskval)] = 0    ## using a (0,1) mask from here onwards
+    mask[(mask>0) & (mask!=maskval)] = 0
     if fdebug: basicplot(mask, mlat, mlon, title="mask used for bias-correction")
     
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
-    xla, xlo = np.where(mask==1) # P[:,xla,xlo] is merely a 2D array... ;)
+    xla, xlo = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     weights = gridded_area_exact_1D_TEMPORARY(lats_centr=lats[xla], res=1.0, R=6371)
     ibgn = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     PrefTS    =  np.nansum(weights*Pref[ibgn:,xla, xlo], axis=1)/np.nansum(weights)
