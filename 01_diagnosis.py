@@ -51,34 +51,18 @@ def main_diagnosis(
     
     if verbose:
         disclaimer()
-        print("\n SETTINGS :")
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
-        print("\n input path: \t", 	ipath)
         print("\n============================================================================================================")
+        print(" ! using input path: \t", 	ipath)
         print(" ! using variable mass: \t" +str(fvariable_mass) )
         if fvariable_mass:
             print(" \t ! reference date for number of particles: \t" +str(refdate) )
-        print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
         if fwrite_netcdf:
-            print(" \t ! with grid resolution:: \t", str(gres) )
+            print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
+            print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
-        print(" ! mode: \t" +str(mode))
-        #print(" ! DIAGNOSIS SETTINGS")
-        #print(" \t ! HEAT: ")
-        #print(" \t \t  dTH > " + str(cheat_dtemp) )
-        #print(" \t \t  abs(dqv) < "+str(cheat_cc)+" * (dTH) * ...")
-        #print(" \t \t  ztra[0] <  max("+str(cheat_hgt)+", hpbl_max) ")
-        #print(" \t \t  ztra[1] <  max("+str(cheat_hgt)+", hpbl_max) ")
-        #print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
-        #print(" \t ! EVAPORATION: ")
-        #print(" \t \t  abs(dTH) < "+str(cevap_cc)+" * (dqv) * ...")
-        #print(" \t \t  ztra[0] <  max("+str(cevap_hgt)+", hpbl_max) ")
-        #print(" \t \t  ztra[1] <  max("+str(cevap_hgt)+", hpbl_max) ")
-        #print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
-        #print(" \t ! PRECIPITATION: ")
-        #print(" \t \t  dqv < "+str(cprec_dqv) )
-        #print(" \t \t  rh[0] > "+str(cprec_rh) )
+        print(" ! using mode: \t" +str(mode))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -124,7 +108,7 @@ def main_diagnosis(
     
     ## ------- LOOP OVER DATES (FILES) 
     if verbose:
-        print("\n=== \t Start main program...\n")
+        print("\n=== \t Start main program: 01_diagnosis...\n")
 
     # pre-allocate arrays
     ary_heat     = np.zeros(shape=(glat.size,glon.size))
