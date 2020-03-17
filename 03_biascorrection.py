@@ -185,10 +185,10 @@ def main_biascorrection(
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
-    if fdebug: basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
-    mask[(mask>0) & (mask!=maskval)] = 0
-    if fdebug: basicplot(mask, mlat, mlon, title="mask used for bias-correction")
-    
+    if fdebug: 
+        basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
+        mask[(mask>0) & (mask!=maskval)] = 0
+        basicplot(mask, mlat, mlon, title="mask used for bias-correction")
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
