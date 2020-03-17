@@ -250,7 +250,6 @@ def main_biascorrection(
     f_remain = Pratio / f_Escaled
     
     if fdebug:
-        from matplotlib import pyplot as plt
         plt.figure
         plt.plot(f_remain, label="remaining scaling factor")
         plt.plot(Pratio, label="P ratio (REF/FLEX)")
