@@ -9,7 +9,7 @@ MAIN FUNCTION FOR 03_biascorrection
 
 def main_biascorrection(
            ryyyy, ayyyy, am,
-           ipathA, ifileA_base, # attribution (input)
+           ipathA, #ifileA_base, # attribution (input)
            opathA, #ofileA_base, # attribution (output)
            opathD, #ofileD_base,         # diagnosis (output)
            ipathR,                      # reference data (input)
@@ -17,7 +17,6 @@ def main_biascorrection(
            set_negERA_to0,    
            verbose,
            inspect_alphas,
-           go_frankenstein,
            fwrite_netcdf):
 #           strargs):
 
@@ -31,8 +30,6 @@ def main_biascorrection(
 
     ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
-    ##### hardcoded for pom output | TODO: discuss
-    maskpath  = ipathA+"/"+str(ryyyy)+"/"+ifileA_base[0][:-8]+"mask.dat"
 
     ##--1. load attribution data; grab all uptake days ############################    
     with nc4.Dataset(attrpath, mode="r") as f:
@@ -189,19 +186,13 @@ def main_biascorrection(
         Pref = Pref[:-1,:,:]
     
     ## P-scaling requires arrival region mask
-    if go_frankenstein:
-        mask, mlat, mlon = freakshow(pommaskpath=maskpath)
-        #if verbose: basicplot(mask, mlat, mlon, title="frankenstein'ed mask from mask.dat")
-    else:
-        import warnings
-        warnings.warn("----- user did not want to go Frankenstein, falling back to ecoregion mask (all HARDCODED)")
-        with nc4.Dataset("/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/NGP/mask/GPP_ecoreg_boxes.nc") as f:
-            mask = f['mask'][:]
-            mlat = f['lat'][:]
-            mlon = f['lon'][:]   
-        #if verbose: basicplot(mask, mlat, mlon, title="actual masks (all ecoregions)")
-        mask[(mask>0) & (mask!=1)] = 0 ## NOTE: HARDCODED FOR ECOREGION 1 (NGP)
-        #if verbose: basicplot(mask, mlat, mlon, title="actual mask (NGP only)")
+    with nc4.Dataset("/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/NGP/mask/GPP_ecoreg_boxes.nc") as f:
+        mask = f['mask'][:]
+        mlat = f['lat'][:]
+        mlon = f['lon'][:]   
+    #if verbose: basicplot(mask, mlat, mlon, title="actual masks (all ecoregions)")
+    mask[(mask>0) & (mask!=1)] = 0 ## NOTE: HARDCODED FOR ECOREGION 1 (NGP)
+    #if verbose: basicplot(mask, mlat, mlon, title="actual mask (NGP only)")
     
     
     ## area-weight arrival region precipitation (FLEXPART & REF)

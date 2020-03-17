@@ -124,7 +124,7 @@ if args.steps == 2 or args.steps == 4:
 
 if args.steps == 3 or args.steps == 4:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
+               ipathA=ipath_ATR,
                opathA=opath_ATR, 
                opathD=opath_DGN, 
                ipathR=ipath_REF,
@@ -132,5 +132,4 @@ if args.steps == 3 or args.steps == 4:
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
                inspect_alphas=args.inspect,
-               go_frankenstein=args.frankenstein,
                fwrite_netcdf=args.write_netcdf)
