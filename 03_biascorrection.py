@@ -74,14 +74,13 @@ def main_biascorrection(
             H = np.concatenate((H, Hx), axis=0)
             time = np.concatenate((time, timex))
     
-    
-    ## check if coordinates are the same
-    with nc4.Dataset(diagfile, mode="r") as f: # still defined from before
-        totlats = f['lat'][:]
-        totlons = f['lon'][:]
-        
-    if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
-        raise SystemExit("------ no can do")
+        ## check if coordinates are the same
+        with nc4.Dataset(diagfile, mode="r") as f:
+            totlats = f['lat'][:]
+            totlons = f['lon'][:]
+            
+        if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
+            raise SystemExit("------ no can do")
     
     ## must check if data comes in daily resolution; fix if not
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in time])
