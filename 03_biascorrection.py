@@ -114,7 +114,6 @@ def main_biascorrection(
      
             ## TODO: clean up; there should be a check whether 4 files are present, imo
             if sel.size != 4:
-                import warnings
                 warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
                 #warnings.warn("\n\n----------------- WARNING: last DIAGN day incomplete (need 00 UTC of next month), gotta skip it\n\n")
                 #cutend = True
@@ -217,7 +216,6 @@ def main_biascorrection(
     ## AGAIN that the output cannot be fully trusted (but continue)
     if ( (np.any(alpha_Had > 1.0001) or np.any(math.isinf(alpha_Had))) or 
          (np.any(alpha_E2P > 1.0001) or np.any(math.isinf(alpha_E2P))) ):
-        import warnings
         warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
  
     ## have a look if you're curious
