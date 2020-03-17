@@ -55,7 +55,7 @@ def main_biascorrection(
     for jj in range(umonths.size):
         uyr  = str(uyears[jj])
         umon = str(umonths[jj])
-        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy[-2:])+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
+        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
         with nc4.Dataset(diagfile, mode="r") as f:
             Ex     = f['E'][:]
             Px     = f['P'][:]
