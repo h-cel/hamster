@@ -53,6 +53,29 @@ This software is published under the GPLv3 license. This means:
 
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
+### Prerequisites
+The only prerequisites are: 
+– Output from FLEXPART (driven with a reanalysis or output from a GCM/RCM)
+– Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
+– A file paths.txt which lists where the above data is found and where output will be dumped.
+
+The file paths.txt is not coming with hamster. Users have to create the file theirselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
+```
+# This file contains all required paths to run hamster
+# INPUT paths
+ipath_ATR = "./data/FLEXPART/era_global/"
+ipath_DGN = "./data/FLEXPART/era_global/"
+
+# INPUT file name base
+ibase_ATR = ["pom_ecoreg1_traj10d_AUXTRAJ_"]
+ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
+
+# OUTPUT paths
+opath_DGN = "./flexpart_data/hamster/01_diagnosis"
+opath_ATR = "./flexpart_data/hamster/02_attribution"
+opath_BIA = "./flexpart_data/hamster/03_biascorrection"
+```
+
 ### 1. Diagnosis
 The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
 
