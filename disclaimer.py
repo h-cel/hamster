@@ -10,5 +10,5 @@ def disclaimer():
     print(" *                                                                     *")
     print(" * HAMSTER is free under the terms of the GNU General Public license   *")
     print(" * version 3 as published by the Free Software Foundation              *")
-    print(" * HAMSTER is distributed WITHOUT ANY WARRANTY! (see LICENSE           *") 
+    print(" * HAMSTER is distributed WITHOUT ANY WARRANTY! (see LICENSE)          *") 
     print("\n============================================================================================================")
