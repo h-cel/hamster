@@ -49,6 +49,7 @@ with open(wpath+"/paths.txt") as f:
     ibase_ATR = content.ibase_ATR 
     opath_ATR = content.opath_ATR 
     opath_BIA = content.opath_BIA
+    maskfile  = content.maskfile
 
 ###########################################################################
 ##--- MAIN
@@ -131,6 +132,7 @@ if args.steps == 3 or args.steps == 4:
                opathD=opath_DGN, 
                ipathR=ipath_REF,
                opath=opath_BIA, ofile_base=args.expid, # output
+               maskfile=maskfile,
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
                fdebug=args.debug,

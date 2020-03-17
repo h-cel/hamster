@@ -14,6 +14,7 @@ def main_biascorrection(
            opathD, #ofileD_base,         # diagnosis (output)
            ipathR,                      # reference data (input)
            opath, ofile_base,           # output
+           maskfile,
            set_negERA_to0,    
            verbose,
            fdebug,
@@ -185,7 +186,7 @@ def main_biascorrection(
         Pref = Pref[:-1,:,:]
     
     ## P-scaling requires arrival region mask
-    with nc4.Dataset("/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t42/gglobal/NGP/mask/GPP_ecoreg_boxes.nc") as f:
+    with nc4.Dataset(maskfile) as f:
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
