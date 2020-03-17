@@ -16,7 +16,7 @@ def main_biascorrection(
            opath, ofile_base,           # output
            set_negERA_to0,    
            verbose,
-           inspect_alphas,
+           fdebug,
            fwrite_netcdf):
 #           strargs):
 
@@ -221,7 +221,7 @@ def main_biascorrection(
         warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
  
     ## have a look if you're curious
-    if inspect_alphas:
+    if fdebug:
         alphascreener(alpha_Had, var='Had')
         alphascreener(-alpha_E2P, var='E2P') # feed in >0 alphas for simplicity
     

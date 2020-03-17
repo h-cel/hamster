@@ -131,5 +131,5 @@ if args.steps == 3 or args.steps == 4:
                opath=opath_BIA, ofile_base=args.expid, # output
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
-               inspect_alphas=args.inspect,
+               fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf)
