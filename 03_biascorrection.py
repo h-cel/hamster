@@ -22,18 +22,13 @@ def main_biascorrection(
 #           strargs):
 
 
-    ##--0. construct precise input and storage paths
-    #attrpath  = opathA+"/"+str(ryyyy)+"/"+str(ofileA_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
-    #diagdir   = opathD+"/"+str(ryyyy)
-    ##### again, but without ryyyy | TODO: fix
-    attrpath  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
-    diagdir   = opathD
-
+    ## construct precise input and storage paths
+    attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
 
     ##--1. load attribution data; grab all uptake days ############################    
-    with nc4.Dataset(attrpath, mode="r") as f:
+    with nc4.Dataset(attrfile, mode="r") as f:
         E2P          = np.asarray(f['E2P'][:])
         Had          = np.asarray(f['H'][:])
         arrival_time = nc4.num2date(f['arrival-time'][:], f['arrival-time'].units, f['arrival-time'].calendar)
@@ -60,8 +55,8 @@ def main_biascorrection(
     for jj in range(umonths.size):
         uyr  = str(uyears[jj])
         umon = str(umonths[jj])
-        fnam = ofile_base+"_diag_r"+str(uyr[2:])+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
-        with nc4.Dataset(str(diagdir)+"/"+str(fnam), mode="r") as f:
+        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(uyr[2:])+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
+        with nc4.Dataset(diagfile, mode="r") as f:
             Ex     = f['E'][:]
             Px     = f['P'][:]
             Hx     = f['H'][:]
@@ -81,7 +76,7 @@ def main_biascorrection(
     
     
     ## check if coordinates are the same
-    with nc4.Dataset(diagdir+"/"+fnam, mode="r") as f: # still defined from before
+    with nc4.Dataset(diagfile, mode="r") as f: # still defined from before
         totlats = f['lat'][:]
         totlons = f['lon'][:]
         
