@@ -9,7 +9,7 @@
 
 # Copy of mainpy to work-dir
 work/
-path.txt
+paths.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
