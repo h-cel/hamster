@@ -30,6 +30,8 @@ import datetime as datetime
 import imp
 import warnings
 from matplotlib import pyplot as plt
+import cartopy.crs as ccrs
+from cartopy.feature import NaturalEarthFeature
 
 ###########################################################################
 ##--- PATHS

@@ -605,9 +605,6 @@ def basicplot(array, lats, lons, title, coastlines=True, colorbar=True):
     
     data must be on a regular lat/lon grid!
     """
-    # use pcolor if it doesnt work
-    from matplotlib import pyplot as plt
-    import cartopy.crs as ccrs
     
     ## obtain resolution and check if this is a 
     if (abs(lats[1]-lats[0]) == abs(lons[1]-lons[0])):
@@ -625,7 +622,6 @@ def basicplot(array, lats, lons, title, coastlines=True, colorbar=True):
     plot_data = ax.pcolormesh(cornerlons, cornerlats, array, 
                               transform=ccrs.PlateCarree())
     if coastlines:
-        from cartopy.feature import NaturalEarthFeature
         coast = NaturalEarthFeature(category='physical', scale='50m',
                                     facecolor='none', name='coastline')
         ax.add_feature(coast, edgecolor='gray')
@@ -700,7 +696,6 @@ def freakshow(pommaskpath):
     """
 
     ## load mask file
-    import pandas as pd
     mask = np.asarray(pd.read_table(pommaskpath, sep="\s", engine='python', header=None))
     
     
@@ -789,7 +784,6 @@ def eraloader_12hourly(var, fullpath, maskpos, uptake_dates, lats, lons):
         return daily
     
 def alphascreener(alpha, var):
-    from matplotlib import pyplot as plt
     alphasum = np.nansum(alpha, axis=0)
     plt.figure()
     plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
