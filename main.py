@@ -39,6 +39,7 @@ wpath = os.getcwd()
 ## load input and output paths & input file name base(s)
 with open(wpath+"/paths.txt") as f: 
     content = imp.load_source('','',f) # load like a python module
+    ipath_REF = content.ipath_REF # input path (01_diagnosis)
     ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
     ibase_DGN = content.ibase_DGN # input file name base(s)
     opath_DGN = content.opath_DGN # output path
@@ -126,7 +127,7 @@ if args.steps == 3 or args.steps == 4:
                ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
                opathA=opath_ATR, 
                opathD=opath_DGN, 
-               ipathR="/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1", # reference data 
+               ipathR=ipath_REF,
                opath=opath_BIA, ofile_base=args.expid, # output
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
