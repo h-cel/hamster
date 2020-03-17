@@ -133,6 +133,7 @@ if args.steps == 3 or args.steps == 4:
                ipathR=ipath_REF,
                opath=opath_BIA, ofile_base=args.expid, # output
                maskfile=maskfile,
+               maskval=args.maskval,
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
                fdebug=args.debug,

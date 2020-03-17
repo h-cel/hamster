@@ -15,6 +15,7 @@ def main_biascorrection(
            ipathR,                      # reference data (input)
            opath, ofile_base,           # output
            maskfile,
+           maskval,
            set_negERA_to0,    
            verbose,
            fdebug,
@@ -190,9 +191,9 @@ def main_biascorrection(
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
-    if fdebug: basicplot(mask, mlat, mlon, title="actual masks (all ecoregions)")
-    mask[(mask>0) & (mask!=1)] = 0 ## NOTE: HARDCODED FOR ECOREGION 1 (NGP)
-    if fdebug: basicplot(mask, mlat, mlon, title="actual mask (NGP only)")
+    if fdebug: basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
+    mask[(mask>0) & (mask!=maskval)] = 0    ## using a (0,1) mask from here onwards
+    if fdebug: basicplot(mask, mlat, mlon, title="mask used for bias-correction")
     
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
