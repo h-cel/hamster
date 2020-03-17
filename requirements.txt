@@ -1,8 +1,10 @@
 # This file may be used to create an environment using:
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
-# created by jkeune 04/10/2019 with conda list -e > requirements.txt
+# created by jkeune 17/03/20 with conda list -e > requirements.txt
+_libgcc_mutex=0.1=conda_forge
 _license=1.1=py36_1
+_openmp_mutex=4.5=1_llvm
 alabaster=0.7.10=py36_0
 anaconda=custom=py36_0
 anaconda-client=1.6.3=py36_0
@@ -10,7 +12,7 @@ anaconda-navigator=1.6.2=py36_0
 anaconda-project=0.6.0=py36_0
 asn1crypto=0.22.0=py36_0
 astroid=1.4.9=py36_0
-astropy=1.3.2=np112py36_0
+astropy=4.0=py36h516909a_1
 babel=2.4.0=py36_0
 backports=1.0=py36_0
 backports.functools_lru_cache=1.4=py36_1
@@ -18,12 +20,12 @@ basemap=1.0.7=np112py36_0
 bcolz=1.1.2=np112py36_0
 beautifulsoup4=4.6.0=py36_0
 bitarray=0.8.1=py36_0
-blas=1.0=mkl
+blas=2.16=openblas
 blaze=0.10.1=py36_0
 bleach=1.5.0=py36_0
 bokeh=0.12.5=py36_1
 boto=2.46.1=py36_0
-bottleneck=1.2.1=np112py36_0
+bottleneck=1.3.2=py36hc1659b7_0
 bzip2=1.0.6=1
 cairo=1.14.6=4
 certifi=2017.7.27.1=py36h8b7b77e_0
@@ -33,6 +35,9 @@ click=6.7=py36_0
 cloudpickle=0.2.2=py36_0
 clyent=1.2.2=py36_0
 colorama=0.3.9=py36_0
+conda=4.8.3=py36h9f0ad1d_0
+conda-env=2.6.0=1
+conda-package-handling=1.6.0=py36h8c4c3a4_2
 contextlib2=0.5.5=py36_0
 coverage=4.4.1=py36_0
 cryptography=1.8.1=py36_0
@@ -46,6 +51,7 @@ dbus=1.10.10=0
 decorator=4.0.11=py36_0
 distributed=1.16.3=py36_0
 docutils=0.13.1=py36_0
+ecmwf-api-client=1.5.0=pypi_0
 entrypoints=0.2.2=py36_1
 et_xmlfile=1.0.1=py36_0
 execnet=1.3.0=py36_1
@@ -84,7 +90,7 @@ jbig=2.1=0
 jdcal=1.3=py36_0
 jedi=0.10.2=py36_2
 jinja2=2.9.6=py36_0
-joblib=0.13.2=py36_0
+joblib=0.14.1=py_0
 jpeg=9b=0
 jsonschema=2.6.0=py36_0
 jupyter=1.0.0=py36_3
@@ -92,21 +98,28 @@ jupyter_client=5.0.1=py36_0
 jupyter_console=5.1.0=py36_0
 jupyter_core=4.3.0=py36_0
 lazy-object-proxy=1.2.2=py36_0
+libblas=3.8.0=16_openblas
+libcblas=3.8.0=16_openblas
 libffi=3.2.1=1
 libgcc=4.8.5=2
-libgcc-ng=7.2.0=h7cc24e2_2
+libgcc-ng=9.2.0=h24d8f2e_2
 libgfortran=3.0.0=1
+libgfortran-ng=7.3.0=hdf63c60_5
 libiconv=1.14=0
+liblapack=3.8.0=16_openblas
+liblapacke=3.8.0=16_openblas
 libnetcdf=4.4.1.1=6
+libopenblas=0.3.9=h5ec1e0e_0
 libpng=1.6.28=1
 libsodium=1.0.10=0
-libstdcxx-ng=7.2.0=h7a57d05_2
+libstdcxx-ng=9.2.0=hdf63c60_2
 libtiff=4.0.6=3
 libtool=2.4.2=0
 libxcb=1.12=1
 libxml2=2.9.4=0
 libxslt=1.1.29=0
-llvmlite=0.18.0=py36_0
+llvm-openmp=9.0.1=hc9558a2_2
+llvmlite=0.25.0=py36_0
 locket=0.2.0=py36_1
 lxml=3.7.3=py36_0
 lzo=2.10=0
@@ -127,9 +140,9 @@ networkx=1.11=py36_0
 nltk=3.2.3=py36_0
 nose=1.3.7=py36_1
 notebook=5.0.0=py36_0
-numba=0.33.0=np112py36_0
+numba=0.40.1=py36h637b7d7_1000
 numexpr=2.6.2=np112py36_0
-numpy=1.12.1=py36_0
+numpy=1.18.1=py36h95a1406_0
 numpydoc=0.7.0=py36h18f165f_0
 odo=0.5.0=py36_1
 olefile=0.44=py36_0
@@ -153,13 +166,12 @@ pillow=4.3.0=py36_0
 pip=9.0.1=py36_1
 pixman=0.34.0=0
 ply=3.10=py36_0
-progress=1.5=py36_0
 prompt_toolkit=1.0.14=py36_0
 psutil=5.2.2=py36_0
 ptyprocess=0.5.1=py36_0
 py=1.4.33=py36_0
 pycodestyle=2.3.1=py36hf609f19_0
-pycosat=0.6.2=py36_0
+pycosat=0.6.3=py36h8c4c3a4_1004
 pycparser=2.17=py36_0
 pycrypto=2.6.1=py36_6
 pycurl=7.43.0=py36_0
@@ -173,13 +185,14 @@ pyqt=5.6.0=py36_2
 pysocks=1.6.7=py36hd97a5b1_1
 pytables=3.4.2=py36_5
 pytest=3.2.1=py36h11ad3bb_1
-pytest-cache=1.0=py36_0
+pytest-cache=1.0=pypi_0
 pytest-cov=2.5.1=py36hd4733f3_0
-pytest-pep8=1.0.6=py36_0
+pytest-pep8=1.0.6=pypi_0
 python=3.6.1=2
 python-dateutil=2.6.0=py36_0
+python_abi=3.6=1_cp36m
 pytz=2017.2=py36_0
-pywavelets=0.5.2=np112py36_0
+pywavelets=1.1.1=py36hc1659b7_0
 pyyaml=3.12=py36_1
 pyzmq=16.0.2=py36_0
 qt=5.6.2=3
@@ -187,12 +200,13 @@ qtawesome=0.4.4=py36_0
 qtconsole=4.3.0=py36_0
 qtpy=1.2.1=py36_0
 readline=6.2=2
+reflexible=0.5.0=pypi_0
 requests=2.18.4=py36he2e5f8d_1
 rope=0.9.4=py36_1
 ruamel_yaml=0.11.14=py36_1
 scikit-image=0.13.0=np112py36_0
-scikit-learn=0.19.0=np112py36_0
-scipy=0.19.1=np112py36_0
+scikit-learn=0.22.2.post1=py36hcdab131_0
+scipy=1.4.1=py36h921218d_0
 seaborn=0.7.1=py36_0
 setuptools=36.5.0=py36he42e2e1_0
 setuptools_scm=1.15.6=py36h9817af8_0
@@ -200,14 +214,15 @@ simplegeneric=0.8.1=py36_1
 singledispatch=3.4.0.3=py36_0
 sip=4.18=py36_0
 six=1.10.0=py36_0
+snakeviz=2.0.1=pypi_0
 snowballstemmer=1.2.1=py36_0
 sortedcollections=0.5.3=py36_0
 sortedcontainers=1.5.7=py36_0
-sphinx=1.5.6=py36_0
+sphinx=1.5.6=pypi_0
 spyder=3.2.3=py36he38cbf7_1
 sqlalchemy=1.1.9=py36_0
 sqlite=3.13.0=0
-statsmodels=0.8.0=np112py36_0
+statsmodels=0.10.2=py36hc1659b7_0
 sympy=1.0=py36_0
 tblib=1.3.2=py36_0
 terminado=0.6=py36_0
@@ -215,6 +230,7 @@ testpath=0.3=py36_0
 tk=8.5.18=0
 toolz=0.8.2=py36_0
 tornado=4.5.1=py36_0
+tqdm=4.43.0=py_0
 traitlets=4.3.2=py36_0
 unicodecsv=0.14.1=py36_0
 unixodbc=2.3.4=0
