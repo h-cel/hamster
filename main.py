@@ -129,11 +129,11 @@ if args.steps == 2 or args.steps == 4:
 
 if args.steps == 3 or args.steps == 4:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               ipathA=ipath_ATR,
                opathA=opath_ATR, 
                opathD=opath_DGN, 
                ipathR=ipath_REF,
-               opath=opath_BIA, ofile_base=args.expid, # output
+               opath=opath_BIA, 
+               ofile_base=args.expid, # output
                maskfile=maskfile,
                maskval=args.maskval,
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data

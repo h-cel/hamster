@@ -9,10 +9,9 @@ MAIN FUNCTION FOR 03_biascorrection
 
 def main_biascorrection(
            ryyyy, ayyyy, am,
-           ipathA, #ifileA_base, # attribution (input)
-           opathA, #ofileA_base, # attribution (output)
-           opathD, #ofileD_base,         # diagnosis (output)
-           ipathR,                      # reference data (input)
+           opathA, # attribution (output)
+           opathD, # diagnosis (output)
+           ipathR, # reference data (input)
            opath, ofile_base,           # output
            maskfile,
            maskval,
