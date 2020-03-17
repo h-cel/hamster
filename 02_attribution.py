@@ -30,7 +30,7 @@ def main_attribution(
  
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
-    ofilename = str(ofile_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
 
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############

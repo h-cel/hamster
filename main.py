@@ -124,8 +124,8 @@ if args.steps == 2 or args.steps == 4:
 if args.steps == 3 or args.steps == 4:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
                ipathA=ipath_ATR, ifileA_base=ibase_ATR,                 # attribution
-               opathA=opath_ATR, ofileA_base="FXv",#args.expid,         # attribution
-               opathD=opath_DGN, ofileD_base="FXv_diag_r",#args.expid,  # diagnosis
+               opathA=opath_ATR, 
+               opathD=opath_DGN, 
                ipathR="/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1", # reference data 
                opath=opath_BIA, ofile_base=args.expid, # output
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data

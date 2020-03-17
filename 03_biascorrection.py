@@ -10,8 +10,8 @@ MAIN FUNCTION FOR 03_biascorrection
 def main_biascorrection(
            ryyyy, ayyyy, am,
            ipathA, ifileA_base, # attribution (input)
-           opathA, ofileA_base, # attribution (output)
-           opathD, ofileD_base,         # diagnosis (output)
+           opathA, #ofileA_base, # attribution (output)
+           opathD, #ofileD_base,         # diagnosis (output)
            ipathR,                      # reference data (input)
            opath, ofile_base,           # output
            set_negERA_to0,    
@@ -26,10 +26,10 @@ def main_biascorrection(
     #attrpath  = opathA+"/"+str(ryyyy)+"/"+str(ofileA_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     #diagdir   = opathD+"/"+str(ryyyy)
     ##### again, but without ryyyy | TODO: fix
-    attrpath  = opathA+"/"+str(ofileA_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    attrpath  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     diagdir   = opathD
 
-    ofilename = str(ofile_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
     ##### hardcoded for pom output | TODO: discuss
     maskpath  = ipathA+"/"+str(ryyyy)+"/"+ifileA_base[0][:-8]+"mask.dat"
@@ -62,8 +62,8 @@ def main_biascorrection(
     for jj in range(umonths.size):
         uyr  = str(uyears[jj])
         umon = str(umonths[jj])
-        fnam = ofileD_base+uyr[2:]+"_"+uyr+"-"+umon.zfill(2)+".nc"
-        with nc4.Dataset(diagdir+"/"+fnam, mode="r") as f:
+        fnam = ofile_base+"_diag_r"+str(uyr[2:])+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
+        with nc4.Dataset(str(diagdir)+"/"+str(fnam), mode="r") as f:
             Ex     = f['E'][:]
             Px     = f['P'][:]
             Hx     = f['H'][:]
