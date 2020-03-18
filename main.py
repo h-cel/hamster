@@ -108,6 +108,8 @@ if args.steps == 2 or args.steps == 4:
               ofile_base=args.expid,
               mode=args.mode,
               gres=args.gres,
+              maskfile=maskfile,
+              maskval=args.maskval,
               tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
               cheat_dtemp=args.cheat_dtemp,
