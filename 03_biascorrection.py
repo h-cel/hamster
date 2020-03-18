@@ -21,6 +21,12 @@ def main_biascorrection(
            fwrite_netcdf):
 #           strargs):
 
+    ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
+    ## suppressing warnings, such as
+    #  invalid value encountered in true_divide
+    #  invalid value encountered in multiply 
+    if not fdebug:
+        np.seterr(divide='ignore', invalid='ignore')
 
     ## construct precise input and storage paths
     attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
@@ -29,8 +35,8 @@ def main_biascorrection(
 
     ##--1. load attribution data; grab all uptake days ############################    
     with nc4.Dataset(attrfile, mode="r") as f:
-        E2P          = np.asarray(f['E2P'][:])
-        Had          = np.asarray(f['H'][:])
+        E2P          = np.asarray(f['E2P'][:],dtype=np.float64)
+        Had          = np.asarray(f['H'][:],dtype=np.float64)
         arrival_time = nc4.num2date(f['arrival-time'][:], f['arrival-time'].units, f['arrival-time'].calendar)
         uptake_time  = nc4.num2date(f['uptake-time'][:], f['uptake-time'].units, f['uptake-time'].calendar)
         lats         = np.asarray(f['lat'][:])
