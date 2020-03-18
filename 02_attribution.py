@@ -174,6 +174,10 @@ def main_attribution(
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
+        # number of parcels evaluates (neval) and not evaluated (nneval)
+        neval   = 0
+        nneval  = 0
+
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
             
@@ -182,8 +186,10 @@ def main_attribution(
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             if mask[lat_ind,lon_ind]!=maskval:
+                nneval  += 1
                 pass
             else:
+                neval  += 1
 
                 ## - 2.1) check how far back trajectory should be evaluated
                 # NOTE: this could be moved elsewhere...
@@ -351,6 +357,10 @@ def main_attribution(
                     if fmemento:
                         pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
 
+
+        if verbose:
+            # mask stats 
+            print(" STATS: Evaluated "+str(neval)+" ({:.2f}".format(100*neval/(neval+nneval)) +"%) parcels. \n")
 
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
