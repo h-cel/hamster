@@ -65,6 +65,9 @@ def main_attribution(
         megatic = timeit.default_timer()
     
     glon, glat, garea = makegrid(resolution=gres)
+    ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
+    if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
+        warnings.warn("\n----------------- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
 
     ## -- DATES
     # NOTE: we begin at 06 UTC...
@@ -179,12 +182,8 @@ def main_attribution(
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat)
             if mask[lat_ind,lon_ind]!=maskval:
-                if verbose:
-                    print("Parcel is not in the target region... skipping!")
                 pass
             else:
-                if verbose:
-                    print("Evaluating parcel...")
 
                 ## - 2.1) check how far back trajectory should be evaluated
                 # NOTE: this could be moved elsewhere...
