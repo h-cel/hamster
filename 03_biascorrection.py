@@ -21,6 +21,12 @@ def main_biascorrection(
            fwrite_netcdf):
 #           strargs):
 
+    ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
+    ## suppressing warnings, such as
+    #  invalid value encountered in true_divide
+    #  invalid value encountered in multiply 
+    if not fdebug:
+        np.seterr(divide='ignore', invalid='ignore')
 
     ## construct precise input and storage paths
     attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
