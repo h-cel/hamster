@@ -93,10 +93,10 @@ def printsettings(args):
         "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"}))
 
 
-def readpom(idate,     # run year
+def readpom(idate,      # run year
             ipath,      # input data path
-            ifile_base):# loop over ifile_base filenames for each date
-
+            ifile_base, # loop over ifile_base filenames for each date
+            verbose=True): # NOTE: temporary solution
     """
     INPUT
         - idate :       date as string [YYYYMMDDHH]
@@ -213,6 +213,22 @@ def readpottemp(parray):
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     return pottemp
 
+def readheights(parray):
+
+    """
+    This is basically the same as 'glanceparcel',
+    and as of now, is called only for the first 4 timesteps.
+ 
+    NOTE: probably to be updated / removed
+
+    """
+
+    ## parcel information
+    ztra    = parray[:,3]                   # height (m) 
+    hpbl    = parray[:,7]                   # ABL height (m)
+
+    return ztra, hpbl
+
 def glanceparcel(parray):
 
     """
@@ -224,7 +240,7 @@ def glanceparcel(parray):
     last 4 values of hpbl, as for the other variables here,
     only the last / last 2 values are required at first.
 
-    work-in-progress.
+    NOTE: beautify or remove!
 
     """
 
@@ -237,7 +253,6 @@ def glanceparcel(parray):
     pres    = calc_pres(dens,temp)          # pressure (Pa)
 
     return ztra, hpbl, temp, qv, dens, pres
-
 
 def parceldiff(pvals, meval):
     # difference 
