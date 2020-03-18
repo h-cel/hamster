@@ -180,7 +180,7 @@ def main_attribution(
             ## - 2.0) only evaluate if the parcel is in target region
             ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
-            lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat)
+            lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             if mask[lat_ind,lon_ind]!=maskval:
                 pass
             else:
