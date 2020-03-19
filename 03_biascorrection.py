@@ -107,7 +107,6 @@ def main_biascorrection(
         Htot = np.zeros(shape=(time.size, lats.size, lons.size))
         
         ## this isn't fast or elegant, but works for literally anything sub-daily
-        cutend = False # again, really ugly... so much
         for i in range(udates.size):
             
             iud = udates[i]       
@@ -116,8 +115,6 @@ def main_biascorrection(
             ## TODO: clean up; there should be a check whether 4 files are present, imo
             if sel.size != 4:
                 warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
-                #warnings.warn("\n\n----------------- WARNING: last DIAGN day incomplete (need 00 UTC of next month), gotta skip it\n\n")
-                #cutend = True
            
             Etot[i,:,:] = np.nansum(E[sel, :, :], axis=0) # nan likely unnecessary
             Ptot[i,:,:] = np.nansum(P[sel, :, :], axis=0)
@@ -168,23 +165,6 @@ def main_biascorrection(
     
     
     ##--4. scale ##################################################################
-    
-    ## NOTE: this shall be removed once 01_diagnosis.py has been adjusted.
-    print("cutend= "+str(cutend))
-    if cutend:
-        Had  = Had[:-1,:-1,:,:]
-        Htot = Htot[:-1,:,:]
-        E2P  = E2P[:-1,:-1,:,:]
-        Etot = Etot[:-1,:,:]
-        Ptot = Ptot[:-1,:,:]
-        
-        arrival_time = arrival_time[:-1]
-        uptake_time  = uptake_time[:-1]
-        uptake_dates = uptake_dates[:-1]
-        
-        Href = Href[:-1,:,:]
-        Eref = Eref[:-1,:,:]
-        Pref = Pref[:-1,:,:]
     
     ## P-scaling requires arrival region mask
     with nc4.Dataset(maskfile) as f:
