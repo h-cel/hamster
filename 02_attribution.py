@@ -53,7 +53,7 @@ def main_attribution(
             print(" \t ! reference date for number of particles: \t" +str(refdate) )
         if fwrite_netcdf:
             print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
-            print(" \t ! with grid resolution:: \t", str(gres) )
+            print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
