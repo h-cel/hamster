@@ -216,8 +216,8 @@ def main_biascorrection(
     ## so that scaled data blows up to infinity (this actually happened).
     ## hence, check if any alpha clearly exceeds 1, and warn the user
     ## AGAIN that the output cannot be fully trusted (but continue)
-    if ( (np.any(alpha_Had > 1.0001) or np.any(math.isinf(alpha_Had))) or 
-         (np.any(alpha_E2P > 1.0001) or np.any(math.isinf(alpha_E2P))) ):
+    if ( (np.any(alpha_Had > 1.0001) or np.any(np.isinf(alpha_Had))) or 
+         (np.any(alpha_E2P > 1.0001) or np.any(np.isinf(alpha_E2P))) ):
         warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
  
     ## have a look if you're curious
