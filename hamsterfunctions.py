@@ -130,7 +130,7 @@ def readpom(idate,      # run year
             ntrajstep   = int(ary_dim[1])
             nvars       = int(ary_dim[2])
             if verbose:
-                print("\t nparticle = ",nparticle, " |  ntrajstep=",ntrajstep,"  | =",nvars)
+                print("\t nparticle = ",nparticle, " |  ntrajstep = ",ntrajstep,"  | nvars = ",nvars)
             ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
             datav       = (np.asarray(ary_dat).flatten('C'))
             if dataar is None:
