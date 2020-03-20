@@ -92,7 +92,7 @@ def main_diagnosis(
 
     # TESTMODE
     if mode == "test":
-        ntime       = 1
+        ntime       = 4
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
         mfdate_seq  = mfdate_seq[0:ntime]
