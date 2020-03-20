@@ -21,6 +21,7 @@ def main_attribution(
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
+           cjumps,
            refdate,
            fwrite_netcdf,ftimethis,
            fdry,fmemento,fcc_advanced,fvariable_mass,
@@ -217,6 +218,7 @@ def main_attribution(
                        ifile_base = ifile_base)
 
         nparticle   = ary.shape[1]
+        ntrajleng   = ary.shape[0]
         if verbose:
             print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparticle) + " parcels")
 
@@ -234,15 +236,27 @@ def main_attribution(
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
-        # number of parcels evaluates (neval) and not evaluated (nneval)
+        # STATS
+        # number of parcels evaluated (neval) and not evaluated (nneval)
         neval   = 0
         nneval  = 0
+        # number of trajectories with at least one jump (entirely skipped for now)
+        njumps  = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
-            
+           
+            ## disregard entire trajectory if it contains a jump
+            ## NOTE: or should we use the jump to cut it?
+            jumps = np.array([])
+            for it in range(ntrajleng-1):
+                jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
+            if np.any(jumps > cjumps):
+                njumps += int(1)
+                continue
+
             ## - 2.0) only evaluate if the parcel is in target region
-	    ## NOTE: I took only the last two time steps for now; should this be 4?
+	        ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             if mask[lat_ind,lon_ind]!=maskval:
@@ -421,8 +435,10 @@ def main_attribution(
 
 
         if verbose:
+            # jump stats
+            print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/nparticle) +"%) jumps.")
             # mask stats 
-            print(" STATS: Evaluated "+str(neval)+" ({:.2f}".format(100*neval/(neval+nneval)) +"%) parcels. \n")
+            print(" STATS: Evaluated "+str(neval)+" ({:.2f}".format(100*neval/(neval+nneval)) +"%) parcels inside mask.")
 
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
