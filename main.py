@@ -93,6 +93,7 @@ if args.steps == 1 or args.steps == 4:
               cprec_dtemp=args.cprec_dtemp,
               cprec_rh=args.cprec_rh,
               cpbl_strict=args.cpbl_strict,
+              cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               ftimethis=args.timethis,

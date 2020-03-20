@@ -20,6 +20,7 @@ def main_diagnosis(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
+           cjumps,
            refdate,
            fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass,
            strargs):
@@ -149,7 +150,7 @@ def main_diagnosis(
 
             ## check for jumps 
             jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[0,i,1]) #lat1,lon1,lat2,lon2
-            if jump > 2000:
+            if jump > cjumps:
                 njumps += int(1)
                 continue
                     

@@ -50,6 +50,7 @@ def read_cmdargs():
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         type = float,   default = 0)
     parser.add_argument('--cpbl_strict','-pbl', help = "1: both within max, 2: one within max, 3: not used",            type = int,     default = 1)
+    parser.add_argument('--cjumps',     '-cj',  help = "threshold to filter for jumps [km]",                            type = int,     default = 2000)
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
