@@ -20,6 +20,7 @@ def main_diagnosis(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
+           fjumps,
            cjumps,
            refdate,
            fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass,
@@ -149,10 +150,11 @@ def main_diagnosis(
         for i in ntot:
 
             ## check for jumps 
-            jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1]) #lat1,lon1,lat2,lon2
-            if jump > cjumps:
-                njumps += int(1)
-                continue
+            if fjumps:
+                jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1]) #lat1,lon1,lat2,lon2
+                if jump > cjumps:
+                    njumps += int(1)
+                    continue
                     
             ## get midpoint at the very beginning
             #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
