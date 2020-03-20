@@ -140,10 +140,19 @@ def main_diagnosis(
             ntot    = range(nparticle)
 
         #smalltic = timeit.default_timer()
-
+       
+        # log variables
+        njumps  = 0
+       
         ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
         for i in ntot:
 
+            ## check for jumps 
+            jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[0,i,1]) #lat1,lon1,lat2,lon2
+            if jump > 2000:
+                njumps += int(1)
+                continue
+                    
             ## get midpoint at the very beginning
             #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
             lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat) # :2 for clarity, not needed
@@ -256,6 +265,10 @@ def main_diagnosis(
                 ## precipitation AND evaporation
                 ary_prec[lat_ind,lon_ind] += dq
                 ary_evap[lat_ind,lon_ind] += dq
+        
+        # print stats
+        if verbose:
+            print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/nparticle) +"%) jumps.")
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
