@@ -72,7 +72,7 @@ exec(open("hamsterfunctions.py").read())
 #      note: this is where we set the default values now. 
 args    = read_cmdargs()
 verbose = args.verbose
-print(printsettings(args))
+print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
 if args.steps == 1 or args.steps == 4:
@@ -100,7 +100,7 @@ if args.steps == 1 or args.steps == 4:
               ftimethis=args.timethis,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
-              strargs=printsettings(args))
+              strargs=printsettings(args,1))
 
 if args.steps == 2 or args.steps == 4:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
@@ -131,7 +131,7 @@ if args.steps == 2 or args.steps == 4:
               fmemento=args.memento,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
-              strargs=printsettings(args))
+              strargs=printsettings(args,2))
 
 if args.steps == 3 or args.steps == 4:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
