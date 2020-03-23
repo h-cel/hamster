@@ -432,8 +432,11 @@ def main_attribution(
                 ##  - 2.3)-SAJ: Stohl and James, 2004
                 elif tdiagnosis == 'SAJ':
 
+                    if not mask[mlat_ind,mlon_ind]==maskval:
+                        nnevalm += 1
+                        continue
+                    
                     ## (a) E-P based on ALL parcels residing over target region, no precipitation-criterion used
-
                     # read full parcel information (but only what is needed; ihf_H)
                     lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
