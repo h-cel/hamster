@@ -240,9 +240,7 @@ def main_attribution(
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
         # STATS
-        # number of parcels evaluated (neval) and not evaluated (nneval)
-        neval   = 0
-        nneval  = 0
+        # number of parcels not evaluated (nnevala for arriving; nnevalm for midpoint)
         nnevalm = 0
         nnevala = 0
         # number of trajectories with at least one jump (entirely skipped for now)
@@ -268,10 +266,8 @@ def main_attribution(
             mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
             if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
-                nneval  += 1
                 continue
             else:
-                neval  += 1
 
                 ## - 2.1) check how far back trajectory should be evaluated
                 # NOTE: this could be moved elsewhere...
