@@ -258,6 +258,9 @@ def main_attribution(
                     jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
                 if np.any(jumps > cjumps):
                     njumps += int(1)
+                    findjump = np.argwhere(jumps > cjumps)
+                    if np.any(findjump > 0):
+                        print(" !!! ATTENTION: YOU JUST ENCOUNTERED A JUMP IN THE TAIL OF THE TRAJECTORY !!!")
                     continue
 
             ## - 2.0) only evaluate if the parcel is in target region
