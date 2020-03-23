@@ -187,7 +187,7 @@ def main_attribution(
             ## p4) now loop through particles
             for i in ntot:
 
-                ## pasted from below
+                ## check for jumps
                 mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
                 alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
                 if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
