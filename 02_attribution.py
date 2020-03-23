@@ -188,8 +188,8 @@ def main_attribution(
             for i in ntot:
 
                 ## pasted from below
-                lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
-                if not mask[lat_ind,lon_ind]==maskval:
+                mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+                if not mask[mlat_ind,mlon_ind]==maskval:
                    continue
 
                 ## read ONLY parcel and ABL heights
@@ -261,10 +261,10 @@ def main_attribution(
             ## - 2.0) only evaluate if the parcel is in target region
 	        ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
-            lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
-            if mask[lat_ind,lon_ind]!=maskval:
+            mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+            if not mask[mlat_ind,mlon_ind]==maskval:
                 nneval  += 1
-                pass
+                continue
             else:
                 neval  += 1
 
