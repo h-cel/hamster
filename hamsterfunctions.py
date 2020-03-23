@@ -457,6 +457,16 @@ def midpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
     return ind_lat, ind_lon
 
+def arrpindex(parray,glon,glat):
+    # function to get arrival point index on grid
+    lats    = parray[2]                   # latitude
+    lons    = parray[1]                   # longitude
+    if lons>180.0:
+        lons = lons - 360                 # transform coordinates from [0 ... 360] to [-180 ... 180]
+    ind_lat = np.argmin(np.abs(glat-lats))
+    ind_lon = np.argmin(np.abs(glon-lons))
+    return ind_lat, ind_lon
+
 def writeemptync(ofile,fdate_seq,glon,glat,strargs):
     # delete nc file if it is present (avoiding error message)
     try:
