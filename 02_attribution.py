@@ -168,7 +168,7 @@ def main_attribution(
 
             if verbose and pix==1:
                 pretoc = timeit.default_timer()
-                print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, crab a coffee..")
+                print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
 
             ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
             #print("Processing "+str(predatetime_seq[pix]))
@@ -201,8 +201,9 @@ def main_attribution(
                     ## update parcel log
                     ID = int(ary[0,i,0])
                     pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
-    ###---                   
-
+    
+    
+    ###--- MAIN LOOP
     ## prepare uptake indices
     upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
 
