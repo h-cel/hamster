@@ -18,8 +18,8 @@ def main_biascorrection(
            set_negERA_to0,    
            verbose,
            fdebug,
-           fwrite_netcdf):
-#           strargs):
+           fwrite_netcdf,
+           strargs):
 
     ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
     ## suppressing warnings, such as
@@ -277,4 +277,4 @@ def main_biascorrection(
     ##--6. save output ############################################################
     if fwrite_netcdf:
         writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_scaled, 
-                 E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled)
+                 E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=strargs)

@@ -145,4 +145,5 @@ if args.steps == 3 or args.steps == 4:
                set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
                fdebug=args.debug,
-               fwrite_netcdf=args.write_netcdf)
+               fwrite_netcdf=args.write_netcdf,
+               strargs=printsettings(args,3))
