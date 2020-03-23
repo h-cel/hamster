@@ -189,7 +189,8 @@ def main_attribution(
 
                 ## pasted from below
                 mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
-                if not mask[mlat_ind,mlon_ind]==maskval:
+                alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+                if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
                    continue
 
                 ## read ONLY parcel and ABL heights
@@ -262,7 +263,8 @@ def main_attribution(
 	        ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
-            if not mask[mlat_ind,mlon_ind]==maskval:
+            alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+            if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
                 nneval  += 1
                 continue
             else:
