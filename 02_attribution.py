@@ -450,12 +450,13 @@ def main_attribution(
 
 
         if verbose:
+            neval   = len(ntot)
             # jump stats
             if fjumps:
-                print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/nparticle) +"%) jumps.")
+                print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
             # mask stats 
-            print(" STATS: Evaluated "+str(nparticle-nnevala)+" ({:.2f}".format(100*(nparticle-nnevala)/(nparticle)) +"%) arriving parcels inside mask (advection).")
-            print(" STATS: Evaluated "+str(nparticle-nnevalm)+" ({:.2f}".format(100*(nparticle-nnevalm)/(nparticle)) +"%) midpoint parcels inside mask (precipitation).")
+            print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
+            print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
 
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
