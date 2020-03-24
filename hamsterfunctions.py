@@ -540,10 +540,10 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     heats               = nc_f.createVariable('H', precision, ('time','lat','lon'))
     evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'))
     precs               = nc_f.createVariable('P', precision, ('time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', precision, ('time','lat','lon'))
-    pnparts             = nc_f.createVariable('P_n_part', precision, ('time','lat','lon'))
-    enparts             = nc_f.createVariable('E_n_part', precision, ('time','lat','lon'))
-    hnparts             = nc_f.createVariable('H_n_part', precision, ('time','lat','lon'))
+    nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'))
+    pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'))
+    enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'))
+    hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'))
     
     # set attributes
     nc_f.description    = "01 - " + str(strargs)
