@@ -546,7 +546,8 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'))
     
     # set attributes
-    nc_f.description    = "01 - " + str(strargs)
+    nc_f.title          = "Diagnosis (01) of FLEXPART fluxes"
+    nc_f.description    = "01_diagnosis - " + str(strargs)
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
@@ -641,7 +642,8 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     etops               = nc_f.createVariable('E2P', precision, ('arrival-time','uptake-time','lat','lon'))
     
     # set attributes
-    nc_f.description    = "02 - " + str(strargs)
+    nc_f.title          = "Attribution (02) of sources using FLEXPART output"
+    nc_f.description    = "02_attribution - " + str(strargs)
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
@@ -924,7 +926,8 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     
  
     # set attributes
-    nc_f.description    = "03 - " + str(strargs)
+    nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
+    nc_f.description    = "03_biascorrection - " + str(strargs)
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
