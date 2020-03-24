@@ -548,7 +548,9 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     # set attributes
     nc_f.description    = "01 - " + str(strargs)
     today               = datetime.datetime.now()
-    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Dominik Schumacher and Jessica Keune)"
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
@@ -641,7 +643,9 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     # set attributes
     nc_f.description    = "02 - " + str(strargs)
     today               = datetime.datetime.now()
-    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Jessica Keune and Dominik Schumacher)"
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.units        = 'hours since 1900-01-01 00:00:00'
@@ -922,7 +926,9 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     # set attributes
     nc_f.description    = "03 - " + str(strargs)
     today               = datetime.datetime.now()
-    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using hamster ((c) Dominik Schumacher and Jessica Keune)"
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
