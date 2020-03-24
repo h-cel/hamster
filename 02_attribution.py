@@ -22,6 +22,7 @@ def main_attribution(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
            fjumps,
+           fjumpsfull,
            cjumps,
            refdate,
            fwrite_netcdf,ftimethis,
@@ -250,12 +251,15 @@ def main_attribution(
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
            
-            ## disregard entire trajectory if it contains a jump
-            ## NOTE: or should we use the jump to cut it?
+            ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
             if fjumps:
-                jumps = np.array([])
-                for it in range(ntrajleng-1):
-                    jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
+                if fjumpsfull:
+                    # checking for the full trajectory length
+                    jumps = np.array([])
+                    for it in range(ntrajleng-1):
+                        jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
+                else:
+                    jumps = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1])
                 if np.any(jumps > cjumps):
                     njumps += int(1)
                     findjump = np.argwhere(jumps > cjumps)

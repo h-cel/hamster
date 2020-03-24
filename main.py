@@ -123,6 +123,7 @@ if args.steps == 2 or args.steps == 4:
               cprec_dtemp=args.cprec_dtemp, 
               cprec_rh=args.cprec_rh,
               fjumps=args.fjumps,
+              fjumpsfull=args.fjumpsfull,
               cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
