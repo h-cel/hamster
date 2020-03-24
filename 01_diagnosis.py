@@ -271,7 +271,7 @@ def main_diagnosis(
         
         # print stats
         if verbose:
-            print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/nparticle) +"%) jumps.")
+            print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/len(ntot)) +"%) jumps.")
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
