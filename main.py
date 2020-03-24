@@ -76,7 +76,7 @@ print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
 if args.steps == 1 or args.steps == 4:
-    main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
+    main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
               ipath=ipath_DGN,
               ifile_base=ibase_DGN, 
               opath=opath_DGN,

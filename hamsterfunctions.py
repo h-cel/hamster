@@ -36,6 +36,7 @@ def read_cmdargs():
     parser.add_argument('--steps',      '-st',  help = "steps performed (1: 01_diagnosis, ..., 4: all)",                type = int,     default = 4)
     parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
+    parser.add_argument('--ad',         '-ad',  help = "analysis day (D)",                                              type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
     parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2, SAJ)",                         type = str,     default = "KAS")

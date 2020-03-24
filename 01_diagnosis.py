@@ -9,7 +9,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 #############################    SETTINGS ##################################
 
 def main_diagnosis(
-           ryyyy, ayyyy, am,
+           ryyyy, ayyyy, am, ad,
            ipath, ifile_base, 
            opath, ofile_base,
            mode,
@@ -76,7 +76,7 @@ def main_diagnosis(
     glon, glat, garea = makegrid(resolution=gres)
 
     ## -- DATES
-    date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01", "%Y-%m-%d")
+    date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2), "%Y-%m-%d")
     date_end        = date_bgn + relativedelta(months=1)
     timestep        = datetime.timedelta(hours=6)
     date_seq        = []
