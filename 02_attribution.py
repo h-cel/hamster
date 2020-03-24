@@ -117,7 +117,7 @@ def main_attribution(
         ntime            = 8 #NOTE: use multiples of 4 only, else output is not saved 
         datetime_seq     = datetime_seq[:ntime]
         fdatetime_seq    = fdatetime_seq[:ntime]
-        ndaytime         = 2
+        ndaytime         = int(ntime/4)
         fdate_seq        = fdate_seq[:ndaytime]
         
         nupttime         = 4*ctraj_len + 1
