@@ -23,7 +23,9 @@ def main_diagnosis(
            fjumps,
            cjumps,
            refdate,
-           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass,
+           fwrite_netcdf,
+           precision,
+           ftimethis,fcc_advanced,fvariable_mass,
            strargs):
 
     """
@@ -99,7 +101,7 @@ def main_diagnosis(
 
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
-        writeemptync(ofile,mfdate_seq,glon,glat,strargs)
+        writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision)
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 

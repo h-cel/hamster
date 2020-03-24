@@ -97,6 +97,7 @@ if args.steps == 1 or args.steps == 4:
               cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
+              precision=args.precision,
               ftimethis=args.timethis,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
@@ -127,6 +128,7 @@ if args.steps == 2 or args.steps == 4:
               cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
+              precision=args.precision,
               ftimethis=args.timethis, 
               fdry=args.fallingdry,
               fmemento=args.memento,
@@ -147,4 +149,5 @@ if args.steps == 3 or args.steps == 4:
                verbose=args.verbose,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
+               precision=args.precision,
                strargs=printsettings(args,3))

@@ -25,7 +25,9 @@ def main_attribution(
            fjumpsfull,
            cjumps,
            refdate,
-           fwrite_netcdf,ftimethis,
+           fwrite_netcdf,
+           precision,
+           ftimethis,
            fdry,fmemento,fcc_advanced,fvariable_mass,
            strargs):
 
@@ -128,7 +130,7 @@ def main_attribution(
 
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
-        writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs)
+        writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision)
 
     # traj max len
     tml = nupttime - ntime

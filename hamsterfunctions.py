@@ -57,6 +57,7 @@ def read_cmdargs():
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f4")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
@@ -517,7 +518,7 @@ def arrpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-lons))
     return ind_lat, ind_lon
 
-def writeemptync(ofile,fdate_seq,glon,glat,strargs):
+def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -533,16 +534,16 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs):
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    times               = nc_f.createVariable('time', 'i4', 'time')
-    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
-    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
-    heats               = nc_f.createVariable('H', 'f4', ('time','lat','lon'))
-    evaps               = nc_f.createVariable('E', 'f4', ('time','lat','lon'))
-    precs               = nc_f.createVariable('P', 'f4', ('time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', 'f4', ('time','lat','lon'))
-    pnparts             = nc_f.createVariable('P_n_part', 'f4', ('time','lat','lon'))
-    enparts             = nc_f.createVariable('E_n_part', 'f4', ('time','lat','lon'))
-    hnparts             = nc_f.createVariable('H_n_part', 'f4', ('time','lat','lon'))
+    times               = nc_f.createVariable('time', 'i8', 'time')
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    heats               = nc_f.createVariable('H', precision, ('time','lat','lon'))
+    evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'))
+    precs               = nc_f.createVariable('P', precision, ('time','lat','lon'))
+    nparts              = nc_f.createVariable('n_part', precision, ('time','lat','lon'))
+    pnparts             = nc_f.createVariable('P_n_part', precision, ('time','lat','lon'))
+    enparts             = nc_f.createVariable('E_n_part', precision, ('time','lat','lon'))
+    hnparts             = nc_f.createVariable('H_n_part', precision, ('time','lat','lon'))
     
     # set attributes
     nc_f.description    = "01 - " + str(strargs)
@@ -612,7 +613,7 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,
     nc_f['H_n_part'][ix,:,:]  = ary_hnpart
     nc_f.close()
 
-def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs):
+def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
                 
     # delete nc file if it is present (avoiding error message)
     try:
@@ -630,12 +631,12 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs):
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    atimes              = nc_f.createVariable('arrival-time', 'f4', 'arrival-time')
-    utimes              = nc_f.createVariable('uptake-time', 'f4', 'uptake-time')
-    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
-    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
-    heats               = nc_f.createVariable('H', 'f4', ('arrival-time','uptake-time','lat','lon'))
-    etops               = nc_f.createVariable('E2P', 'f4', ('arrival-time','uptake-time','lat','lon'))
+    atimes              = nc_f.createVariable('arrival-time', 'f8', 'arrival-time')
+    utimes              = nc_f.createVariable('uptake-time', 'f8', 'uptake-time')
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    heats               = nc_f.createVariable('H', precision, ('arrival-time','uptake-time','lat','lon'))
+    etops               = nc_f.createVariable('E2P', precision, ('arrival-time','uptake-time','lat','lon'))
     
     # set attributes
     nc_f.description    = "02 - " + str(strargs)
@@ -890,7 +891,7 @@ def nanweight3Dary(array, weights):
     
 def writefinalnc(ofile,fdate_seq,glon,glat,
                  Had, Had_Hs,
-                 E2P, E2P_Es, E2P_Ps, E2P_EPs,strargs):
+                 E2P, E2P_Es, E2P_Ps, E2P_EPs,strargs,precision):
     
     # delete nc file if it is present (avoiding error message)
     try:
@@ -908,14 +909,14 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
 
     # create variables
     times               = nc_f.createVariable('time', 'i4', 'time')
-    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
-    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
-    heats               = nc_f.createVariable('Had', 'f4', ('time','lat','lon'))
-    heats_Hs            = nc_f.createVariable('Had_Hs', 'f4', ('time','lat','lon'))
-    evaps               = nc_f.createVariable('E2P', 'f4', ('time','lat','lon'))
-    evaps_Es            = nc_f.createVariable('E2P_Es', 'f4', ('time','lat','lon'))
-    evaps_Ps            = nc_f.createVariable('E2P_Ps', 'f4', ('time','lat','lon'))
-    evaps_EPs           = nc_f.createVariable('E2P_EPs', 'f4', ('time','lat','lon'))
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    heats               = nc_f.createVariable('Had', precision, ('time','lat','lon'))
+    heats_Hs            = nc_f.createVariable('Had_Hs', precision, ('time','lat','lon'))
+    evaps               = nc_f.createVariable('E2P', precision, ('time','lat','lon'))
+    evaps_Es            = nc_f.createVariable('E2P_Es', precision, ('time','lat','lon'))
+    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, ('time','lat','lon'))
+    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, ('time','lat','lon'))
     
  
     # set attributes
