@@ -114,10 +114,10 @@ def main_attribution(
 
     # TESTMODE
     if mode == "test":
-        ntime            = 4 #NOTE: use multiples of 4 only, else output is not saved 
+        ntime            = 8 #NOTE: use multiples of 4 only, else output is not saved 
         datetime_seq     = datetime_seq[:ntime]
         fdatetime_seq    = fdatetime_seq[:ntime]
-        ndaytime         = 1
+        ndaytime         = 2
         fdate_seq        = fdate_seq[:ndaytime]
         
         nupttime         = 4*ctraj_len + 1
