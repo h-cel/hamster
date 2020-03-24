@@ -127,6 +127,8 @@ def main_biascorrection(
         Htot = H
         
     ## only keep what is really needed
+    if date_bgn not in udates: 
+        raise SystemExit("---- ERROR: INPUT DATA MISSING: date "+str(date_bgn)+" not available as output from 01_diagnosis! Aborting here.")
     ibgn = np.where(udates==date_bgn)[0][0]
     iend = np.where(udates==date_end)[0][0]
     Etot = Etot[ibgn:iend+1]
