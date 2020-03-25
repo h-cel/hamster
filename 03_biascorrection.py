@@ -144,26 +144,28 @@ def main_biascorrection(
     
     ## clean up a bit
     del(E, P, H, Ex, Px, Hx)
-    
-    
+
     ##--3. load reference data ####################################################
     """
     this part is STRICTLY CODED FOR (12-hourly) ERA-INTERIM only (so far),
     and HARDCODED too
     """
     Eref = eraloader_12hourly(var='e',
-                     fullpath=ipathR+"/evap_12hourly/E_1deg_"+str(uyears[0])+".nc",
+                     datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
+                     uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
         
     Href = eraloader_12hourly(var='sshf',
-                     fullpath=ipathR+"/sshf_12hourly/H_1deg_"+str(uyears[0])+".nc",
+                     datapath=ipathR+"/sshf_12hourly/H_1deg_",
                      maskpos=True,
+                     uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
     Pref = eraloader_12hourly(var='tp',
-                     fullpath=ipathR+"/tp_12hourly/P_1deg_"+str(uyears[0])+".nc",
+                     datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
+                     uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
     
