@@ -534,7 +534,7 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    times               = nc_f.createVariable('time', 'i8', 'time')
+    times               = nc_f.createVariable('time', 'f8', 'time')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
     heats               = nc_f.createVariable('H', precision, ('time','lat','lon'))
