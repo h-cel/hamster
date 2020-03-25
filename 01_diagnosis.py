@@ -139,7 +139,7 @@ def main_diagnosis(
 
         ## TEST mode: less parcels
         if mode == "test":
-            ntot    = range(1000,1100)
+            ntot    = range(10000,10100)
         else:
             ntot    = range(nparticle)
 
