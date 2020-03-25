@@ -117,16 +117,35 @@ def main_attribution(
 
     # TESTMODE
     if mode == "test":
-        ntime            = 8 #NOTE: use multiples of 4 only, else output is not saved 
-        datetime_seq     = datetime_seq[:ntime]
-        fdatetime_seq    = fdatetime_seq[:ntime]
+
+        ctraj_len_orig   = ctraj_len
+        ctraj_len        = 2 # NOTE: changes here must be accompanied by changes in 01_diagnosis!
+
+        ntime            = 4 #NOTE: use multiples of 4 only, else output is not saved 
+        datetime_seq     = datetime_seq[(4*ctraj_len):(4*ctraj_len+ntime)]
+        fdatetime_seq    = fdatetime_seq[(4*ctraj_len):(4*ctraj_len+ntime)]
         ndaytime         = int(ntime/4)
-        fdate_seq        = fdate_seq[:ndaytime]
-        
-        nupttime         = 4*ctraj_len + 1
-        fuptdatetime_seq = fuptdatetime_seq[:nupttime]
-        ndayupttime      = (ctraj_len) + 1
-        fuptdate_seq     = fuptdate_seq[:ndayupttime]
+        fdate_seq        = fdate_seq[ctraj_len:ctraj_len+ndaytime]
+        fdateasdate      = fdateasdate[ctraj_len:ctraj_len+ndaytime]
+
+        nupttime         = ntime + 4*ctraj_len
+        # NOTE: this is not coded 'universally' at this point... CAUTION
+        fuptdatetime_seq = fuptdatetime_seq[4*ctraj_len_orig:4*ctraj_len_orig+nupttime]
+        ndayupttime      = ctraj_len + 1
+        fuptdate_seq     = fuptdate_seq[ctraj_len_orig:ctraj_len_orig+ndayupttime]
+
+        print(datetime_seq)
+        print(fdatetime_seq)
+        print(fdate_seq)
+
+        print(fuptdatetime_seq)
+        print(fuptdate_seq)
+
+        print("tml = ", nupttime - ntime)
+
+        print(fdateasdate)
+
+        #raise SystemExit("stop")
 
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
