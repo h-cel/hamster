@@ -807,65 +807,78 @@ def freakshow(pommaskpath):
     return(mask1deg, lat1deg, lon1deg)
     
 
-def eraloader_12hourly(var, fullpath, maskpos, uptake_dates, lats, lons):
+def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats, lons):
     """
-    only for single years so far!!!
+    quickly adjusted to enable multi-annual support at the cost of reading in
+    two entire years, instead of just what is needed.
     """
-    with nc4.Dataset(fullpath, mode='r') as f: # sshf_12hourly, tp_12hourly
-        
-        reflats = np.asarray(f['latitude'][:])
-        reflons = np.asarray(f['longitude'][:])
-        
-        reftime = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) 
-        refdates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
 
-        ## first figure out what is needed!
-        jbeg = np.min(np.where(refdates == uptake_dates[0])) 
-        jend = np.max(np.where(refdates == uptake_dates[-1])) # 12-hourly input here!
+    uyears = np.unique(uptake_years)
+
+    with nc4.Dataset(datapath+str(uyears[0])+'.nc', mode='r') as f: 
+        reflats   = np.asarray(f['latitude'][:])
+        reflons   = np.asarray(f['longitude'][:])
+        reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+        refdates  = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
+        array     = np.asarray(f[var][:,:,:]) # not ideal to load everything..
+        units     = f[var].units
+
+    for ii in range(1,uyears.size):
+
+        with nc4.Dataset(datapath+str(uyears[ii])+'.nc', mode='r') as f:
+            reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+            reftime  = np.concatenate((reftime, reftimeY))
+            refdates = np.concatenate((refdates, np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftimeY])))
+            array    = np.concatenate((array, np.asarray(f[var][:,:,:])), axis=0)
+
+    ## first figure out what is needed! NOTE: this is less elegant now due to multi-annual support.
+    jbeg = np.min(np.where(refdates == uptake_dates[0])) 
+    jend = np.max(np.where(refdates == uptake_dates[-1])) # 12-hourly input here!
         
-        array = np.asarray(f[var][jbeg:jend+1,:,:])
-        reftime  = reftime[jbeg:jend+1]
-        refdates = refdates[jbeg:jend+1]
+    array    = array[jbeg:jend+1,:,:]
+    reftime  = reftime[jbeg:jend+1]
+    refdates = refdates[jbeg:jend+1]
         
-        ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
-        if maskpos:
-            array[array>0] = np.NaN
+    ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
+    if maskpos:
+        array[array>0] = np.NaN
             
-        ## aggregate to daily
-        refudates = np.unique(refdates)
-        daily = np.empty(shape=(refudates.size, reflats.size, reflons.size))
-        for i in range(refudates.size):
-            rud = refudates[i]
-            daily[i,:,:] = np.nansum(array[np.where(refdates==rud)[0],:,:], axis=0) 
-        if not np.array_equal(refudates, uptake_dates):
-            raise SystemExit("---- no good")
+    ## aggregate to daily
+    refudates = np.unique(refdates)
+
+    daily = np.empty(shape=(refudates.size, reflats.size, reflons.size))
+    for i in range(refudates.size):
+        rud = refudates[i]
+        daily[i,:,:] = np.nansum(array[np.where(refdates==rud)[0],:,:], axis=0) 
+    if not np.array_equal(refudates, uptake_dates):
+        raise SystemExit("---- no good")
     
-        ## regrid (flip LATS; LON 0 .. 359 to -180 .. 179)
-        reflats = np.flipud(reflats)
-        daily  = np.flip(daily, axis=1)
-        #-- above: flipping latitudes, below: from 0 .. 359 to -180 .. 179
-        daily_bu  = np.copy(daily)
-        reflons_bu = np.copy(reflons)
-        reflons[:int(reflons.size/2)] = reflons_bu[int(reflons.size/2):] - 360
-        reflons[int(reflons.size/2):] = reflons_bu[:int(reflons.size/2)]
-        daily[:,:,:int(reflons.size/2)] = daily_bu[:,:,int(reflons.size/2):]
-        daily[:,:,int(reflons.size/2):] = daily_bu[:,:,:int(reflons.size/2)]
+    ## regrid (flip LATS; LON 0 .. 359 to -180 .. 179)
+    reflats = np.flipud(reflats)
+    daily  = np.flip(daily, axis=1)
+    #-- above: flipping latitudes, below: from 0 .. 359 to -180 .. 179
+    daily_bu  = np.copy(daily)
+    reflons_bu = np.copy(reflons)
+    reflons[:int(reflons.size/2)] = reflons_bu[int(reflons.size/2):] - 360
+    reflons[int(reflons.size/2):] = reflons_bu[:int(reflons.size/2)]
+    daily[:,:,:int(reflons.size/2)] = daily_bu[:,:,int(reflons.size/2):]
+    daily[:,:,int(reflons.size/2):] = daily_bu[:,:,:int(reflons.size/2)]
     
-        # check        
-        if not (np.array_equal(lats, reflats) or not np.array_equal(lons, reflons)):
-            raise SystemExit("---------- FATAL ERROR: regridded ERA-I coordinates don't match!")
+    # check        
+    if not (np.array_equal(lats, reflats) or not np.array_equal(lons, reflons)):
+        raise SystemExit("---------- FATAL ERROR: regridded ERA-I coordinates don't match!")
             
-        ## units... and sign
-        if var=='e' and f[var].units == "m of water equivalent":
-            daily *= -1e3 # flip sign
-        elif var=='tp' and f[var].units == "m":
-            daily *= 1e3
-        elif var=='sshf' and f[var].units == "J m**-2":
-            daily /= -86400 # flip sign
-        else:
-            raise SystemExit("---- aborted: no can do.")
-        
-        return daily
+    ## units... and sign
+    if var=='e' and units == "m of water equivalent":
+        daily *= -1e3 # flip sign
+    elif var=='tp' and units == "m":
+        daily *= 1e3
+    elif var=='sshf' and units == "J m**-2":
+        daily /= -86400 # flip sign
+    else:
+        raise SystemExit("---- aborted: no can do.")
+    
+    return daily
     
 def alphascreener(alpha, var):
     alphasum = np.nansum(alpha, axis=0)
