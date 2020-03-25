@@ -36,8 +36,8 @@ def main_biascorrection(
 
     ##--1. load attribution data; grab all uptake days ############################    
     with nc4.Dataset(attrfile, mode="r") as f:
-        E2P          = np.asarray(f['E2P'][:],dtype=np.float64)
-        Had          = np.asarray(f['H'][:],dtype=np.float64)
+        E2P          = np.asarray(f['E2P'][:])
+        Had          = np.asarray(f['H'][:])
         arrival_time = nc4.num2date(f['arrival-time'][:], f['arrival-time'].units, f['arrival-time'].calendar)
         uptake_time  = nc4.num2date(f['uptake-time'][:], f['uptake-time'].units, f['uptake-time'].calendar)
         lats         = np.asarray(f['lat'][:])
