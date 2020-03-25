@@ -134,19 +134,6 @@ def main_attribution(
         ndayupttime      = ctraj_len + 1
         fuptdate_seq     = fuptdate_seq[ctraj_len_orig:ctraj_len_orig+ndayupttime]
 
-        print(datetime_seq)
-        print(fdatetime_seq)
-        print(fdate_seq)
-
-        print(fuptdatetime_seq)
-        print(fuptdate_seq)
-
-        print("tml = ", nupttime - ntime)
-
-        print(fdateasdate)
-
-        #raise SystemExit("stop")
-
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
         writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision)
