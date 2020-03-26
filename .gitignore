@@ -8,7 +8,11 @@
 *.pbs*
 
 # Copy of mainpy to work-dir
-work/main.py
+work/
+paths.txt
+
+# profiling output
+profile_output*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

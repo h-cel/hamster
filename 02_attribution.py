@@ -4,132 +4,6 @@
 MAIN FUNCTIONS FOR 02_attribution
 """
 
-
-def PBL_check(z, h, seth, diagnosis):
-
-    if diagnosis == 'KAS':
-        h[h<seth] = seth
-        before_inside = np.logical_or( z[1:] < h[:-1], z[1:]  < h[1:])  
-        after_inside  = np.logical_or(z[:-1] < h[:-1], z[:-1] < h[1:])  
-        change_inside = np.logical_and(before_inside, after_inside)
-    elif diagnosis == 'SOD':   
-        change_inside = ((z[1:]+z[:-1])/2) < 1.5*((h[1:]+h[:-1])/2)
-        # NOTE: factor 1.5 is hardcoded      
-
-    return change_inside
-
-def trajparceldiff(pvals, meval):
-    # difference 
-    if meval in ['diff']:
-        dpval   = pvals[:-1] - pvals[1:]
-    # mean
-    if meval in ['mean']:
-        dpval   = (pvals[:-1] + pvals[1:])/2
-    # max
-    if meval in ['max']:
-        dpval   = np.amax(pvals[:-1], pvals[1:])
-    return(dpval)
-
-
-def change_discounter(v, min_gain, min_loss):
-    """
-    ========= inputs =========
-    v:        vector extending into past; v[0] is most recent, v[-1] least recent
-    min_gain: minimum gain (dv/dt) to be considered
-    min_loss: minimum loss to be considered for discounting, must be <= 0
-    ==========================
-    """
-
-    ## compute dv/dt, prepare dv_disc
-    dv = v[:-1] - v[1:]
-    dv_disc = np.zeros(shape=len(dv))
-    ## get indices of gains and losses
-    idx_gains  = np.where(dv >= min_gain)[0]
-    idx_losses = np.where(dv <= min_loss)[0]
-
-    for idx in idx_gains:
-        ## determine relevant indices (losses only!)
-        idx_consider = idx_losses[np.where(idx_losses < idx)]
-
-        ## skip current iteration if no moisture loss occurs between then and t=0
-        if len(idx_consider)==0:
-            dv_disc[idx] = dv[idx]
-            continue
-
-        ## create vector with fractions,
-        frc_vec = v[idx_consider]/v[idx_consider+1]
-        ## then multiply current dv with product of vector (order irrelevant)
-        dv_disc[idx] = np.prod(frc_vec)*dv[idx]
-    return(dv_disc)
-
-
-def writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart):
-    if verbose:
-        print(" * Writing netcdf output...")
-                
-    # convert date objects to datetime objects if necessary
-    if type(fdate_seq[0]) == datetime.date:
-        for idt in range(len(fdate_seq)):
-            fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
-    if type(fuptdate_seq[0]) == datetime.date:
-        for idt in range(len(fuptdate_seq)):
-            fuptdate_seq[idt] = datetime.datetime(fuptdate_seq[idt].year, fuptdate_seq[idt].month, fuptdate_seq[idt].day)
-
-    # delete nc file if it is present (avoiding error message)
-    try:
-        os.remove(ofile)
-    except OSError:
-        pass
-        
-    # create netCDF4 instance
-    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
-    
-    # create dimensions 
-    nc_f.createDimension('arrival-time', len(fdate_seq))
-    nc_f.createDimension('uptake-time', len(fuptdate_seq))
-    nc_f.createDimension('lat', glat.size)
-    nc_f.createDimension('lon', glon.size)
-    
-    # create variables
-    atimes              = nc_f.createVariable('arrival-time', 'i4', 'arrival-time')
-    utimes              = nc_f.createVariable('uptake-time', 'i4', 'uptake-time')
-    latitudes           = nc_f.createVariable('lat', 'f4', 'lat')
-    longitudes          = nc_f.createVariable('lon', 'f4', 'lon')
-    heats               = nc_f.createVariable('H', 'f4', ('arrival-time','uptake-time','lat','lon'))
-    etops               = nc_f.createVariable('E2P', 'f4', ('arrival-time','uptake-time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', 'f4', ('arrival-time','uptake-time','lat','lon'))
-    
-    # set attributes
-    nc_f.description    = "FLEXPART: 02_attribution of advected surface sensible heat and evaporative moisture resulting in precipitation"
-    atimes.units        = 'hours since 1900-01-01 00:00:00'
-    atimes.calendar     = 'Standard' 
-    utimes.units        = 'hours since 1900-01-01 00:00:00'
-    utimes.calendar     = 'Standard' 
-    latitudes.units     = 'degrees_north'
-    longitudes.units    = 'degrees_east'
-    heats.units         = 'W m-2'
-    heats.long_name	= 'surface sensible heat flux'
-    etops.units         = 'mm'
-    etops.long_name	= 'evaporation resulting in precipitation'
-    nparts.units        = 'int'
-    nparts.long_name    = 'number of parcels (mid pos.)'
-    
-    # write data
-    atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)
-    utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)
-    longitudes[:]       = glon
-    latitudes[:]        = glat
-    heats[:]            = ary_heat[:]
-    etops[:]            = ary_etop[:]     
-    nparts[:]           = ary_npart[:]
-        
-    # close file
-    nc_f.close()
-        
-    print("\n===============================================================")
-    print("\n Successfully written: "+ofile+" !")
-    print("\n===============================================================")
-
 ############################################################################
 #############################    SETTINGS ##################################
 
@@ -139,55 +13,55 @@ def main_attribution(
            opath, ofile_base,
            mode,
            gres,
-           diagnosis,
+           maskfile,
+           maskval,
+           tdiagnosis,
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
-           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
+           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
+           fjumps,
+           fjumpsfull,
+           cjumps,
            refdate,
-           fwrite_netcdf,ftimethis,fcc_advanced,fvariable_mass):
+           fwrite_netcdf,
+           precision,
+           ftimethis,
+           fdry,fmemento,fcc_advanced,fvariable_mass,
+           strargs):
 
+    # TODO: add missing features
     if fcc_advanced or fvariable_mass:
-        raise SystemExit("---- ABORTED: no can do, master")
-    
+        raise SystemExit("---- ABORTED: no can do, not implemented!")
+ 
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
-    ofilename = str(ofile_base)+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
+    
+    ## read netcdf mask
+    with nc4.Dataset(maskfile) as f:
+        mask = f['mask'][:]
+        mlat = f['lat'][:]
+        mlon = f['lon'][:]
 
     ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
     if verbose:
         disclaimer()
-        print("\n SETTINGS :")
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
-        print("\n input path: \t", 	ipath)
         print("\n============================================================================================================")
+        print(" ! using input path: \t", 	ipath)
         print(" ! using variable mass: \t" +str(fvariable_mass) )
         if fvariable_mass:
             print(" \t ! reference date for number of particles: \t" +str(refdate) )
-        print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
         if fwrite_netcdf:
-            print(" \t ! with grid resolution:: \t", str(gres) )
+            print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
+            print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
-        print(" ! mode: \t" +str(mode))
-        print(" ! DIAGNOSIS SETTINGS")
-        print(" \t ! HEAT: ")
-        print(" \t \t  dTH > " + str(cheat_dtemp) )
-        print(" \t \t  abs(dqv) < "+str(cheat_cc)+" * (dTH) * ...")
-        print(" \t \t  ztra[0] <  max("+str(cheat_hgt)+", hpbl_max) ")
-        print(" \t \t  ztra[1] <  max("+str(cheat_hgt)+", hpbl_max) ")
-        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
-        print(" \t ! EVAPORATION: ")
-        print(" \t \t  abs(dTH) < "+str(cevap_cc)+" * (dqv) * ...")
-        print(" \t \t  ztra[0] <  max("+str(cevap_hgt)+", hpbl_max) ")
-        print(" \t \t  ztra[1] <  max("+str(cevap_hgt)+", hpbl_max) ")
-        print(" \t ! + using advanced CC criteria: \t" +str(fcc_advanced) )
-        print(" \t ! PRECIPITATION: ")
-        print(" \t \t  dqv < "+str(cprec_dqv) )
-        print(" \t \t  rh[0] > "+str(cprec_rh) )
+        print(" ! using mode: \t" +str(mode))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -196,10 +70,13 @@ def main_attribution(
         megatic = timeit.default_timer()
     
     glon, glat, garea = makegrid(resolution=gres)
+    ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
+    if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
+        warnings.warn("\n----------------- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
 
     ## -- DATES
     # NOTE: we begin at 06 UTC...
-    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01-06", "%Y-%m-%d-%H")
+    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01-06", "%Y-%m-%d-%H") 
     datetime_end    = datetime_bgn + relativedelta(months=1)
     timestep        = datetime.timedelta(hours=6)
     datetime_seq    = []
@@ -219,48 +96,50 @@ def main_attribution(
     while iuptdatetime < datetime_end - datetime.timedelta(hours=3):
         fuptdatetime_seq.append(iuptdatetime)
         iuptdatetime += timestep
-  
-    """
-    issue: arrays become HUGE if using 6-hourly res for TWO time axes,
-           yet particle mass scaling appears to be implemented
-           at 6-hourly resolution as of now.....
-    """
 
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
-    fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist()
+    fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
     fuptdate_seq = np.unique([fdt.date() for fdt in fuptdatetime_seq]).tolist()
+    # keep a copy of datetime.date formatted list for arv_idx further below
+    fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
+    # convert these datetime.date objects to datetime.datetime objects for netCDF writing
+    for idt in range(len(fdate_seq)):
+        fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
+    for idt in range(len(fuptdate_seq)):
+        fuptdate_seq[idt] = datetime.datetime(fuptdate_seq[idt].year, fuptdate_seq[idt].month, fuptdate_seq[idt].day)
     # NOTE: better to keep these as lists to maintain consistency
 
+    # calculate number of time steps, also aggregated to daily resolution
     ntime           = len(fdatetime_seq)
     nupttime        = len(fuptdatetime_seq)
-
     ndaytime        = len(fdate_seq)
     ndayupttime     = len(fuptdate_seq)
 
     # TESTMODE
     if mode == "test":
-        ntime            = 1
-        datetime_seq     = datetime_seq[:ntime]
-        fdatetime_seq    = fdatetime_seq[:ntime]
-        ndaytime         = 1
-        fdate_seq        = fdate_seq[:ndaytime]
-        
-        nupttime         = 4*ctraj_len + 1
-        fuptdatetime_seq = fuptdatetime_seq[:nupttime]
-        ndayupttime      = (ctraj_len) + 1
-        fuptdate_seq     = fuptdate_seq[:ndayupttime]
 
-    print("PRELIM: ntime, ndaytime, nupttime, ndayupttime =", ntime, ndaytime, nupttime, ndayupttime)
+        ctraj_len_orig   = ctraj_len
+        ctraj_len        = 2 # NOTE: changes here must be accompanied by changes in 01_diagnosis!
+
+        ntime            = 4 #NOTE: use multiples of 4 only, else output is not saved 
+        datetime_seq     = datetime_seq[(4*ctraj_len):(4*ctraj_len+ntime)]
+        fdatetime_seq    = fdatetime_seq[(4*ctraj_len):(4*ctraj_len+ntime)]
+        ndaytime         = int(ntime/4)
+        fdate_seq        = fdate_seq[ctraj_len:ctraj_len+ndaytime]
+        fdateasdate      = fdateasdate[ctraj_len:ctraj_len+ndaytime]
+
+        nupttime         = ntime + 4*ctraj_len
+        # NOTE: this is not coded 'universally' at this point... CAUTION
+        fuptdatetime_seq = fuptdatetime_seq[4*ctraj_len_orig:4*ctraj_len_orig+nupttime]
+        ndayupttime      = ctraj_len + 1
+        fuptdate_seq     = fuptdate_seq[ctraj_len_orig:ctraj_len_orig+ndayupttime]
+
+    ## -- WRITE NETCDF OUTPUT (empty, to be filled)
+    if fwrite_netcdf:
+        writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision)
 
     # traj max len
     tml = nupttime - ntime
-
-    print("tml=", tml)
-
-    ## pre-allocate arrays
-    ary_heat     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
-    ary_etop     = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
-    ary_npart    = np.zeros(shape=(ndaytime,ndayupttime,glat.size,glon.size))
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
@@ -268,12 +147,74 @@ def main_attribution(
     if fvariable_mass:
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
 
-    ## prepare parcel log to handle trajectories properly   
-    pIDlogH = -np.ones(shape=2000001).astype(int) 
+    ## prepare parcel log to handle trajectories properly 
+    if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
+        pIDlogH = -999*np.ones(shape=2000001).astype(int) 
 
+
+    ###--- pre-loop to produce independent monthly output
+    ## NOTE: this is irrelevant for E2P, but crucial for Had (& Ead)
+    if fmemento and mode == "oper": # skip if multi-counting somehow desired and/or if testing
+
+        ## p1) create required datetime string object
+        predatetime_bgn = uptdatetime_bgn + datetime.timedelta(hours=3)
+        predatetime_end = datetime_bgn 
+        predatetime_seq = []
+        idatetime       = predatetime_bgn
+        while idatetime < predatetime_end:
+            predatetime_seq.append(idatetime.strftime('%Y%m%d%H'))
+            idatetime += timestep # timestep was defined above
+        npretime = len(predatetime_seq)
+ 
+        if verbose: 
+            print("\n--------------------------------------------------------------------------------------")
+            print("\n ! performing pre-loop to log advected parcels arriving prior to analysis time")
+            print("\n ! estimating remaining time for pre-loop ...")
+         
+        ## p2) loop through files (.. to log in-ABL hits)
+        pretic = timeit.default_timer()
+        for pix in range(npretime):
+
+            if verbose and pix==1:
+                pretoc = timeit.default_timer()
+                print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
+
+            ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
+            #print("Processing "+str(predatetime_seq[pix]))
+
+            ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
+            ary = readpom( idate    = predatetime_seq[pix],
+                           ipath    = ipath+"/"+str(ryyyy),
+                           ifile_base = ifile_base,
+                           verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
+
+            nparticle   = ary.shape[1]
+            #if verbose:
+            #    print(" TOTAL: " + str(predatetime_seq[pix]) + " has " + str(nparticle) + " parcels")
+            ntot    = range(nparticle)
+
+            ## p4) now loop through particles
+            for i in ntot:
+
+                ## check for jumps
+                mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+                alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+                if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+                   continue
+
+                ## read ONLY parcel and ABL heights
+                ztra, hpbl = readheights(ary[:4,i,:])
+
+                ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
+                if ( ztra[0] < np.max(hpbl[:4]) ):
+                    ## update parcel log
+                    ID = int(ary[0,i,0])
+                    pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
+    
+    
+    ###--- MAIN LOOP
     ## prepare uptake indices
     upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
-    print(upt_idx)
 
     ## loop over time to read in files
     if verbose:
@@ -289,6 +230,7 @@ def main_attribution(
                        ifile_base = ifile_base)
 
         nparticle   = ary.shape[1]
+        ntrajleng   = ary.shape[0]
         if verbose:
             print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparticle) + " parcels")
 
@@ -299,156 +241,253 @@ def main_attribution(
             ntot    = range(nparticle)
 
         # figure out where to store data (on which arriving day)
-        arv_idx = np.where(np.asarray(fdate_seq)==fdatetime_seq[ix].date())[0][0]
- 
+        arv_idx = np.where(np.asarray(fdateasdate)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
+
+        # pre-allocate arrays (repeat at every 4th step)
+        if ix%4==0:
+            ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+            ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+
+        # STATS
+        # number of parcels not evaluated (nnevala for arriving; nnevalm for midpoint)
+        nnevalm = 0
+        nnevala = 0
+        # number of trajectories with at least one jump (entirely skipped for now)
+        if fjumps: 
+            njumps  = 0
+
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
+           
+            ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
+            if fjumps:
+                if fjumpsfull:
+                    # checking for the full trajectory length
+                    jumps = np.array([])
+                    for it in range(ntrajleng-1):
+                        jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
+                else:
+                    jumps = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1])
+                if np.any(jumps > cjumps):
+                    njumps += int(1)
+                    findjump = np.argwhere(jumps > cjumps)
+                    if np.any(findjump > 0):
+                        print(" !!! ATTENTION: YOU JUST ENCOUNTERED A JUMP IN THE TAIL OF THE TRAJECTORY !!!")
+                    continue
 
-            ## - 2.0) check how far back trajectory should be evaluated
-            # NOTE: this can be moved elsewhere...
-            # for Hadv (not needed for E2P)
-            ID = int(ary[0,i,0])   
-            istepH = pIDlogH[ID]
-            if istepH < 0:
-                ihf_H = 4*ctraj_len + 2
+            ## - 2.0) only evaluate if the parcel is in target region
+	        ## NOTE: I took only the last two time steps for now; should this be 4?
+            ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
+            mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+            alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+            if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+                continue
             else:
-                ihf_H = min((ix-istepH+1), 4*ctraj_len + 2)
-            if ihf_H < 4*ctraj_len + 2: # might as well use tml+2
-                print("*", end="")
-            """
-                 ======> the above needs to be (double-)checked!
-			.. and it would be tight to do this with less lines, IMPROVE
-            """
 
-            ## - 2.1) read parcel information
-            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:]) ### tml+2 PRELIM
+                ## - 2.1) check how far back trajectory should be evaluated
+                # NOTE: this could be moved elsewhere...
+                # for Hadv (not needed for E2P):
+                if fmemento:
+                    ID = int(ary[0,i,0])   
+                    istepH = pIDlogH[ID]
+                    ihf_H = min((ix-istepH+1), tml + 2) 
+                else:
+                    ihf_H = tml + 2
 
-            ## - 2.2) parcel changes / criteria
-            dq          = trajparceldiff(qv[:], 'diff') 
-            if diagnosis == 'KAS':
-                hpbl_max    = parceldiff(hpbl[:], 'max')
-                dTH         = trajparceldiff(pottemp[:], 'diff')
-                dTHe        = trajparceldiff(epottemp[:], 'diff')
-                #dz          = parceldiff(ztra, 'diff')
-                #if fcc_advanced:
-                #    dT          = parceldiff(temp[:2], 'diff')
-            elif diagnosis == 'SOD':
-                hpbl_avg    = parceldiff(hpbl[:], 'mean')
-                dTH         = trajparceldiff(pottemp[:], 'diff')
+                ## - 2.2) read only the most basic parcel information
+                # NOTE: this could easily be done more efficiently
+                ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
 
-            ## - 2.3) diagnose fluxes
+                ## - 2.3) diagnose fluxes
 
-            ## (a) number of parcels
-            for itj in range(tml+1): # NOT tml+2 !!!
-                ary_npart[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=int(1), glon=glon, glat=glat)
+                ##  - 2.3)-KAS: Keune and Schumacher
+                if tdiagnosis == 'KAS':
 
-            ##  - 2.3)-KAS: Keune and Schumacher
-            if diagnosis == 'KAS':
-
-                ## (b) E2P, evaporation resulting in precipitation
-                if ( dq[0] < cprec_dqv and 
-                     q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                     q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
-
-
-                    # first things first, check if traj falls dry & adapt ihf_E if so
-                    # NOTE: to be discussed if we even use this (imo: ditch it), 
-                    #       ===> do include for SOD, though
-                    ihf_dry = np.where(qv[:]<= 0.00005)[0]
-                    if ihf_dry.size>0:
-                       ihf_E = np.min(ihf_dry)
-                       print("---- PRELIM INFO: E2P traj fell dry, cut off at", ihf_E)
+                    ## (a) E2P, evaporation resulting in precipitation
+                    if not mask[mlat_ind,mlon_ind]==maskval:
+                        nnevalm += 1
                     else:
-                       ihf_E = tml + 2
+                        if ( (qv[0]-qv[1]) < cprec_dqv and 
+                             q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
+                             q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
 
-                    # SHOULD I MAKE USE OF PARCELDIFF instead of PBL_check???
-                    in_PBL     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, diagnosis=diagnosis)                      
-                    evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
-                    evap_plaus = abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                    evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
+                            # read full parcel information
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                            
+                            # calculate all required changes along trajectory
+                            dq          = trajparceldiff(qv[:], 'diff')
+                            dTH         = trajparceldiff(pottemp[:], 'diff')
+                            dTHe        = trajparceldiff(epottemp[:], 'diff')
+
+                            # check if traj falls dry & adjust ihf_E if so
+                            ihf_E = tml + 2
+                            if fdry:
+                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
+                                if ihf_dry.size>0:
+                                    ihf_E = np.min(ihf_dry)
+                                    
+                            # identify evaporative moisture uptakes
+                            in_PBL     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
+                            evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
+                            evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
+                            evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
+                            
+                            if evap_idx.size>0:
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc
+
+                            for itj in evap_idx: 
+                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+
+                    ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
+                    if not mask[alat_ind,alon_ind]==maskval:
+                        nnevala += 1
+                    else:
+                        if ( ihf_H >= 2 and 
+                             ztra[0] < np.max(hpbl[:4]) ):
+
+                            # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                            
+                            # calculate all required changes along trajectory
+                            dq          = trajparceldiff(qv[:], 'diff')
+                            dTH         = trajparceldiff(pottemp[:], 'diff')
+                            
+                            # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
+                            in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
+                            heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_plaus = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
+                            heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
+
+                            # discount uptakes linearly
+                            if heat_idx.size>0:
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+
+                            # loop through sensible heat uptakes
+                            for itj in heat_idx:
+                                #NOTE: hardcoded for writing daily data 
+                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+
+                            # update parcel log
+                            if fmemento:
+                                pIDlogH[ID] = ix # NOTE: double-check
+
+                ##  - 2.3)-SOD: Sodemann et al., 2008
+                elif tdiagnosis == 'SOD':
+         
+                    ## (a) E2P
+                    if not mask[mlat_ind,mlon_ind]==maskval:
+                        nnevalm += 1
+                    else:
+                        if ( (qv[0]-qv[1]) < 0 and 
+                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+
+                            # read full parcel information
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+
+                            # calculate all required changes along trajectory
+                            dq          = trajparceldiff(qv[:], 'diff')
+                            
+                            # check if traj falls dry & adjust ihf_E if so
+                            ihf_E = tml + 2
+                            if fdry:
+                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
+                                if ihf_dry.size>0:
+                                    ihf_E = np.min(ihf_dry)
+
+                            # identify evaporative moisture uptakes
+                            in_PBL    = trajparceldiff(ztra[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
+                            evap_uptk = dq[:ihf_E-1] > 0.0002
+                            evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
+
+                            # discount uptakes linearly, scale with precipitation fraction
+                            if evap_idx.size>0:
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc 
+
+                            # loop through evaporative uptakes
+                            for itj in evap_idx:
+                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+  
+    
+                    ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
+                    if not mask[alat_ind,alon_ind]==maskval:
+                        nnevala += 1
+                    else:
+                        if ( ihf_H >= 2 and
+                             ztra[0] < np.max(hpbl[:4]) ):
+
+                            # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+
+                            # calculate all required changes along trajectory
+                            dTH         = trajparceldiff(pottemp[:], 'diff')
+
+                            # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
+                            in_PBL    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
+                            heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
+
+                            # discount uptakes linearly
+                            if heat_idx.size>0:
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+
+                            # loop through sensible heat uptakes
+                            for itj in heat_idx:
+                                #NOTE: hardcoded for writing daily data 
+                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+
+                            # update parcel log
+                            if fmemento:
+                                pIDlogH[ID] = ix # NOTE: double-check
+
+
+                ##  - 2.3)-SAJ: Stohl and James, 2004
+                elif tdiagnosis == 'SAJ':
+
+                    if not mask[mlat_ind,mlon_ind]==maskval:
+                        nnevalm += 1
+                        continue
                     
-#                    print("evap_idx, arv_idx = ", evap_idx, arv_idx)
-                   
-                    if evap_idx.size>0:
-                        dq_disc = change_discounter(v=qv[:ihf_E], min_gain=0, min_loss=0)
-                        etop = ((qv[0]-qv[1])/qv[1])*dq_disc ### NOTE: might want to swap sign
+                    ## (a) E-P based on ALL parcels residing over target region, no precipitation-criterion used
+                    # read full parcel information (but only what is needed; ihf_H)
+                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
-#                    print("dq=", dq)
-#                    print("dq_disc=", dq_disc)
+                    # calculate all required changes along trajectory
+                    dq          = trajparceldiff(qv[:], 'diff')
 
-                    for itj in evap_idx: 
-#                        print(itj, upt_idx[ix+tml-itj])
-                        ary_etop[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
-
-                ## (c) H, surface sensible heat arriving in PBL (or nocturnal layer)
-                if ( ztra[0] < np.max(hpbl[:4]) ):
-
-                    in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, diagnosis=diagnosis)
-                    heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
-                    heat_plaus = abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
-                    heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
-
-                    if heat_idx.size>0:
-                        dTH_disc = change_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
-
-                    for itj in heat_idx:
-                        #print(itj, upt_idx[ix+tml-itj])
-                        ary_heat[arv_idx,upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)
+                    # add any moisture change along trajectory to respective column sum
+                    for itj in range(ihf_H-1):
+                        ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dq[itj], glon=glon, glat=glat)
 
                     # update parcel log
-                    pIDlogH[ID] = ix # NOTE: double-check
+                    if fmemento:
+                        pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
 
 
-
-            ##  - 2.3)-SOD: Sodemann et al., 2008
-#            elif diagnosis == 'SOD':
-#         
-#                ## (b) precipitation
-#                if ( dq < 0 and 
-#                     q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
-#                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-#
-#                ## (c) evaporation
-#                if ( dq > 0.0002 and 
-#                     (ztra[0]+ztra[1])/2 <  hpbl_avg
-#                   ):
-#                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-#    
-#                ## (d) sensible heat (not used originally; analogous to evaporation)
-#                if ( (dTH > cheat_dtemp) and 
-#                    (ztra[0]+ztra[1])/2 <  hpbl_avg
-#                   ):
-#                    ary_heat[ix,:,:] += gridder(plon=lons, plat=lats, pval=dTH, glon=glon, glat=glat)
-#
-#            ##  - 2.3)-SAJ: Stohl and James, 2004
-#            elif diagnosis == 'SAJ':
-#
-#                ## (b) precipitation
-#                if ( dq < 0 ):
-#                    ary_prec[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-#    
-#                ## (c) evaporation
-#                if ( dq > 0 ):
-#                    ary_evap[ix,:,:] += gridder(plon=lons, plat=lats, pval=dq, glon=glon, glat=glat)
-
-        # Convert units
         if verbose:
-            print(" * Converting units...")
-        if diagnosis == 'KAS' or diagnosis == 'SOD':
-            ary_etop[ix,:,:,:] = convertunits(ary_etop[ix,:,:,:], garea, "E")
-            ary_heat[ix,:,:,:] = convertunits(ary_heat[ix,:,:,:], garea, "H")
-            # NOTE: the above works for 3D arrays too thanks to numpy broadcasting!
-#        elif diagnosis =='SAJ':
-#            # first calculate column sums, assign to E or P according to sign
-#            colsum = ary_prec[ix,:,:] + ary_evap[ix,:,:]
-#            colsum_pos = np.zeros_like(colsum)
-#            colsum_neg = np.zeros_like(colsum)
-#            colsum_pos[np.where(colsum>0)] = colsum[np.where(colsum>0)]
-#            colsum_neg[np.where(colsum<0)] = colsum[np.where(colsum<0)]
-#            ary_evap[ix,:,:] = convertunits(colsum_pos, garea, "E")
-#            ary_prec[ix,:,:] = convertunits(colsum_neg, garea, "P")
+            neval   = len(ntot)
+            # jump stats
+            if fjumps:
+                print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
+            # mask stats 
+            print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
+            print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
 
-    # Scale with parcel mass
+        # Convert units, but only after the last time step of each day
+        if ( (ix+1)%4==0 ):
+            if verbose:
+                print(" * Converting units...")
+            ary_etop[:,:,:] = convertunits(ary_etop[:,:,:], garea, "E")
+            ary_heat[:,:,:] = convertunits(ary_heat[:,:,:], garea, "H")
+    
+            if fwrite_netcdf:
+                writenc4D(ofile,arv_idx,ary_etop,ary_heat)
+        
+#TODO: decide what to do with parcel mass scaling here
+#    # Scale with parcel mass
 #    if fvariable_mass:
 #        if verbose: 
 #            print(" * Applying variable mass...")
@@ -461,5 +500,6 @@ def main_attribution(
         if verbose:
             print("\n=== \t End main program (total runtime so far: ",str(round(megatoc-megatic, 2)),"seconds) \n")
     
-    if fwrite_netcdf:
-        writenc4D(ofile,fdate_seq,fuptdate_seq,glon,glat,ary_etop,ary_heat,ary_npart)
+    if verbose:
+        if fwrite_netcdf:
+            print("\n Successfully written: "+ofile+" !")

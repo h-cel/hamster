@@ -71,6 +71,24 @@ def dist_on_sphere(lat1,lon1,lat2,lon2):
 
     return(dist)
 
+
+def dist_on_sphere2(lat1,lon1,lat2,lon2):
+    
+    lon1 = math.radians(lon1)
+    lon2 = math.radians(lon2)
+    dlon = lon2 - lon1
+
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    dlat = lat2 - lat1
+
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(sqrt(a), sqrt(1 - a))
+
+    dist = c * EARTHRADIUS
+
+    return(dist)
+
 def gridded_area_exact(lats_centr, res, nlon):
     """
     INPUT
@@ -116,6 +134,32 @@ def gridded_area_exact(lats_centr, res, nlon):
     # return array of dimension nlat x nlon
     ary_area = np.swapaxes(np.tile(areas, (nlon,1)), 0,1)
     return(ary_area)
+
+
+def gridded_area_exact_1D_TEMPORARY(lats_centr, res, R):
+    """
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    this shall be removed soon,
+    the only reason it's here is that I need the 1D version somewhere
+    in 03_biascorrection (and actually also 2D, but I still call 
+    this crap for now and then stupidly repeat & reshape)
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    """
+
+    ## UGLY but it's getting too late
+    R = EARTHRADIUS
+
+    ## make use of numpy vectorization
+    lats1 = (lats_centr+(res/2))*np.pi/180 # np.sin requires radians
+    lats2 = (lats_centr-(res/2))*np.pi/180
+    areas = (np.pi/180)*(R**2)*np.abs(np.sin(lats1)-np.sin(lats2))*res
+
+    ## overwrite any areas of 0 (at the poles) with np.NaN to prevent problems
+    try:
+        areas[np.where(areas==0.)] = np.NaN # only works for arrays
+    except TypeError:
+        pass # simply ignore if it's a float
+    return(areas)
 
 def midpoint_on_sphere(lat1,lon1,lat2,lon2):
 
@@ -183,8 +227,21 @@ def midpoint_on_sphere(lat1,lon1,lat2,lon2):
         lon_mid = 180 + phi*(180/PI)
 
     if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
-
     return(lat_mid, lon_mid)
+
+def midpoint_on_sphere2(lat1, lon1, lat2, lon2):
+    #Input values as degrees
+    # following http://www.movable-type.co.uk/scripts/latlong.html
+    lat1    = math.radians(lat1)
+    lon1    = math.radians(lon1)
+    lat2    = math.radians(lat2)
+    lon2    = math.radians(lon2)
+    bx      = math.cos(lat2) * math.cos(lon2 - lon1)
+    by      = math.cos(lat2) * math.sin(lon2 - lon1)
+    latm    = math.atan2(math.sin(lat1) + math.sin(lat2), math.sqrt((math.cos(lat1) + bx) * (math.cos(lat1) + bx) + by**2))
+    lonm    = lon1 + math.atan2(by, math.cos(lat1) + bx)
+    return math.degrees(latm), math.degrees(lonm)
+
 
 def q2rh(q_kgkg,p_Pa,T_K):
     """
