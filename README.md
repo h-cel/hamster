@@ -2,12 +2,12 @@
 
 **HAMSTER - a Heat And MoiSturE Tracking fRamework**
 
-**HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source-sink relationships, using output from a Lagrangian model. 
+**HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. 
 
 - - - -
 ## Getting started. 
 
-This sections describes the prerequisites required to run HAMSTER, and describes the steps to install it. 
+This section describes the prerequisites required to run HAMSTER, as well as the steps to install it. 
 
 ### Prerequisites
 To run HAMSTER, you need 
@@ -54,13 +54,13 @@ This software is published under the GPLv3 license. This means:
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
 ### 1. Diagnosis
-The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source-sink relationships. 
+The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using output from a Lagrangian model. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source–receptor relationships. 
 
 ### 2. Attribution
-The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source-sink relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
+The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route), and establishes a first (biased) source–receptor relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
 
 ### 3. Bias-correction
-The last module of **HAMSTER** uses information from the former two modules to bias-correct source-receptor relationships. Multiple options for bias-correction are available (see docs). 
+The last module of **HAMSTER** uses information from the former two modules to bias-correct source–receptor relationships. Multiple options for bias-correction are available (see docs). 
 
 ## Running HAMSTER.
 ### Prerequisites
@@ -69,7 +69,7 @@ To execute the full chain (all 3 modules) of **HAMSTER**, the only prerequisites
 * Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
 * A file paths.txt which lists the paths where the above data is found and where output will be stored.
 
-The file paths.txt is not part of **HAMSTER**. Users have to create the file theirselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
+The file paths.txt is not part of **HAMSTER**. Users have to create the file themselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
 ```
 # This file contains all required paths to run hamster
 # INPUT paths
@@ -87,12 +87,12 @@ opath_BIA = "./flexpart_data/hamster/03_biascorrection"
 ```
 
 ### Run and settings.
-To run **HAMSTER**, do
+To run **HAMSTER**, run
 ```
 python main.py
 ```
 
-Note that - without any flags - main.py is run with default values. Use 
+Note that — without any flags — main.py is run with default values. Use 
 ```
 python main.py -h
 ```
