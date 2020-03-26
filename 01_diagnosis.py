@@ -108,6 +108,7 @@ def main_diagnosis(
 
     # read in reference distribution of parcels
     if fvariable_mass:
+        print(" \n !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet! \n")
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
     
     ## ------- LOOP OVER DATES (FILES) 
@@ -293,6 +294,7 @@ def main_diagnosis(
 
         # Scale with parcel mass
         if fvariable_mass:
+            print(" !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet!")
             if verbose: 
                 print(" * Applying variable mass...")
             ary_prec[:,:]         = scale_mass(ary_prec[:,:], ary_npart[:,:], ary_rnpart)
