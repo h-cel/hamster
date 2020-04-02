@@ -71,6 +71,8 @@ exec(open("hamsterfunctions.py").read())
 ## (2) get date, thresholds and flags from command line (job script) 
 #      note: this is where we set the default values now. 
 args    = read_cmdargs()
+if args.ryyyy is None:
+    args.ryyyy = args.ayyyy
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
