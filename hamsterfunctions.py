@@ -67,7 +67,7 @@ def read_cmdargs():
     parser.add_argument('--frankenstein','-fr', help = "PRELIM: pom mask.dat used for P-scaling (flag)",                type = str2bol, default = True,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = None)
-    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = str(parser.parse_args().ryyyy)+"123118")
+    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = None)
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     return args

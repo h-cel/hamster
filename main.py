@@ -72,7 +72,9 @@ exec(open("hamsterfunctions.py").read())
 #      note: this is where we set the default values now. 
 args    = read_cmdargs()
 if args.ryyyy is None:
-    args.ryyyy = args.ayyyy
+    args.ryyyy   = args.ayyyy
+if args.refdate is None:
+    args.refdate = str(args.ryyyy)+"123118"
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
