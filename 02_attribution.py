@@ -34,6 +34,8 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
+    if tdiagnosis=="SOD2":
+        raise SystemExit(" tdiagnosis 'SOD2' is not yet implemented. Abort.")
  
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
