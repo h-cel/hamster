@@ -34,8 +34,6 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
-    if tdiagnosis=="SOD2":
-        raise SystemExit(" tdiagnosis 'SOD2' is not yet implemented. Abort.")
  
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
@@ -431,6 +429,75 @@ def main_attribution(
                             in_PBL    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
                             heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
                             heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
+
+                            # discount uptakes linearly
+                            if heat_idx.size>0:
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+
+                            # loop through sensible heat uptakes
+                            for itj in heat_idx:
+                                #NOTE: hardcoded for writing daily data 
+                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+
+                            # update parcel log
+                            if fmemento:
+                                pIDlogH[ID] = ix # NOTE: double-check
+
+
+                ##  SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
+                elif tdiagnosis == 'SOD2':
+         
+                    ## (a) E2P
+                    if not mask[mlat_ind,mlon_ind]==maskval:
+                        nnevalm += 1
+                    else:
+                        if ( (qv[0]-qv[1]) < 0 and 
+                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+
+                            # read full parcel information
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+
+                            # calculate all required changes along trajectory
+                            dq          = trajparceldiff(qv[:], 'diff')
+                            
+                            # check if traj falls dry & adjust ihf_E if so
+                            ihf_E = tml + 2
+                            if fdry:
+                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
+                                if ihf_dry.size>0:
+                                    ihf_E = np.min(ihf_dry)
+
+                            # identify evaporative moisture uptakes
+                            evap_uptk = dq[:ihf_E-1] > 0.0001
+                            evap_idx  = np.where(evap_uptk)[0] 
+
+                            # discount uptakes linearly, scale with precipitation fraction
+                            if evap_idx.size>0:
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc 
+
+                            # loop through evaporative uptakes
+                            for itj in evap_idx:
+                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+  
+    
+                    ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
+                    if not mask[alat_ind,alon_ind]==maskval:
+                        nnevala += 1
+                    else:
+                        if ( ihf_H >= 2 and
+                             ztra[0] < np.max(hpbl[:4]) ):
+
+                            # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
+                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+
+                            # calculate all required changes along trajectory
+                            dTH         = trajparceldiff(pottemp[:], 'diff')
+
+                            # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
+                            heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx  = np.where(heat_uptk)[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
