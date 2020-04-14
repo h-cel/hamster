@@ -252,6 +252,8 @@ def main_attribution(
         # number of parcels not evaluated (nnevala for arriving; nnevalm for midpoint)
         nnevalm = 0
         nnevala = 0
+        # number of precipitating parcels
+        nevalp  = 0
         # number of trajectories with at least one jump (entirely skipped for now)
         if fjumps: 
             njumps  = 0
@@ -310,6 +312,8 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
                              q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
                              q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                            
+                            nevalp += 1
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -383,12 +387,12 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
 
+                            nevalp += 1
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
 
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
-                            
                             # check if traj falls dry & adjust ihf_E if so
                             ihf_E = tml + 2
                             if fdry:
@@ -453,6 +457,7 @@ def main_attribution(
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
                              q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                            nevalp += 1
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -544,6 +549,7 @@ def main_attribution(
             # mask stats 
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
             print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
+            print(" STATS: Evaluated "+str(nevalp)+" ({:.2f}".format(100*(nevalp)/(neval-nnevalm)) +"%) precipitating parcels.")
 
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
