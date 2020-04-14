@@ -446,6 +446,29 @@ def linear_discounter(v, min_gain, min_loss):
         dv_disc[idx] = np.prod(frc_vec)*dv[idx]
     return(dv_disc)
 
+def linear_discounter2(qtot):
+    dqdt = qtot[:-1] - qtot[1:]
+    print(str(dqdt[0]))
+    dqdt = dqdt[::-1]
+    qtot = qtot[::-1]
+    nt   = len(dqdt)
+    print(str(dqdt[nt-1]))
+    ## scale all humidity changes with subsequent uptakes and losses (rer= rain en route): 
+    # using a discounting with the relative gain to the moisture content before the loss
+    dqdt_scaled = dqdt
+    rer         = abs(dqdt*((dqdt<0)+0))
+    for ii in range(nt-2):
+        if dqdt[ii]>0:
+            for t in range((ii+1),(nt-1)):
+                dqdt_scaled[ii] = dqdt_scaled[ii] - dqdt_scaled[ii]/qtot[t] * rer[t]
+    dqdt_scaled[np.where(dqdt<=0)] =0 # reset rain en route
+    return(dqdt_scaled[::-1])
+    ## relative weight of scaled uptake to moisture content before final precip. event
+    #fw  = dqdt_scaled / qtot[nt-1]
+    #fw[which(fw<0)]=0
+    #fw[which(is.na(fw))]=0
+    #fw  = fw[::-1]
+    #return(fw)
 
 def gridder(plon, plat, pval,
             glat, glon):
