@@ -63,6 +63,7 @@ def read_cmdargs():
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--explainp', '-exp',   help = "upscaling of E2P contributions to explain P fully",             type = str2bol, default = False,    nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--writestats','-ws',   help = "write additional stats to file (02 only; flag)",                type = str2bol, default = False,    nargs='?')
     parser.add_argument('--setnegzero', '-sz',  help = "set negative ERA-I E & H fluxes to zero (flag)",                type = str2bol, default = True,     nargs='?')
     parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       type = str2bol, default = False,    nargs='?')
     parser.add_argument('--frankenstein','-fr', help = "PRELIM: pom mask.dat used for P-scaling (flag)",                type = str2bol, default = True,    nargs='?')
@@ -1005,3 +1006,9 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     
     # print info
     print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+
+def append2csv(filename, listvals):
+    # Open file in append mode
+    with open(filename, 'a+', newline='\n') as write_obj:
+        csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
+        csv_writer.writerow(listvals)

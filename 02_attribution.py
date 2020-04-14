@@ -28,7 +28,7 @@ def main_attribution(
            fwrite_netcdf,
            precision,
            ftimethis,
-           fdry,fmemento,fexplainp,fcc_advanced,fvariable_mass,
+           fdry,fmemento,fexplainp,fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
     # TODO: add missing features
@@ -39,7 +39,15 @@ def main_attribution(
     mainpath  = ipath+str(ryyyy)+"/"
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
-    
+
+    # output file for writestats (only for P as of now)
+    if fwritestats:
+        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
+        statsfile   = opath+"/"+sfilename
+        with open(statsfile,'w') as sfile:
+                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
+                writer.writerow(["DATE", "FTOT", "DQDT(P)[kg/kg]"])
+
     ## read netcdf mask
     with nc4.Dataset(maskfile) as f:
         mask = f['mask'][:]
@@ -62,6 +70,8 @@ def main_attribution(
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
+        if fwritestats:
+            print(" ! additional statistics in: \t"+str(statsfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -340,9 +350,13 @@ def main_attribution(
                             
                             if evap_idx.size==0:
                                 nnevalp += 1
+                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -416,10 +430,14 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
+                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -494,10 +512,14 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
+                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
+                                append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely

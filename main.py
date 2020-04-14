@@ -32,6 +32,7 @@ import warnings
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
+import csv
 
 ###########################################################################
 ##--- PATHS
@@ -139,6 +140,7 @@ if args.steps == 2 or args.steps == 4:
               fexplainp=args.explainp,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
+              fwritestats=args.writestats,
               strargs=printsettings(args,2))
 
 if args.steps == 3 or args.steps == 4:
