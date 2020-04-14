@@ -28,7 +28,7 @@ def main_attribution(
            fwrite_netcdf,
            precision,
            ftimethis,
-           fdry,fmemento,fcc_advanced,fvariable_mass,
+           fdry,fmemento,fexplainp,fcc_advanced,fvariable_mass,
            strargs):
 
     # TODO: add missing features
@@ -254,6 +254,8 @@ def main_attribution(
         nnevala = 0
         # number of precipitating parcels
         nevalp  = 0
+        # number of precipitating parcels that are not evaluated...
+        nnevalp  = 0
         # number of trajectories with at least one jump (entirely skipped for now)
         if fjumps: 
             njumps  = 0
@@ -336,10 +338,17 @@ def main_attribution(
                             evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
                             evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
                             
+                            if evap_idx.size==0:
+                                nnevalp += 1
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                if fexplainp:
+                                    # upscaling of fractions dq_disc/qv[1] to 1
+                                    # in order to explain the loss entirely
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                else:
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
                             for itj in evap_idx: 
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -405,11 +414,18 @@ def main_attribution(
                             evap_uptk = dq[:ihf_E-1] > 0.0002
                             evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
 
+                            if evap_idx.size==0:
+                                nnevalp    += 1
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc 
+                                if fexplainp:
+                                    # upscaling of fractions dq_disc/qv[1] to 1
+                                    # in order to explain the loss entirely
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                else:
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -476,11 +492,18 @@ def main_attribution(
                             evap_uptk = dq[:ihf_E-1] > 0.0001
                             evap_idx  = np.where(evap_uptk)[0] 
 
+                            if evap_idx.size==0:
+                                nnevalp    += 1
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc 
+                                if fexplainp:
+                                    # upscaling of fractions dq_disc/qv[1] to 1
+                                    # in order to explain the loss entirely
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                else:
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -550,7 +573,8 @@ def main_attribution(
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
             print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
             print(" STATS: Evaluated "+str(nevalp)+" ({:.2f}".format(100*(nevalp)/(neval-nnevalm)) +"%) precipitating parcels.")
-
+            if nnevalp!=0:
+                print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any uptakes...")
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
             if verbose:

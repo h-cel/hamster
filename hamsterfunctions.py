@@ -61,6 +61,7 @@ def read_cmdargs():
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--explainp', '-exp',   help = "upscaling of E2P contributions to explain P fully",             type = str2bol, default = False,    nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
     parser.add_argument('--setnegzero', '-sz',  help = "set negative ERA-I E & H fluxes to zero (flag)",                type = str2bol, default = True,     nargs='?')
     parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       type = str2bol, default = False,    nargs='?')
