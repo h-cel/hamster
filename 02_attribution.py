@@ -339,7 +339,7 @@ def main_attribution(
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc
+                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
                             for itj in evap_idx: 
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -409,7 +409,7 @@ def main_attribution(
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc 
+                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc 
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -480,7 +480,7 @@ def main_attribution(
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                etop        = ((qv[0]-qv[1])/qv[1])*dq_disc 
+                                etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc 
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
