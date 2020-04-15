@@ -322,8 +322,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
-                             q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                             q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > cprec_rh ):
                             
                             nevalp += 1
 
