@@ -417,16 +417,16 @@ def scale_mass(ary_val, ary_part, ary_rpart):
     return(ary_sval)
 
 
-def linear_discounter(qv, min_gain):
+def linear_discounter(v, min_gain):
     """
     ========= inputs =========
-    qv:        vector extending into past; qv[0] is most recent, qv[-1] least recent
+    v:        vector extending into past; v[0] is most recent, v[-1] least recent
     min_gain: minimum gain (dv/dt) to be considered
     ==========================
     """
 
     ## compute dv/dt, prepare dv_disc
-    dq = qv[:-1] - qv[1:]
+    dq = v[:-1] - v[1:]
     dq_disc = np.zeros(shape=len(dq))
     ## get indices of gains and losses
     idx_gains  = np.where(dq >= min_gain)[0]
@@ -442,9 +442,9 @@ def linear_discounter(qv, min_gain):
             continue
 
         ## create vector with fractions,
-        fw = qv[idx_consider]/qv[idx_consider+1]
+        frc_vec = v[idx_consider]/v[idx_consider+1]
         ## then multiply current dv with product of vector (order irrelevant)
-        dq_disc[idx] = np.prod(fw)*dq[idx]
+        dq_disc[idx] = np.prod(frc_vec)*dq[idx]
     return(dq_disc)
 
 def linear_discounter2(qtot):
