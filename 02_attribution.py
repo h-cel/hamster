@@ -354,7 +354,7 @@ def main_attribution(
                                     append2csv(statsfile,statdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
                                     statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
@@ -390,7 +390,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
@@ -437,7 +437,7 @@ def main_attribution(
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
                                     statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
@@ -473,7 +473,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
@@ -521,7 +521,7 @@ def main_attribution(
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
                                     statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
@@ -556,7 +556,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
