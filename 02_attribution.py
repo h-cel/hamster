@@ -322,7 +322,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
-                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > cprec_rh ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                             
                             nevalp += 1
 
@@ -409,7 +409,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
-                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
                             nevalp += 1
                             # read full parcel information
@@ -493,7 +493,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
-                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
                             nevalp += 1
 
                             # read full parcel information
