@@ -349,13 +349,15 @@ def main_attribution(
                             
                             if evap_idx.size==0:
                                 nnevalp += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -429,14 +431,16 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -511,14 +515,16 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if frwitestats:
+                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
