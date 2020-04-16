@@ -177,8 +177,7 @@ def main_diagnosis(
                 # precipitation
                 if (dq < cprec_dqv):
                     pres = readpres(ary[:,i,:])
-                    if ( q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                         q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                    if ( ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                          ary_prec[lat_ind,lon_ind] += dq
                          ary_pnpart[lat_ind,lon_ind] += int(1)
 
@@ -225,7 +224,7 @@ def main_diagnosis(
 
                 ## precipitation
                 if (dq < 0 and 
-                        q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
+                        ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
                     ary_prec[lat_ind,lon_ind] += dq
                     ary_pnpart[lat_ind,lon_ind] += int(1)
 
@@ -251,7 +250,7 @@ def main_diagnosis(
 
                 ## precipitation
                 if (dq < 0 and 
-                        q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80):
+                        ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
                     ary_prec[lat_ind,lon_ind] += dq
                     ary_pnpart[lat_ind,lon_ind] += int(1)
 

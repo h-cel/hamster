@@ -322,8 +322,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
-                             q2rh(qv[0], pres[0], temp[0]) > cprec_rh  and
-                             q2rh(qv[1], pres[1], temp[1]) > cprec_rh ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                             
                             nevalp += 1
 
@@ -350,17 +349,19 @@ def main_attribution(
                             
                             if evap_idx.size==0:
                                 nnevalp += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -389,7 +390,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
@@ -408,7 +409,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
-                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
                             nevalp += 1
                             # read full parcel information
@@ -430,18 +431,20 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -470,7 +473,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
@@ -490,7 +493,7 @@ def main_attribution(
                         nnevalm += 1
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
-                             q2rh((qv[0]+qv[1])/2, (pres[0]+pres[1])/2, (temp[0]+temp[1])/2) > 80 ):
+                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
                             nevalp += 1
 
                             # read full parcel information
@@ -512,18 +515,20 @@ def main_attribution(
 
                             if evap_idx.size==0:
                                 nnevalp    += 1
-                                statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0, min_loss=0)
-                                statdata    = [str(datetime_seq[ix]),str(sum(dq_disc/qv[1])),str(abs(qv[0]-qv[1]))]
-                                append2csv(statsfile,statdata)
+                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
+                                if fwritestats:
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -551,7 +556,7 @@ def main_attribution(
 
                             # discount uptakes linearly
                             if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0, min_loss=0)
+                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
                             # loop through sensible heat uptakes
                             for itj in heat_idx:

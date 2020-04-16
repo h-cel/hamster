@@ -417,12 +417,11 @@ def scale_mass(ary_val, ary_part, ary_rpart):
     return(ary_sval)
 
 
-def linear_discounter(v, min_gain, min_loss):
+def linear_discounter(v, min_gain):
     """
     ========= inputs =========
     v:        vector extending into past; v[0] is most recent, v[-1] least recent
     min_gain: minimum gain (dv/dt) to be considered
-    min_loss: minimum loss to be considered for discounting, must be <= 0
     ==========================
     """
 
@@ -431,7 +430,7 @@ def linear_discounter(v, min_gain, min_loss):
     dv_disc = np.zeros(shape=len(dv))
     ## get indices of gains and losses
     idx_gains  = np.where(dv >= min_gain)[0]
-    idx_losses = np.where(dv <= min_loss)[0]
+    idx_losses = np.where(dv < 0)[0]
 
     for idx in idx_gains:
         ## determine relevant indices (losses only!)
