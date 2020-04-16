@@ -359,7 +359,7 @@ def main_attribution(
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -440,7 +440,7 @@ def main_attribution(
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -522,7 +522,7 @@ def main_attribution(
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
