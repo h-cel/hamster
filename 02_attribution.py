@@ -356,12 +356,12 @@ def main_attribution(
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -439,12 +439,12 @@ def main_attribution(
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
@@ -523,12 +523,12 @@ def main_attribution(
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(sum(dq_disc[evap_idx]/qv[1])),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/sum(dq_disc[evap_idx]/qv[1])
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
 
