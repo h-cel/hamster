@@ -426,11 +426,11 @@ def linear_discounter(v, min_gain):
     """
 
     ## compute dv/dt, prepare dv_disc
-    dq = v[:-1] - v[1:]
-    dq_disc = np.zeros(shape=len(dq))
+    dv = v[:-1] - v[1:]
+    dv_disc = np.zeros(shape=len(dv))
     ## get indices of gains and losses
-    idx_gains  = np.where(dq >= min_gain)[0]
-    idx_losses = np.where(dq < 0)[0]
+    idx_gains  = np.where(dv >= min_gain)[0]
+    idx_losses = np.where(dv < 0)[0]
 
     for idx in idx_gains:
         ## determine relevant indices (losses only!)
@@ -438,14 +438,14 @@ def linear_discounter(v, min_gain):
 
         ## skip current iteration if no moisture loss occurs between then and t=0
         if len(idx_consider)==0:
-            dq_disc[idx] = dq[idx]
+            dv_disc[idx] = dv[idx]
             continue
 
         ## create vector with fractions,
         frc_vec = v[idx_consider]/v[idx_consider+1]
         ## then multiply current dv with product of vector (order irrelevant)
-        dq_disc[idx] = np.prod(frc_vec)*dq[idx]
-    return(dq_disc)
+        dv_disc[idx] = np.prod(frc_vec)*dv[idx]
+    return(dv_disc)
 
 def linear_discounter2(qtot):
     dqdt = qtot[:-1] - qtot[1:]
