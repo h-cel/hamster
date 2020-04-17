@@ -427,6 +427,9 @@ def linear_discounter(v, min_gain):
 
     ## compute dv/dt, prepare dv_disc
     dv = v[:-1] - v[1:]
+    # append initial v as a -fake- uptake 
+    # (used to estimate fraction that cannot be attributed)
+    dv = np.append(dv,v[-1])
     dv_disc = np.zeros(shape=len(dv))
     ## get indices of gains and losses
     idx_gains  = np.where(dv >= min_gain)[0]

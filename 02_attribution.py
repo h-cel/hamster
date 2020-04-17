@@ -357,7 +357,7 @@ def main_attribution(
                                     pattdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
