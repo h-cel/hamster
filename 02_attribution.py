@@ -35,23 +35,24 @@ def main_attribution(
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
  
-    ## construct precise input and storage paths
+    #### OUTPUT FILES
     mainpath  = ipath+str(ryyyy)+"/"
+    ## main netcdf output
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
-
-    # output file for writestats (only for P as of now)
+    ## additional statistic output files (*.csv)
+    # monthly statistics
+    sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
+    statfile  = opath+"/"+sfilename
+    # trajectory-based precipitation statistics
     if fwritestats:
-        # attribution file: single trajectory data; each time step (P)
         pfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pattribution.csv"
-        pattfile   = opath+"/"+pfilename
+        pattfile  = opath+"/"+pfilename
         with open(pattfile,'w') as pfile:
                 writer=csv.writer(pfile, delimiter='\t', lineterminator='\n',)
                 writer.writerow(["DATE", "F_ATT", "F_POT", "P_DQDT"])
-        # precipitation statistics file: monthly statistics
-        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
-        statfile   = opath+"/"+sfilename
-
+    
+    #### INPUT FILES
     ## read netcdf mask
     with nc4.Dataset(maskfile) as f:
         mask = f['mask'][:]
@@ -74,8 +75,9 @@ def main_attribution(
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
+        print(" ! additional statistics in: \t"+str(statfile))
         if fwritestats:
-            print(" ! additional statistics in: \t"+str(pattfile))
+            print(" ! precipitation statistics in: \t"+str(pattfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -644,8 +646,8 @@ def main_attribution(
                         pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
 
 
+        neval   = len(ntot)
         if verbose:
-            neval   = len(ntot)
             # jump stats
             if fjumps:
                 print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
@@ -695,25 +697,24 @@ def main_attribution(
         if fwrite_netcdf:
             print("\n Successfully written: "+ofile+" !\n")
     
-    if fwritestats:
-        with open(statfile,'w') as sfile:
-                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
-                writer.writerow(["* - PARCEL STATISTICS: "])
-                writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
-                writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
-                writer.writerow([" "])
-                writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
-                writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
-                writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
-                writer.writerow([" "])
-                writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
-                writer.writerow(["   --- # PARCELS EVAL. FOR PRECI:     " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
-                writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
-                writer.writerow([" "])
-                writer.writerow([" * - PRECIPITATION STATISTICS: "])
-                writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
-                writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
-                writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
-        if verbose: 
-            with open(statfile, 'r') as sfile:
-                print(sfile.read())
+    with open(statfile,'w') as sfile:
+        writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["* - PARCEL STATISTICS: "])
+        writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
+        writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
+        writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
+        writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
+        writer.writerow(["   --- # PARCELS EVAL. FOR PRECI:     " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+        writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
+        writer.writerow([" "])
+        writer.writerow([" * - PRECIPITATION STATISTICS: "])
+        writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
+        writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
+        writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+    if verbose: 
+        with open(statfile, 'r') as sfile:
+            print(sfile.read())
