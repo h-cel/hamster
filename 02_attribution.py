@@ -203,10 +203,9 @@ def main_attribution(
             ## p4) now loop through particles
             for i in ntot:
 
-                ## check for jumps
-                mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+                ## check for arriving parcels
                 alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-                if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+                if mask[alat_ind,alon_ind]==maskval:
                    continue
 
                 ## read ONLY parcel and ABL heights
