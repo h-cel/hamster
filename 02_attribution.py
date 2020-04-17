@@ -685,7 +685,7 @@ def main_attribution(
         writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
         writer.writerow([" "])
         writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
-        writer.writerow(["   --- # PARCELS EVAL. FOR PRECI:     " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+        writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
         writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
         writer.writerow([" "])
         writer.writerow([" * - PRECIPITATION STATISTICS: "])
