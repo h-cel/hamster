@@ -59,8 +59,7 @@ def main_attribution(
         mlat = f['lat'][:]
         mlon = f['lon'][:]
 
-    ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
-    
+    #### DISCLAIMER
     if verbose:
         disclaimer()
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
@@ -81,10 +80,12 @@ def main_attribution(
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
+    #### SETTINGS
     ## start timer
     if ftimethis:
         megatic = timeit.default_timer()
     
+    ## grids
     glon, glat, garea = makegrid(resolution=gres)
     ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
     if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
@@ -131,7 +132,7 @@ def main_attribution(
     ndaytime        = len(fdate_seq)
     ndayupttime     = len(fuptdate_seq)
 
-    # TESTMODE
+    ## TESTMODE
     if mode == "test":
 
         ctraj_len_orig   = ctraj_len
@@ -159,6 +160,7 @@ def main_attribution(
 
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
+    
     # read in reference distribution of parcels
     if fvariable_mass:
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
@@ -170,6 +172,7 @@ def main_attribution(
 
     ###--- pre-loop to produce independent monthly output
     ## NOTE: this is irrelevant for E2P, but crucial for Had (& Ead)
+    ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
     if fmemento and mode == "oper": # skip if multi-counting somehow desired and/or if testing
 
         ## p1) create required datetime string object
@@ -195,9 +198,6 @@ def main_attribution(
                 pretoc = timeit.default_timer()
                 print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
 
-            ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
-            #print("Processing "+str(predatetime_seq[pix]))
-
             ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
             ary = readpom( idate    = predatetime_seq[pix],
                            ipath    = ipath+"/"+str(ryyyy),
@@ -205,8 +205,6 @@ def main_attribution(
                            verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
 
             nparticle   = ary.shape[1]
-            #if verbose:
-            #    print(" TOTAL: " + str(predatetime_seq[pix]) + " has " + str(nparticle) + " parcels")
             ntot    = range(nparticle)
 
             ## p4) now loop through particles
@@ -223,7 +221,6 @@ def main_attribution(
 
                 ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
                 if ( ztra[0] < np.max(hpbl[:4]) ):
-                    ## update parcel log
                     ID = int(ary[0,i,0])
                     pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
     
@@ -256,7 +253,6 @@ def main_attribution(
         if verbose:
             print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparticle) + " parcels")
 
-        #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
             ntot    = range(1000)
         else:
@@ -270,8 +266,7 @@ def main_attribution(
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
-        # STATS
-        # number of parcels
+        # STATS: number of parcels per file
         neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
@@ -648,10 +643,8 @@ def main_attribution(
 
         neval   = len(ntot)
         if verbose:
-            # jump stats
             if fjumps:
                 print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
-            # mask stats 
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
             if nnevalh!=0:
                 print(" --- ATTENTION: "+str(nnevalh)+"/"+str(neval-nnevala)+" arriving parcels are not associated with any heat uptakes...")
@@ -659,6 +652,7 @@ def main_attribution(
             print(" STATS: Evaluated "+str(nevalp)+" ({:.2f}".format(100*(nevalp)/(neval-nnevalm)) +"%) precipitating parcels.")
             if nnevalp!=0:
                 print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any evap uptakes...")
+        
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
             if verbose:
