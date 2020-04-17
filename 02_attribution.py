@@ -191,16 +191,16 @@ def main_attribution(
                 pretoc = timeit.default_timer()
                 print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
 
-            ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
+            ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
             ary = readpom( idate    = predatetime_seq[pix],
                            ipath    = ipath+"/"+str(ryyyy),
                            ifile_base = ifile_base,
                            verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
 
-            nparticle   = ary.shape[1]
-            ntot    = range(nparticle)
+            nparcel   = ary.shape[1]
+            ntot    = range(nparcel)
 
-            ## p4) now loop through particles
+            ## p4) now loop through parcels
             for i in ntot:
 
                 ## check for arriving parcels
@@ -235,20 +235,20 @@ def main_attribution(
                 print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdatetime_seq[ix]))
 
-        ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
+        ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readpom( idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
                        ifile_base = ifile_base)
 
-        nparticle   = ary.shape[1]
+        nparcel   = ary.shape[1]
         ntrajleng   = ary.shape[0]
         if verbose:
-            print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparticle) + " parcels")
+            print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparcel) + " parcels")
 
         if mode == "test":
             ntot    = range(1000)
         else:
-            ntot    = range(nparticle)
+            ntot    = range(nparcel)
 
         # figure out where to store data (on which arriving day)
         arv_idx = np.where(np.asarray(fdateasdate)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
