@@ -65,9 +65,6 @@ def main_attribution(
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
         print("\n============================================================================================================")
         print(" ! using input path: \t", 	ipath)
-        print(" ! using variable mass: \t" +str(fvariable_mass) )
-        if fvariable_mass:
-            print(" \t ! reference date for number of particles: \t" +str(refdate) )
         if fwrite_netcdf:
             print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
             print(" \t ! with grid resolution: \t", str(gres) )
@@ -161,10 +158,6 @@ def main_attribution(
     # set some default thresholds
     cprec_dqv    = default_thresholds(cprec_dqv) 
     
-    # read in reference distribution of parcels
-    if fvariable_mass:
-        ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
-
     ## prepare parcel log to handle trajectories properly 
     if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
         pIDlogH = -999*np.ones(shape=2000001).astype(int) 
@@ -672,15 +665,6 @@ def main_attribution(
         tnnevalp+= nnevalp
         tnevalh += nevalh
         tnnevalh+= nnevalh
-
-#TODO: decide what to do with parcel mass scaling here
-#    # Scale with parcel mass
-#    if fvariable_mass:
-#        if verbose: 
-#            print(" * Applying variable mass...")
-#        ary_prec         = scale_mass(ary_prec, ary_npart, ary_rnpart)
-#        ary_evap         = scale_mass(ary_evap, ary_npart, ary_rnpart)
-#        ary_heat         = scale_mass(ary_heat, ary_npart, ary_rnpart)
 
     if ftimethis:
         megatoc = timeit.default_timer()
