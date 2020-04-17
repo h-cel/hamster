@@ -311,6 +311,10 @@ def main_attribution(
                 ## - 2.2) read only the most basic parcel information
                 # NOTE: this could easily be done more efficiently
                 ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
+                
+                # sorry, yet another date for writing the P date to the csv (preliminary).
+                # because i wanted to have the hours in there as wel (not assign to day only)
+                pdate   = str((fdatetime_seq[ix]-relativedelta(hours=3)).strftime('%Y%m%d%H'))
 
                 ## - 2.3) diagnose fluxes
 
@@ -350,13 +354,13 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp += 1
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
@@ -432,14 +436,14 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp    += 1
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
@@ -516,14 +520,14 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp    += 1
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(statsfile,statdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
