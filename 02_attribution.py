@@ -42,10 +42,10 @@ def main_attribution(
 
     # output file for writestats (only for P as of now)
     if fwritestats:
-        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
-        pattfile   = opath+"/"+sfilename
-        with open(pattfile,'w') as sfile:
-                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
+        pfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pattribution.csv"
+        pattfile   = opath+"/"+pfilename
+        with open(pattfile,'w') as pfile:
+                writer=csv.writer(pfile, delimiter='\t', lineterminator='\n',)
                 writer.writerow(["DATE", "F_ATT", "P_DQDT"])
 
     ## read netcdf mask
