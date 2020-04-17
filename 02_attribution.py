@@ -46,7 +46,7 @@ def main_attribution(
         statsfile   = opath+"/"+sfilename
         with open(statsfile,'w') as sfile:
                 writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
-                writer.writerow(["DATE", "FTOT", "DQDT(P)[kg/kg]"])
+                writer.writerow(["DATE", "F_ATT", "P_DQDT"])
 
     ## read netcdf mask
     with nc4.Dataset(maskfile) as f:
