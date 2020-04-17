@@ -49,7 +49,7 @@ def main_attribution(
                 writer=csv.writer(pfile, delimiter='\t', lineterminator='\n',)
                 writer.writerow(["DATE", "F_ATT", "F_POT", "P_DQDT"])
         # precipitation statistics file: monthly statistics
-        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
+        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
         statfile   = opath+"/"+sfilename
 
     ## read netcdf mask
@@ -230,6 +230,12 @@ def main_attribution(
     ## prepare uptake indices
     upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
 
+    ## prepare STATS
+    # number of parcels
+    tneval = tnjumps = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
+    # precip. statistics
+    psum = patt = punatt = pmiss = 0
+
     ## loop over time to read in files
     if verbose:
         print("\n=== \t Start main program...\n")
@@ -263,21 +269,8 @@ def main_attribution(
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
 
         # STATS
-        # number of parcels not evaluated (nnevala for arriving; nnevalm for midpoint)
-        nnevalm = 0
-        nnevala = 0
-        # number of precipitating parcels
-        nevalp  = 0
-        # precip-values for monthly statistics
-        psum    = 0
-        patt    = 0
-        punatt  = 0
-        pmiss   = 0
-        # number of precipitating parcels that are not evaluated...
-        nnevalp  = 0
-        # number of trajectories with at least one jump (entirely skipped for now)
-        if fjumps: 
-            njumps  = 0
+        # number of parcels
+        neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
@@ -316,7 +309,7 @@ def main_attribution(
                     ihf_H = min((ix-istepH+1), tml + 2) 
                 else:
                     ihf_H = tml + 2
-
+                
                 ## - 2.2) read only the most basic parcel information
                 # NOTE: this could easily be done more efficiently
                 ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
@@ -337,7 +330,7 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
 
-                            # logging some P statistics
+                            # log some statistics
                             nevalp  += 1
                             psum    += abs(qv[0]-qv[1])
 
@@ -363,6 +356,7 @@ def main_attribution(
                             evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
                             
                             if evap_idx.size==0:
+                                # log some statistics
                                 nnevalp     += 1
                                 pmiss       += abs(qv[0]-qv[1])
                                 if fwritestats:
@@ -395,10 +389,13 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and 
                              ztra[0] < np.max(hpbl[:4]) ):
+                            
+                            # log some statistics
+                            nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
-                            
+                             
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
                             dTH         = trajparceldiff(pottemp[:], 'diff')
@@ -410,6 +407,9 @@ def main_attribution(
                             heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -432,7 +432,7 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
-                            # logging some P statistics
+                            # log some statistics
                             nevalp  += 1
                             psum    += abs(qv[0]-qv[1])
                             
@@ -454,6 +454,7 @@ def main_attribution(
                             evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
 
                             if evap_idx.size==0:
+                                # log some statistics
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
@@ -489,6 +490,9 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and
                              ztra[0] < np.max(hpbl[:4]) ):
+                            
+                            # log some statistics
+                            nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
@@ -502,6 +506,9 @@ def main_attribution(
                             heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -525,7 +532,7 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
                             
-                            # logging some P statistics
+                            # log some statistics
                             nevalp  += 1
                             psum    += abs(qv[0]-qv[1])
 
@@ -547,6 +554,7 @@ def main_attribution(
                             evap_idx  = np.where(evap_uptk)[0] 
 
                             if evap_idx.size==0:
+                                # log some statistics
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
@@ -582,7 +590,10 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and
                              ztra[0] < np.max(hpbl[:4]) ):
-
+                            
+                            # log some statistics
+                            nevalh  += 1
+                            
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
@@ -594,6 +605,9 @@ def main_attribution(
                             heat_idx  = np.where(heat_uptk)[0]     
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -637,10 +651,12 @@ def main_attribution(
                 print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
             # mask stats 
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
+            if nnevalh!=0:
+                print(" --- ATTENTION: "+str(nnevalh)+"/"+str(neval-nnevala)+" arriving parcels are not associated with any heat uptakes...")
             print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
             print(" STATS: Evaluated "+str(nevalp)+" ({:.2f}".format(100*(nevalp)/(neval-nnevalm)) +"%) precipitating parcels.")
             if nnevalp!=0:
-                print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any uptakes...")
+                print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any evap uptakes...")
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
             if verbose:
@@ -651,6 +667,16 @@ def main_attribution(
             if fwrite_netcdf:
                 writenc4D(ofile,arv_idx,ary_etop,ary_heat)
         
+        ## STATS summary
+        tneval  += neval
+        tnjumps += njumps
+        tnnevala+= nnevala
+        tnnevalm+= nnevalm
+        tnevalp += nevalp
+        tnnevalp+= nnevalp
+        tnevalh += nevalh
+        tnnevalh+= nnevalh
+
 #TODO: decide what to do with parcel mass scaling here
 #    # Scale with parcel mass
 #    if fvariable_mass:
@@ -667,18 +693,27 @@ def main_attribution(
     
     if verbose:
         if fwrite_netcdf:
-            print("\n Successfully written: "+ofile+" !")
+            print("\n Successfully written: "+ofile+" !\n")
     
-    if verbose:
-        print("\n * PRECIPITATION STATISTICS: ")
-        print("   --- ATTRIBUTED FRACTION:   \t \t {:.2f}".format(patt/psum))
-        print("   --- UNATTRIBUTED FRACTION (TRAJEC): \t {:.2f}".format(punatt/psum))
-        print("   --- UNATTRIBUTED FRACTION (NO-UPT):\t {:.2f}".format(pmiss/psum))
-        print("\n\n")
     if fwritestats:
         with open(statfile,'w') as sfile:
-                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
-                writer.writerow(["PRECIPITATION STATISTICS"])
-                writer.writerow(["--- ATTRIBUTED FRACTION: \t","{:.2f}".format(patt/psum)])
-                writer.writerow(["--- UNATTRIBUTED FRACTION (TRAJEC):","{:.2f}".format(punatt/psum)])
-                writer.writerow(["--- UNATTRIBUTED FRACTION (NO-UPT):","{:.2f}".format(pmiss/psum)])
+                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+                writer.writerow(["* - PARCEL STATISTICS: "])
+                writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
+                writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
+                writer.writerow([" "])
+                writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
+                writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
+                writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
+                writer.writerow([" "])
+                writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
+                writer.writerow(["   --- # PARCELS EVAL. FOR PRECI:     " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+                writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
+                writer.writerow([" "])
+                writer.writerow([" * - PRECIPITATION STATISTICS: "])
+                writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
+                writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
+                writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+        if verbose: 
+            with open(statfile, 'r') as sfile:
+                print(sfile.read())
