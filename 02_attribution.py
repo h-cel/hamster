@@ -43,8 +43,8 @@ def main_attribution(
     # output file for writestats (only for P as of now)
     if fwritestats:
         sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
-        statsfile   = opath+"/"+sfilename
-        with open(statsfile,'w') as sfile:
+        pattfile   = opath+"/"+sfilename
+        with open(pattfile,'w') as sfile:
                 writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
                 writer.writerow(["DATE", "F_ATT", "P_DQDT"])
 
@@ -71,7 +71,7 @@ def main_attribution(
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
         if fwritestats:
-            print(" ! additional statistics in: \t"+str(statsfile))
+            print(" ! additional statistics in: \t"+str(pattfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
@@ -354,14 +354,14 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp += 1
                                 if fwritestats:
-                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -436,15 +436,15 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp    += 1
                                 if fwritestats:
-                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
@@ -520,15 +520,15 @@ def main_attribution(
                             if evap_idx.size==0:
                                 nnevalp    += 1
                                 if fwritestats:
-                                    statdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
                                 if fexplainp:
                                     # upscaling of fractions dq_disc/qv[1] to 1
                                     # in order to explain the loss entirely
