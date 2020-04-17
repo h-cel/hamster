@@ -28,7 +28,7 @@ def main_attribution(
            fwrite_netcdf,
            precision,
            ftimethis,
-           fdry,fmemento,fexplainp,fcc_advanced,fvariable_mass,fwritestats,
+           fdry,fmemento,fexplainp,fupscale,fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
     # TODO: add missing features
@@ -257,6 +257,9 @@ def main_attribution(
 
         # STATS: number of parcels per file
         neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
+        # upscaling measures (here: per time step!)
+        if fupscale:
+            ipatt = ipmiss = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
@@ -345,6 +348,9 @@ def main_attribution(
                                 # log some statistics
                                 nnevalp     += 1
                                 pmiss       += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
@@ -361,6 +367,9 @@ def main_attribution(
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                # log for upscaling
+                                if fupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
@@ -443,6 +452,9 @@ def main_attribution(
                                 # log some statistics
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
@@ -460,6 +472,9 @@ def main_attribution(
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                # log for upscaling
+                                if fupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
@@ -543,6 +558,9 @@ def main_attribution(
                                 # log some statistics
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
@@ -560,6 +578,9 @@ def main_attribution(
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
                                 else:
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                # log for upscaling
+                                if fupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
@@ -642,6 +663,13 @@ def main_attribution(
             if nnevalp!=0:
                 print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any evap uptakes...")
         
+        # UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
+        # upscaling is currently done every time step (not -unlike the current bias-correction- every day)
+        if fupscale and nnevalp!=0:
+            upsfac              = 1+(ipmiss/ipatt)
+            ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
+            if verbose:
+                print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
         # Convert units, but only after the last time step of each day
         if ( (ix+1)%4==0 ):
             if verbose:
