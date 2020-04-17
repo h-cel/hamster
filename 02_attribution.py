@@ -28,7 +28,10 @@ def main_attribution(
            fwrite_netcdf,
            precision,
            ftimethis,
-           fdry,fmemento,fexplainp,fupscale,fcc_advanced,fvariable_mass,fwritestats,
+           fdry,
+           fmemento,
+           explainp,fupscale,
+           fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
     # TODO: add missing features
@@ -361,13 +364,13 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
+                                # trajectory-based upscaling
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
+                                elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
-                                # log for upscaling
+                                # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 
@@ -466,13 +469,13 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
+                                # trajectory-based upscaling
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
+                                elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
-                                # log for upscaling
+                                # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 
@@ -572,13 +575,13 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
+                                # trajectory-based upscaling
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
+                                elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
-                                # log for upscaling
+                                # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 

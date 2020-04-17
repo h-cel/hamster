@@ -137,7 +137,7 @@ if args.steps == 2 or args.steps == 4:
               ftimethis=args.timethis, 
               fdry=args.fallingdry,
               fmemento=args.memento,
-              fexplainp=args.explainp,
+              explainp=args.explainp,
               fupscale=args.upscale,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
