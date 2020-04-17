@@ -155,9 +155,6 @@ def main_attribution(
     # traj max len
     tml = nupttime - ntime
 
-    # set some default thresholds
-    cprec_dqv    = default_thresholds(cprec_dqv) 
-    
     ## prepare parcel log to handle trajectories properly 
     if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
         pIDlogH = -999*np.ones(shape=2000001).astype(int) 
