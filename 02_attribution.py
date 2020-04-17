@@ -368,6 +368,9 @@ def main_attribution(
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
                                 elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
                                 # log for timestep-based upscaling
@@ -473,6 +476,9 @@ def main_attribution(
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
                                 elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
                                 # log for timestep-based upscaling
@@ -579,6 +585,9 @@ def main_attribution(
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
                                 elif explainp=="none":
                                     etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
                                 # log for timestep-based upscaling
