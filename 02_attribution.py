@@ -383,7 +383,7 @@ def main_attribution(
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
-                                punatt  += abs(qv[0]-qv[1])-np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             for itj in evap_idx: 
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -495,7 +495,7 @@ def main_attribution(
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
-                                punatt  += abs(qv[0]-qv[1])-np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -608,7 +608,7 @@ def main_attribution(
                                 
                                 # log some statistics
                                 patt    += np.sum(etop[evap_idx])
-                                punatt  += abs(qv[0]-qv[1])-np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
