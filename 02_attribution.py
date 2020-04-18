@@ -257,12 +257,12 @@ def main_attribution(
         if ix%4==0:
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+            # upscaling measures (currently has to be per day as well)
+            if fupscale:
+                ipatt = ipmiss = 0
 
         # STATS: number of parcels per file
         neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
-        # upscaling measures (here: per time step!)
-        if fupscale:
-            ipatt = ipmiss = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
@@ -687,15 +687,15 @@ def main_attribution(
             if nnevalp!=0:
                 print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any evap uptakes...")
         
-        # UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
-        # upscaling is currently done every time step (not -unlike the current bias-correction- every day)
-        if fupscale and nnevalp!=0:
-            upsfac              = 1+(ipmiss/ipatt)
-            ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
-            if verbose:
-                print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
-        # Convert units, but only after the last time step of each day
+        ## SOME DAILY CALCULATIONS
         if ( (ix+1)%4==0 ):
+            # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
+            if fupscale and nnevalp!=0:
+                upsfac              = 1+(ipmiss/ipatt)
+                ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
+                if verbose:
+                    print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
+            # Convert units
             if verbose:
                 print(" * Converting units...")
             ary_etop[:,:,:] = convertunits(ary_etop[:,:,:], garea, "E")
