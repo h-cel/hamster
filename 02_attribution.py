@@ -364,15 +364,19 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                # trajectory-based upscaling
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="max":
                                     # upscaling to (100-IC)% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="none":
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    etop        = prec*fw_orig
                                 # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
@@ -472,15 +476,19 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                # trajectory-based upscaling
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="max":
                                     # upscaling to (100-IC)% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="none":
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    etop        = prec*fw_orig
                                 # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
@@ -581,15 +589,19 @@ def main_attribution(
                                 if fwritestats:
                                     pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
                                     append2csv(pattfile,pattdata)
-                                # trajectory-based upscaling
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="max":
                                     # upscaling to (100-IC)% of trajectory
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/(qv[1]-dq_disc[-1]))
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
                                 elif explainp=="none":
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    etop        = prec*fw_orig
                                 # log for timestep-based upscaling
                                 if fupscale:
                                     ipatt       += np.sum(etop[evap_idx])
