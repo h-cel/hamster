@@ -693,6 +693,9 @@ def main_attribution(
             if fupscale and nnevalp!=0:
                 upsfac              = 1+(ipmiss/ipatt)
                 ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
+                # corrections for final statistics
+                patt                += -np.sum(ipatt) + np.sum(ary_etop)
+                pmiss               += -np.sum(ipmiss)
                 if verbose:
                     print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
             # Convert units
