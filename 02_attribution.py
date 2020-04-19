@@ -691,13 +691,16 @@ def main_attribution(
         if ( (ix+1)%4==0 ):
             # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
             if fupscale and nnevalp!=0:
-                upsfac              = 1+(ipmiss/ipatt)
-                ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
-                # corrections for final statistics
-                patt                += -np.sum(ipatt) + np.sum(ary_etop)
-                pmiss               += -np.sum(ipmiss)
-                if verbose:
-                    print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
+                if ipatt==0:
+                    warnings.warn(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+                else:
+                    upsfac              = 1+(ipmiss/ipatt)
+                    ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
+                    # corrections for final statistics
+                    patt                += -np.sum(ipatt) + np.sum(ary_etop)
+                    pmiss               += -np.sum(ipmiss)
+                    if verbose:
+                        print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
             # Convert units
             if verbose:
                 print(" * Converting units...")
