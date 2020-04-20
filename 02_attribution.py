@@ -30,7 +30,7 @@ def main_attribution(
            ftimethis,
            fdry,
            fmemento,
-           explainp,fupscale,
+           explainp,fupscale,fmupscale,
            fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
@@ -723,6 +723,24 @@ def main_attribution(
         tnnevalp+= nnevalp
         tnevalh += nevalh
         tnnevalh+= nnevalh
+    
+    # MONTHLY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
+    if fmupscale and pmiss!=0:
+        if patt==0:
+            print(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+        else:
+            upsfac              = 1+(pmiss/patt)
+            # load full etop array and upscale
+            fdata       = nc4.Dataset(ofile,'r+')
+            uns_etop    = fdata.variables['E2P'][:]
+            ups_etop    = upsfac*uns_etop
+            fdata.variables['E2P'][:]= ups_etop
+            fdata.close()
+            # corrections for final statistics
+            patt                += np.sum(pmiss)
+            pmiss               += -np.sum(pmiss)
+            if verbose:
+                print(" * Monthly upscaling for unattributed precipitation... (factor: {:.4f}".format(upsfac)+")")
 
     if ftimethis:
         megatoc = timeit.default_timer()

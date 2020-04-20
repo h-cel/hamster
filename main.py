@@ -139,6 +139,7 @@ if args.steps == 2 or args.steps == 4:
               fmemento=args.memento,
               explainp=args.explainp,
               fupscale=args.upscale,
+              fmupscale=args.mupscale,
               fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
               fwritestats=args.writestats,
