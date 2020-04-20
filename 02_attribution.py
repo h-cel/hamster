@@ -30,7 +30,7 @@ def main_attribution(
            ftimethis,
            fdry,
            fmemento,
-           explainp,fupscale,fmupscale,
+           explainp,fdupscale,fmupscale,
            fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
@@ -258,7 +258,7 @@ def main_attribution(
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             # upscaling measures (currently has to be per day as well)
-            if fupscale:
+            if fdupscale:
                 ipatt = ipmiss = 0
 
         # STATS: number of parcels per file
@@ -354,7 +354,7 @@ def main_attribution(
                                 nnevalp     += 1
                                 pmiss       += abs(qv[0]-qv[1])
                                 # log for upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
@@ -380,7 +380,7 @@ def main_attribution(
                                 elif explainp=="none":
                                     etop        = prec*fw_orig
                                 # log for timestep-based upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
@@ -465,7 +465,7 @@ def main_attribution(
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
                                 # log for upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
@@ -492,7 +492,7 @@ def main_attribution(
                                 elif explainp=="none":
                                     etop        = prec*fw_orig
                                 # log for timestep-based upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
@@ -578,7 +578,7 @@ def main_attribution(
                                 nnevalp    += 1
                                 pmiss      += abs(qv[0]-qv[1])
                                 # log for upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
                                     pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
@@ -605,7 +605,7 @@ def main_attribution(
                                 elif explainp=="none":
                                     etop        = prec*fw_orig
                                 # log for timestep-based upscaling
-                                if fupscale:
+                                if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
                                 
                                 # log some statistics
@@ -694,7 +694,7 @@ def main_attribution(
         ## SOME DAILY CALCULATIONS
         if ( (ix+1)%4==0 ):
             # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
-            if fupscale and nnevalp!=0:
+            if fdupscale and nnevalp!=0:
                 if ipatt==0:
                     warnings.warn(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
                 else:
