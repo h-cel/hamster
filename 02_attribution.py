@@ -676,8 +676,10 @@ def main_attribution(
                     if fmemento:
                         pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
 
-
-        neval   = len(ntot)
+        if fjumps:
+            neval   = len(ntot)-njumps
+        else: 
+            neval   = len(ntot)
         if verbose:
             if fjumps:
                 print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
