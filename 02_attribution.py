@@ -205,7 +205,7 @@ def main_attribution(
 
                 ## check for arriving parcels
                 alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-                if mask[alat_ind,alon_ind]==maskval:
+                if not mask[alat_ind,alon_ind]==maskval:
                    continue
 
                 ## read ONLY parcel and ABL heights
