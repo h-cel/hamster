@@ -352,6 +352,14 @@ def main_attribution(
                             evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
                             evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
                             
+                            if fwritestats:
+                                if evap_idx.size==0:
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
+                                elif evap_idx.size>0:
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
+                                    pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
+                                append2csv(pattfile,pattdata)
+                            
                             if evap_idx.size==0:
                                 # log some statistics
                                 nnevalp     += 1
@@ -359,28 +367,10 @@ def main_attribution(
                                 # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
-                                if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(prec)]
-                                    append2csv(pattfile,pattdata)
                             
+                            # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
-                                if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
-                                    append2csv(pattfile,pattdata)
-                                ## trajectory-based upscaling
-                                fw_orig = dq_disc/qv[1]
-                                if explainp=="full":
-                                    # upscaling to 100% of trajectory
-                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="max":
-                                    # upscaling to (100-IC)% of trajectory
-                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="none":
-                                    etop        = prec*fw_orig
+                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 # log for timestep-based upscaling
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
@@ -389,7 +379,8 @@ def main_attribution(
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
 
-                            for itj in evap_idx: 
+                            # loop through evaporative uptakes
+                            for itj in evap_idx:
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
 
                     ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
@@ -569,6 +560,14 @@ def main_attribution(
                             evap_uptk = dq[:ihf_E-1] > 0.0001
                             evap_idx  = np.where(evap_uptk)[0] 
 
+                            if fwritestats:
+                                if evap_idx.size==0:
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
+                                elif evap_idx.size>0:
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
+                                    pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
+                                append2csv(pattfile,pattdata)
+  
                             if evap_idx.size==0:
                                 # log some statistics
                                 nnevalp    += 1
@@ -576,29 +575,10 @@ def main_attribution(
                                 # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
-                                if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(prec)]
-                                    append2csv(pattfile,pattdata)
                             
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
-                                if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
-                                    append2csv(pattfile,pattdata)
-                                ## trajectory-based upscaling
-                                fw_orig = dq_disc/qv[1]
-                                if explainp=="full":
-                                    # upscaling to 100% of trajectory
-                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="max":
-                                    # upscaling to (100-IC)% of trajectory
-                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="none":
-                                    etop        = prec*fw_orig
+                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 # log for timestep-based upscaling
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
@@ -610,8 +590,8 @@ def main_attribution(
                             # loop through evaporative uptakes
                             for itj in evap_idx:
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
-  
-    
+   
+
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
                     if not mask[alat_ind,alon_ind]==maskval:
                         nnevala += 1
