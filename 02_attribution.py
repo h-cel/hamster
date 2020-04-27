@@ -209,10 +209,10 @@ def main_attribution(
                    continue
 
                 ## read ONLY parcel and ABL heights
-                ztra, hpbl = readheights(ary[:4,i,:])
+                hgt, hpbl = readheights(ary[:4,i,:])
 
                 ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
-                if ( ztra[0] < np.max(hpbl[:4]) ):
+                if ( hgt[0] < np.max(hpbl[:4]) ):
                     ID = int(ary[0,i,0])
                     pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
     
@@ -306,7 +306,7 @@ def main_attribution(
                 
                 ## - 2.2) read only the most basic parcel information
                 # NOTE: this could easily be done more efficiently
-                ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
+                hgt, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
                 
                 # sorry, yet another date for writing the P date to the csv (preliminary).
                 # because i wanted to have the hours in there as wel (not assign to day only)
@@ -332,7 +332,7 @@ def main_attribution(
                             psum    += prec
 
                             # read full parcel information
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
                             
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
@@ -347,7 +347,7 @@ def main_attribution(
                                     ihf_E = np.min(ihf_dry)
                                     
                             # identify evaporative moisture uptakes
-                            in_pbl     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
+                            in_pbl     = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
                             evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
                             evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
                             evap_idx   = np.where(np.logical_and(in_pbl, np.logical_and(evap_uptk, evap_plaus)))[0]
@@ -388,20 +388,20 @@ def main_attribution(
                         nnevala += 1
                     else:
                         if ( ihf_H >= 2 and 
-                             ztra[0] < np.max(hpbl[:4]) ):
+                             hgt[0] < np.max(hpbl[:4]) ):
                             
                             # log some statistics
                             nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
                              
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
                             dTH         = trajparceldiff(pottemp[:], 'diff')
                             
                             # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
-                            in_pbl     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
+                            in_pbl     = PBL_check(z=hgt[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
                             heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
                             heat_plaus = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
                             heat_idx   = np.where(np.logical_and(in_pbl, np.logical_and(heat_uptk, heat_plaus)))[0]
@@ -440,7 +440,7 @@ def main_attribution(
                             psum    += prec
                             
                             # read full parcel information
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
 
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
@@ -452,7 +452,7 @@ def main_attribution(
                                     ihf_E = np.min(ihf_dry)
 
                             # identify evaporative moisture uptakes
-                            in_pbl    = trajparceldiff(ztra[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
+                            in_pbl    = trajparceldiff(hgt[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
                             evap_uptk = dq[:ihf_E-1] > 0.0002
                             evap_idx  = np.where(np.logical_and(in_pbl, evap_uptk))[0] 
                                 
@@ -493,19 +493,19 @@ def main_attribution(
                         nnevala += 1
                     else:
                         if ( ihf_H >= 2 and
-                             ztra[0] < np.max(hpbl[:4]) ):
+                             hgt[0] < np.max(hpbl[:4]) ):
                             
                             # log some statistics
                             nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
                             # calculate all required changes along trajectory
                             dTH         = trajparceldiff(pottemp[:], 'diff')
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
-                            in_pbl    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
+                            in_pbl    = trajparceldiff(hgt[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
                             heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
                             heat_idx  = np.where(np.logical_and(in_pbl, heat_uptk))[0]     
 
@@ -544,7 +544,7 @@ def main_attribution(
                             psum    += prec
 
                             # read full parcel information
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
 
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
@@ -597,13 +597,13 @@ def main_attribution(
                         nnevala += 1
                     else:
                         if ( ihf_H >= 2 and
-                             ztra[0] < np.max(hpbl[:4]) ):
+                             hgt[0] < np.max(hpbl[:4]) ):
                             
                             # log some statistics
                             nevalh  += 1
                             
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                            lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
                             # calculate all required changes along trajectory
                             dTH         = trajparceldiff(pottemp[:], 'diff')
@@ -638,7 +638,7 @@ def main_attribution(
                     
                     ## (a) E-P based on ALL parcels residing over target region, no precipitation-criterion used
                     # read full parcel information (but only what is needed; ihf_H)
-                    lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                    lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
                     # calculate all required changes along trajectory
                     dq          = trajparceldiff(qv[:], 'diff')
