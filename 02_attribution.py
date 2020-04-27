@@ -347,9 +347,9 @@ def main_attribution(
                                     
                             # identify evaporative moisture uptakes
                             is_inpbl     = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
-                            evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
+                            is_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
                             evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                            evap_idx   = np.where(np.logical_and(is_inpbl, np.logical_and(evap_uptk, evap_plaus)))[0]
+                            evap_idx   = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, evap_plaus)))[0]
                             
                             if fwritestats:
                                 if evap_idx.size==0:
@@ -452,8 +452,8 @@ def main_attribution(
 
                             # identify evaporative moisture uptakes
                             is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
-                            evap_uptk = dq[:ihf_E-1] > 0.0002
-                            evap_idx  = np.where(np.logical_and(is_inpbl, evap_uptk))[0] 
+                            is_uptk = dq[:ihf_E-1] > 0.0002
+                            evap_idx  = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                                 
                             if fwritestats:
                                 if evap_idx.size==0:
@@ -556,8 +556,8 @@ def main_attribution(
                                     ihf_E = np.min(ihf_dry)
 
                             # identify evaporative moisture uptakes
-                            evap_uptk = dq[:ihf_E-1] > 0.0001
-                            evap_idx  = np.where(evap_uptk)[0] 
+                            is_uptk = dq[:ihf_E-1] > 0.0001
+                            evap_idx  = np.where(is_uptk)[0] 
 
                             if fwritestats:
                                 if evap_idx.size==0:
