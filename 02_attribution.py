@@ -160,7 +160,7 @@ def main_attribution(
 
     ## prepare parcel log to handle trajectories properly 
     if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
-        pIDlogH = -999*np.ones(shape=2000001).astype(int) 
+        pidlog = -999*np.ones(shape=2000001).astype(int) 
 
 
     ###--- pre-loop to produce independent monthly output
@@ -214,7 +214,7 @@ def main_attribution(
                 ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
                 if ( hgt[0] < np.max(hpbl[:4]) ):
                     ID = int(ary[0,i,0])
-                    pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
+                    pidlog[ID] = pix - tml # NOTE: tml != npretime (double-check?)
     
     
     ###--- MAIN LOOP
@@ -299,7 +299,7 @@ def main_attribution(
                 # for Hadv (not needed for E2P):
                 if fmemento:
                     ID = int(ary[0,i,0])   
-                    istepH = pIDlogH[ID]
+                    istepH = pidlog[ID]
                     ihf_H = min((ix-istepH+1), tml + 2) 
                 else:
                     ihf_H = tml + 2
@@ -420,7 +420,7 @@ def main_attribution(
 
                             # update parcel log
                             if fmemento:
-                                pIDlogH[ID] = ix # NOTE: double-check
+                                pidlog[ID] = ix # NOTE: double-check
 
                 ##  - 2.3)-SOD: Sodemann et al., 2008
                 elif tdiagnosis == 'SOD':
@@ -523,7 +523,7 @@ def main_attribution(
 
                             # update parcel log
                             if fmemento:
-                                pIDlogH[ID] = ix # NOTE: double-check
+                                pidlog[ID] = ix # NOTE: double-check
 
 
                 ##  SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
@@ -626,7 +626,7 @@ def main_attribution(
 
                             # update parcel log
                             if fmemento:
-                                pIDlogH[ID] = ix # NOTE: double-check
+                                pidlog[ID] = ix # NOTE: double-check
 
 
                 ##  - 2.3)-SAJ: Stohl and James, 2004
@@ -649,7 +649,7 @@ def main_attribution(
 
                     # update parcel log
                     if fmemento:
-                        pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
+                        pidlog[ID] = ix # NOTE: making use of heat parcel log for E-P
 
         if fjumps:
             neval   = len(ntot)-njumps
