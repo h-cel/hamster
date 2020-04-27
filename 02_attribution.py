@@ -324,9 +324,12 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
 
+                            # prec
+                            prec    = abs(qv[0]-qv[1])
+                            
                             # log some statistics
                             nevalp  += 1
-                            psum    += abs(qv[0]-qv[1])
+                            psum    += prec
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -352,22 +355,21 @@ def main_attribution(
                             if evap_idx.size==0:
                                 # log some statistics
                                 nnevalp     += 1
-                                pmiss       += abs(qv[0]-qv[1])
+                                pmiss       += prec
                                 # log for upscaling
                                 if fdupscale:
-                                    ipmiss      += abs(qv[0]-qv[1])
+                                    ipmiss      += prec
                                 if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
                                     append2csv(pattfile,pattdata)
                             
                             if evap_idx.size>0:
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
                                     append2csv(pattfile,pattdata)
                                 ## trajectory-based upscaling
-                                prec    = abs(qv[0]-qv[1])
                                 fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
@@ -439,9 +441,12 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
+                            # prec
+                            prec    = abs(qv[0]-qv[1])
+
                             # log some statistics
                             nevalp  += 1
-                            psum    += abs(qv[0]-qv[1])
+                            psum    += prec
                             
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -463,12 +468,12 @@ def main_attribution(
                             if evap_idx.size==0:
                                 # log some statistics
                                 nnevalp    += 1
-                                pmiss      += abs(qv[0]-qv[1])
+                                pmiss      += prec
                                 # log for upscaling
                                 if fdupscale:
-                                    ipmiss      += abs(qv[0]-qv[1])
+                                    ipmiss      += prec
                                 if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
                                     append2csv(pattfile,pattdata)
                             
                             # discount uptakes linearly, scale with precipitation fraction
@@ -476,10 +481,9 @@ def main_attribution(
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
                                     append2csv(pattfile,pattdata)
                                 ## trajectory-based upscaling
-                                prec    = abs(qv[0]-qv[1])
                                 fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
@@ -551,10 +555,13 @@ def main_attribution(
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
+
+                            # prec
+                            prec    = abs(qv[0]-qv[1])
                             
                             # log some statistics
                             nevalp  += 1
-                            psum    += abs(qv[0]-qv[1])
+                            psum    += prec
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -576,12 +583,12 @@ def main_attribution(
                             if evap_idx.size==0:
                                 # log some statistics
                                 nnevalp    += 1
-                                pmiss      += abs(qv[0]-qv[1])
+                                pmiss      += prec
                                 # log for upscaling
                                 if fdupscale:
-                                    ipmiss      += abs(qv[0]-qv[1])
+                                    ipmiss      += prec
                                 if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
                                     append2csv(pattfile,pattdata)
                             
                             # discount uptakes linearly, scale with precipitation fraction
@@ -589,10 +596,9 @@ def main_attribution(
                                 dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
                                     append2csv(pattfile,pattdata)
                                 ## trajectory-based upscaling
-                                prec    = abs(qv[0]-qv[1])
                                 fw_orig = dq_disc/qv[1]
                                 if explainp=="full":
                                     # upscaling to 100% of trajectory
