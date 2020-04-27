@@ -340,10 +340,8 @@ def main_attribution(
 
                             # check if traj falls dry & adjust ihf_E if so
                             ihf_E = tml + 2
-                            if fdry:
-                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
-                                if ihf_dry.size>0:
-                                    ihf_E = np.min(ihf_dry)
+                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
+                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                                     
                             # identify evaporative moisture uptakes
                             is_inpbl     = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
@@ -445,10 +443,8 @@ def main_attribution(
                             dq          = trajparceldiff(qv[:], 'diff')
                             # check if traj falls dry & adjust ihf_E if so
                             ihf_E = tml + 2
-                            if fdry:
-                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
-                                if ihf_dry.size>0:
-                                    ihf_E = np.min(ihf_dry)
+                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
+                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
 
                             # identify evaporative moisture uptakes
                             is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
@@ -550,10 +546,8 @@ def main_attribution(
                             
                             # check if traj falls dry & adjust ihf_E if so
                             ihf_E = tml + 2
-                            if fdry:
-                                ihf_dry = np.where(qv[1:ihf_E]<= 0.00005)[0] + 1 # omit current time step
-                                if ihf_dry.size>0:
-                                    ihf_E = np.min(ihf_dry)
+                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
+                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
 
                             # identify evaporative moisture uptakes
                             is_uptk = dq[:ihf_E-1] > 0.0001
