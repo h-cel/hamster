@@ -476,6 +476,25 @@ def linear_discounter2(qtot):
     #fw  = fw[::-1]
     #return(fw)
 
+def linear_attribution_p(qv,iupt,explainp):
+    dq_disc     = np.zeros(shape=qv.size)
+    dq_disc[1:] = linear_discounter(v=qv[1:], min_gain=0)
+    ## trajectory-based upscaling
+    prec    = abs(qv[0]-qv[1])
+    fw_orig = dq_disc/qv[1]
+    if explainp=="full":
+        # upscaling to 100% of trajectory
+        cfac        = qv[1]/np.sum(dq_disc[iupt])
+        etop        = prec*fw_orig*cfac
+    elif explainp=="max":
+        # upscaling to (100-IC)% of trajectory
+        cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[iupt])
+        etop        = prec*fw_orig*cfac
+    elif explainp=="none":
+        # no upscaling
+        etop        = prec*fw_orig
+    return(etop)
+
 def gridder(plon, plat, pval,
             glat, glon):
     """

@@ -441,9 +441,9 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
-                            # prec
+                            # 
                             prec    = abs(qv[0]-qv[1])
-
+                            
                             # log some statistics
                             nevalp  += 1
                             psum    += prec
@@ -464,6 +464,14 @@ def main_attribution(
                             in_PBL    = trajparceldiff(ztra[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
                             evap_uptk = dq[:ihf_E-1] > 0.0002
                             evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
+                                
+                            if fwritestats:
+                                if evap_idx.size==0:
+                                    pattdata    = [pdate,str(0),str(0),str(prec)]
+                                elif evap_idx.size>0:
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
+                                    pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
+                                append2csv(pattfile,pattdata)
 
                             if evap_idx.size==0:
                                 # log some statistics
@@ -472,29 +480,10 @@ def main_attribution(
                                 # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
-                                if fwritestats:
-                                    pattdata    = [pdate,str(0),str(0),str(prec)]
-                                    append2csv(pattfile,pattdata)
                             
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
-                                dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
-                                if fwritestats:
-                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(prec)]
-                                    append2csv(pattfile,pattdata)
-                                ## trajectory-based upscaling
-                                fw_orig = dq_disc/qv[1]
-                                if explainp=="full":
-                                    # upscaling to 100% of trajectory
-                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="max":
-                                    # upscaling to (100-IC)% of trajectory
-                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
-                                    etop        = prec*fw_orig*cfac
-                                elif explainp=="none":
-                                    etop        = prec*fw_orig
+                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 # log for timestep-based upscaling
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
