@@ -494,8 +494,8 @@ def main_attribution(
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
                             is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
-                            is_uptk = dTH[:ihf_H-1] > cheat_dtemp
-                            heat_idx  = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
+                            is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
@@ -591,8 +591,8 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
-                            is_uptk = dTH[:ihf_H-1] > cheat_dtemp
-                            heat_idx  = np.where(is_uptk)[0]     
+                            is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx    = np.where(is_uptk)[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
