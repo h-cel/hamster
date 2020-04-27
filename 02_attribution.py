@@ -296,11 +296,11 @@ def main_attribution(
 
                 ## - 2.1) check how far back trajectory should be evaluated
                 # NOTE: this could be moved elsewhere...
-                # for Hadv (not needed for E2P):
+                # for advection (not needed for E2P):
                 if fmemento:
                     ID = int(ary[0,i,0])   
-                    istepH = pidlog[ID]
-                    ihf_H = min((ix-istepH+1), tml + 2) 
+                    istep = pidlog[ID]
+                    ihf_H = min((ix-istep+1), tml + 2) 
                 else:
                     ihf_H = tml + 2
                 
