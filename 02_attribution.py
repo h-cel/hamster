@@ -396,9 +396,9 @@ def main_attribution(
                             
                             # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
                             is_inpbl     = PBL_check(z=hgt[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
-                            heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
+                            is_uptk  = dTH[:ihf_H-1] > cheat_dtemp
                             heat_plaus = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
-                            heat_idx   = np.where(np.logical_and(is_inpbl, np.logical_and(heat_uptk, heat_plaus)))[0]
+                            heat_idx   = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, heat_plaus)))[0]
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
@@ -494,8 +494,8 @@ def main_attribution(
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
                             is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
-                            heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
-                            heat_idx  = np.where(np.logical_and(is_inpbl, heat_uptk))[0]     
+                            is_uptk = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx  = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
@@ -591,8 +591,8 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
-                            heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
-                            heat_idx  = np.where(heat_uptk)[0]     
+                            is_uptk = dTH[:ihf_H-1] > cheat_dtemp
+                            heat_idx  = np.where(is_uptk)[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
