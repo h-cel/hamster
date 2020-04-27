@@ -379,9 +379,9 @@ def main_attribution(
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
 
-                            # loop through evaporative uptakes
-                            for itj in evap_idx:
-                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # grid all uptakes
+                                for itj in evap_idx:
+                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
 
                     ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
                     if not mask[alat_ind,alon_ind]==maskval:
@@ -483,9 +483,9 @@ def main_attribution(
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
 
-                            # loop through evaporative uptakes
-                            for itj in evap_idx:
-                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # grid all uptakes
+                                for itj in evap_idx:
+                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
   
     
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
@@ -587,9 +587,9 @@ def main_attribution(
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
 
-                            # loop through evaporative uptakes
-                            for itj in evap_idx:
-                                ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # grid all uptakes
+                                for itj in evap_idx:
+                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
    
 
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
