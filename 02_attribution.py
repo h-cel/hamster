@@ -346,8 +346,8 @@ def main_attribution(
                             # identify evaporative moisture uptakes
                             is_inpbl    = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)         
                             is_uptk     = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
-                            evap_plaus  = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                            evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, evap_plaus)))[0]
+                            is_uptkcc   = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
+                            evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0]
                            
                             # WRITE STATS
                             if fwritestats:
