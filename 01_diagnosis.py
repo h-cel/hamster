@@ -166,7 +166,7 @@ def main_diagnosis(
             ary_npart[lat_ind,lon_ind] += int(1)
 
             ## read only necessary parcel information
-            qv, temp, ztra, hpbl    = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
+            qv, temp, hgt, hpbl    = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
             dq                      = parceldiff(qv, 'diff') 
             pottemp                 = readpottemp(ary[:2,i,:])
             dTH                     = parceldiff(pottemp, 'diff')
@@ -182,12 +182,12 @@ def main_diagnosis(
                          ary_pnpart[lat_ind,lon_ind] += int(1)
 
                 # evaporation and sensible heat 
-                if ( checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt) or checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt) ):
+                if ( checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt) or checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt) ):
                     if ( dq > 0 or dTH > 0):
                         pres                = readpres(ary[:,i,:])
 
                         # sensible heat
-                        if ( dTH > 0 and checkpbl(cpbl_strict,ztra,hpbl,cheat_hgt)):
+                        if ( dTH > 0 and checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt)):
                             dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
                             if fcc_advanced:
                                 dT = parceldiff(temp, 'diff')
@@ -200,7 +200,7 @@ def main_diagnosis(
                                     ary_hnpart[lat_ind,lon_ind] += int(1)
 
                         # evaporation
-                        if ( dq > 0 and checkpbl(cpbl_strict,ztra,hpbl,cevap_hgt)):
+                        if ( dq > 0 and checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt)):
                             epottemp        = readepottemp(ary[:,i,:])
                             dTHe            = parceldiff(epottemp, 'diff')
                             dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
@@ -230,13 +230,13 @@ def main_diagnosis(
 
                 ## evaporation
                 if (dq > 0.0002 and  
-                        (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
+                        (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_evap[lat_ind,lon_ind] += dq
                     ary_enpart[lat_ind,lon_ind] += int(1)
     
                 ## sensible heat (not used originally; analogous to evaporation)
                 if ((dTH > cheat_dtemp) and 
-                        (ztra[0]+ztra[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
+                        (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[lat_ind,lon_ind] += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
 
