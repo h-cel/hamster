@@ -338,17 +338,18 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
                             dTHe        = trajparceldiff(epottemp[:], 'diff')
 
-                            # check if traj falls dry & adjust ihf_E if so
+                            # evaluate only until trajectory falls dry
                             ihf_E = tml + 2
                             if fdry and np.any(qv[1:ihf_E]<= 0.00005):
                                 ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                                     
                             # identify evaporative moisture uptakes
-                            is_inpbl     = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
-                            is_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
-                            evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                            evap_idx   = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, evap_plaus)))[0]
-                            
+                            is_inpbl    = PBL_check(z=hgt[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)         
+                            is_uptk     = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
+                            evap_plaus  = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
+                            evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, evap_plaus)))[0]
+                           
+                            # WRITE STATS
                             if fwritestats:
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
@@ -356,29 +357,25 @@ def main_attribution(
                                     etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
                                     pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
                                 append2csv(pattfile,pattdata)
-                            
+                           
+                            # TRAJECTORY WITHOUT UPTAKES
                             if evap_idx.size==0:
-                                # log some statistics
+                                # log some statistics (for upscaling)
                                 nnevalp     += 1
                                 pmiss       += prec
-                                # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
                             
-                            # discount uptakes linearly, scale with precipitation fraction
+                            # ATTRIBUTION
                             if evap_idx.size>0:
                                 etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                # log for timestep-based upscaling
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                
-                                # log some statistics
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-
-                                # grid all uptakes
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # log some statistics (for upscaling)
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
 
                     ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
                     if not mask[alat_ind,alon_ind]==maskval:
@@ -429,9 +426,8 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
-                            # 
+                            # prec
                             prec    = abs(qv[0]-qv[1])
-                            
                             # log some statistics
                             nevalp  += 1
                             psum    += prec
@@ -441,16 +437,17 @@ def main_attribution(
 
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
-                            # check if traj falls dry & adjust ihf_E if so
+                            # evaluate only until trajectory falls dry
                             ihf_E = tml + 2
                             if fdry and np.any(qv[1:ihf_E]<= 0.00005):
                                 ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
 
-                            # identify evaporative moisture uptakes
+                            # identify uptake locations
                             is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
-                            is_uptk = dq[:ihf_E-1] > 0.0002
-                            evap_idx  = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
-                                
+                            is_uptk     = dq[:ihf_E-1] > 0.0002
+                            evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
+                               
+                            # WRITE STATS
                             if fwritestats:
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
@@ -459,28 +456,24 @@ def main_attribution(
                                     pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
                                 append2csv(pattfile,pattdata)
 
+                            ## TRAJECTORY WITHOUT UPTAKE LOCATIONS
                             if evap_idx.size==0:
-                                # log some statistics
+                                # log some statistics (for upscaling)
                                 nnevalp    += 1
                                 pmiss      += prec
-                                # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
                             
-                            # discount uptakes linearly, scale with precipitation fraction
+                            # ATTRIBUTION
                             if evap_idx.size>0:
                                 etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                # log for timestep-based upscaling
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                
-                                # log some statistics
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-
-                                # grid all uptakes
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # log some statistics (for upscaling)
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
   
     
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
@@ -533,7 +526,6 @@ def main_attribution(
 
                             # prec
                             prec    = abs(qv[0]-qv[1])
-                            
                             # log some statistics
                             nevalp  += 1
                             psum    += prec
@@ -544,15 +536,16 @@ def main_attribution(
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
                             
-                            # check if traj falls dry & adjust ihf_E if so
+                            # evaluate only until trajectory falls dry
                             ihf_E = tml + 2
                             if fdry and np.any(qv[1:ihf_E]<= 0.00005):
-                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
+                                ihf_E   = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
 
                             # identify evaporative moisture uptakes
-                            is_uptk = dq[:ihf_E-1] > 0.0001
-                            evap_idx  = np.where(is_uptk)[0] 
+                            is_uptk     = dq[:ihf_E-1] > 0.0001
+                            evap_idx    = np.where(is_uptk)[0] 
 
+                            # WRITE STATS
                             if fwritestats:
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
@@ -560,29 +553,25 @@ def main_attribution(
                                     etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
                                     pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
                                 append2csv(pattfile,pattdata)
-  
+ 
+                            # TRAJECTORY WITHOUT UPTAKE LOCATIONS
                             if evap_idx.size==0:
-                                # log some statistics
+                                # log some statistics (for upscaling)
                                 nnevalp    += 1
                                 pmiss      += prec
-                                # log for upscaling
                                 if fdupscale:
                                     ipmiss      += prec
                             
-                            # discount uptakes linearly, scale with precipitation fraction
+                            # ATTRIBUTION
                             if evap_idx.size>0:
                                 etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                # log for timestep-based upscaling
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                
-                                # log some statistics
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-
-                                # grid all uptakes
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                # log some statistics (for upscaling)
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
    
 
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
