@@ -347,10 +347,10 @@ def main_attribution(
                                     ihf_E = np.min(ihf_dry)
                                     
                             # identify evaporative moisture uptakes
-                            in_PBL     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
+                            in_pbl     = PBL_check(z=ztra[:ihf_E], h=hpbl[:ihf_E], seth=cevap_hgt, tdiagnosis=tdiagnosis)                      
                             evap_uptk  = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
                             evap_plaus = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                            evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
+                            evap_idx   = np.where(np.logical_and(in_pbl, np.logical_and(evap_uptk, evap_plaus)))[0]
                             
                             if fwritestats:
                                 if evap_idx.size==0:
@@ -401,10 +401,10 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
                             
                             # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
-                            in_PBL     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
+                            in_pbl     = PBL_check(z=ztra[:ihf_H], h=hpbl[:ihf_H], seth=cheat_hgt, tdiagnosis=tdiagnosis)
                             heat_uptk  = dTH[:ihf_H-1] > cheat_dtemp
                             heat_plaus = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
-                            heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
+                            heat_idx   = np.where(np.logical_and(in_pbl, np.logical_and(heat_uptk, heat_plaus)))[0]
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
@@ -452,9 +452,9 @@ def main_attribution(
                                     ihf_E = np.min(ihf_dry)
 
                             # identify evaporative moisture uptakes
-                            in_PBL    = trajparceldiff(ztra[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
+                            in_pbl    = trajparceldiff(ztra[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
                             evap_uptk = dq[:ihf_E-1] > 0.0002
-                            evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
+                            evap_idx  = np.where(np.logical_and(in_pbl, evap_uptk))[0] 
                                 
                             if fwritestats:
                                 if evap_idx.size==0:
@@ -505,9 +505,9 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
-                            in_PBL    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
+                            in_pbl    = trajparceldiff(ztra[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
                             heat_uptk = dTH[:ihf_H-1] > cheat_dtemp
-                            heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
+                            heat_idx  = np.where(np.logical_and(in_pbl, heat_uptk))[0]     
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
