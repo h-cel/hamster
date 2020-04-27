@@ -61,7 +61,9 @@ def read_cmdargs():
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--explainp', '-exp',   help = "upscaling of E2P contributions to explain P fully",             type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               type = str,     default = "none")
+    parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        type = str2bol, default = False,    nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
     parser.add_argument('--writestats','-ws',   help = "write additional stats to file (02 only; flag)",                type = str2bol, default = False,    nargs='?')
     parser.add_argument('--setnegzero', '-sz',  help = "set negative ERA-I E & H fluxes to zero (flag)",                type = str2bol, default = True,     nargs='?')
@@ -427,6 +429,9 @@ def linear_discounter(v, min_gain):
 
     ## compute dv/dt, prepare dv_disc
     dv = v[:-1] - v[1:]
+    # append initial v as a -fake- uptake 
+    # (used to estimate fraction that cannot be attributed)
+    dv = np.append(dv,v[-1])
     dv_disc = np.zeros(shape=len(dv))
     ## get indices of gains and losses
     idx_gains  = np.where(dv >= min_gain)[0]

@@ -28,57 +28,64 @@ def main_attribution(
            fwrite_netcdf,
            precision,
            ftimethis,
-           fdry,fmemento,fexplainp,fcc_advanced,fvariable_mass,fwritestats,
+           fdry,
+           fmemento,
+           explainp,fdupscale,fmupscale,
+           fcc_advanced,fvariable_mass,fwritestats,
            strargs):
 
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
  
-    ## construct precise input and storage paths
+    #### OUTPUT FILES
     mainpath  = ipath+str(ryyyy)+"/"
+    ## main netcdf output
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
-
-    # output file for writestats (only for P as of now)
+    ## additional statistic output files (*.csv)
+    # monthly statistics
+    sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
+    statfile  = opath+"/"+sfilename
+    # trajectory-based precipitation statistics
     if fwritestats:
-        sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
-        statsfile   = opath+"/"+sfilename
-        with open(statsfile,'w') as sfile:
-                writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',)
-                writer.writerow(["DATE", "FTOT", "DQDT(P)[kg/kg]"])
-
+        pfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pattribution.csv"
+        pattfile  = opath+"/"+pfilename
+        with open(pattfile,'w') as pfile:
+                writer=csv.writer(pfile, delimiter='\t', lineterminator='\n',)
+                writer.writerow(["DATE", "F_ATT", "F_POT", "P_DQDT"])
+    
+    #### INPUT FILES
     ## read netcdf mask
     with nc4.Dataset(maskfile) as f:
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]
 
-    ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
-    
+    #### DISCLAIMER
     if verbose:
         disclaimer()
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
         print("\n============================================================================================================")
         print(" ! using input path: \t", 	ipath)
-        print(" ! using variable mass: \t" +str(fvariable_mass) )
-        if fvariable_mass:
-            print(" \t ! reference date for number of particles: \t" +str(refdate) )
         if fwrite_netcdf:
             print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
             print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
+        print(" ! additional statistics in: \t"+str(statfile))
         if fwritestats:
-            print(" ! additional statistics in: \t"+str(statsfile))
+            print(" ! precipitation statistics in: \t"+str(pattfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
+    #### SETTINGS
     ## start timer
     if ftimethis:
         megatic = timeit.default_timer()
     
+    ## grids
     glon, glat, garea = makegrid(resolution=gres)
     ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
     if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
@@ -125,7 +132,7 @@ def main_attribution(
     ndaytime        = len(fdate_seq)
     ndayupttime     = len(fuptdate_seq)
 
-    # TESTMODE
+    ## TESTMODE
     if mode == "test":
 
         ctraj_len_orig   = ctraj_len
@@ -151,12 +158,6 @@ def main_attribution(
     # traj max len
     tml = nupttime - ntime
 
-    # set some default thresholds
-    cprec_dqv    = default_thresholds(cprec_dqv) 
-    # read in reference distribution of parcels
-    if fvariable_mass:
-        ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
-
     ## prepare parcel log to handle trajectories properly 
     if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
         pIDlogH = -999*np.ones(shape=2000001).astype(int) 
@@ -164,6 +165,7 @@ def main_attribution(
 
     ###--- pre-loop to produce independent monthly output
     ## NOTE: this is irrelevant for E2P, but crucial for Had (& Ead)
+    ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
     if fmemento and mode == "oper": # skip if multi-counting somehow desired and/or if testing
 
         ## p1) create required datetime string object
@@ -189,27 +191,21 @@ def main_attribution(
                 pretoc = timeit.default_timer()
                 print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
 
-            ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
-            #print("Processing "+str(predatetime_seq[pix]))
-
-            ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
+            ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
             ary = readpom( idate    = predatetime_seq[pix],
                            ipath    = ipath+"/"+str(ryyyy),
                            ifile_base = ifile_base,
                            verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
 
-            nparticle   = ary.shape[1]
-            #if verbose:
-            #    print(" TOTAL: " + str(predatetime_seq[pix]) + " has " + str(nparticle) + " parcels")
-            ntot    = range(nparticle)
+            nparcel   = ary.shape[1]
+            ntot    = range(nparcel)
 
-            ## p4) now loop through particles
+            ## p4) now loop through parcels
             for i in ntot:
 
-                ## check for jumps
-                mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
+                ## check for arriving parcels
                 alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-                if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+                if not mask[alat_ind,alon_ind]==maskval:
                    continue
 
                 ## read ONLY parcel and ABL heights
@@ -217,7 +213,6 @@ def main_attribution(
 
                 ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
                 if ( ztra[0] < np.max(hpbl[:4]) ):
-                    ## update parcel log
                     ID = int(ary[0,i,0])
                     pIDlogH[ID] = pix - tml # NOTE: tml != npretime (double-check?)
     
@@ -225,6 +220,12 @@ def main_attribution(
     ###--- MAIN LOOP
     ## prepare uptake indices
     upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
+
+    ## prepare STATS
+    # number of parcels
+    tneval = tnjumps = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
+    # precip. statistics
+    psum = patt = punatt = pmiss = 0
 
     ## loop over time to read in files
     if verbose:
@@ -234,21 +235,20 @@ def main_attribution(
                 print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdatetime_seq[ix]))
 
-        ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparticles x nvars)
+        ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readpom( idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
                        ifile_base = ifile_base)
 
-        nparticle   = ary.shape[1]
+        nparcel   = ary.shape[1]
         ntrajleng   = ary.shape[0]
         if verbose:
-            print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparticle) + " parcels")
+            print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparcel) + " parcels")
 
-        #bar = Bar('Processing', suffix='%(percent)d%%', fill="*")
         if mode == "test":
             ntot    = range(1000)
         else:
-            ntot    = range(nparticle)
+            ntot    = range(nparcel)
 
         # figure out where to store data (on which arriving day)
         arv_idx = np.where(np.asarray(fdateasdate)==(fdatetime_seq[ix]-relativedelta(hours=3)).date())[0][0]
@@ -257,18 +257,12 @@ def main_attribution(
         if ix%4==0:
             ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
             ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+            # upscaling measures (currently has to be per day as well)
+            if fdupscale:
+                ipatt = ipmiss = 0
 
-        # STATS
-        # number of parcels not evaluated (nnevala for arriving; nnevalm for midpoint)
-        nnevalm = 0
-        nnevala = 0
-        # number of precipitating parcels
-        nevalp  = 0
-        # number of precipitating parcels that are not evaluated...
-        nnevalp  = 0
-        # number of trajectories with at least one jump (entirely skipped for now)
-        if fjumps: 
-            njumps  = 0
+        # STATS: number of parcels per file
+        neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
@@ -295,6 +289,8 @@ def main_attribution(
             mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
             if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+                nnevalm     += 1
+                nnevala     += 1
                 continue
             else:
 
@@ -307,10 +303,14 @@ def main_attribution(
                     ihf_H = min((ix-istepH+1), tml + 2) 
                 else:
                     ihf_H = tml + 2
-
+                
                 ## - 2.2) read only the most basic parcel information
                 # NOTE: this could easily be done more efficiently
                 ztra, hpbl, temp, qv, dens, pres = glanceparcel(ary[:4,i,:])
+                
+                # sorry, yet another date for writing the P date to the csv (preliminary).
+                # because i wanted to have the hours in there as wel (not assign to day only)
+                pdate   = str((fdatetime_seq[ix]-relativedelta(hours=3)).strftime('%Y%m%d%H'))
 
                 ## - 2.3) diagnose fluxes
 
@@ -323,8 +323,10 @@ def main_attribution(
                     else:
                         if ( (qv[0]-qv[1]) < cprec_dqv and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
-                            
-                            nevalp += 1
+
+                            # log some statistics
+                            nevalp  += 1
+                            psum    += abs(qv[0]-qv[1])
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -348,22 +350,42 @@ def main_attribution(
                             evap_idx   = np.where(np.logical_and(in_PBL, np.logical_and(evap_uptk, evap_plaus)))[0]
                             
                             if evap_idx.size==0:
-                                nnevalp += 1
+                                # log some statistics
+                                nnevalp     += 1
+                                pmiss       += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fdupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                            
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="none":
+                                    etop        = prec*fw_orig
+                                # log for timestep-based upscaling
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
+                                
+                                # log some statistics
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             for itj in evap_idx: 
                                 ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -374,10 +396,13 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and 
                              ztra[0] < np.max(hpbl[:4]) ):
+                            
+                            # log some statistics
+                            nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
-                            
+                             
                             # calculate all required changes along trajectory
                             dq          = trajparceldiff(qv[:], 'diff')
                             dTH         = trajparceldiff(pottemp[:], 'diff')
@@ -389,6 +414,9 @@ def main_attribution(
                             heat_idx   = np.where(np.logical_and(in_PBL, np.logical_and(heat_uptk, heat_plaus)))[0]
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -411,7 +439,10 @@ def main_attribution(
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
 
-                            nevalp += 1
+                            # log some statistics
+                            nevalp  += 1
+                            psum    += abs(qv[0]-qv[1])
+                            
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
 
@@ -430,23 +461,43 @@ def main_attribution(
                             evap_idx  = np.where(np.logical_and(in_PBL, evap_uptk))[0] 
 
                             if evap_idx.size==0:
+                                # log some statistics
                                 nnevalp    += 1
+                                pmiss      += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fdupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                            
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="none":
+                                    etop        = prec*fw_orig
+                                # log for timestep-based upscaling
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
+                                
+                                # log some statistics
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -459,6 +510,9 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and
                              ztra[0] < np.max(hpbl[:4]) ):
+                            
+                            # log some statistics
+                            nevalh  += 1
 
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
@@ -472,6 +526,9 @@ def main_attribution(
                             heat_idx  = np.where(np.logical_and(in_PBL, heat_uptk))[0]     
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -494,7 +551,10 @@ def main_attribution(
                     else:
                         if ( (qv[0]-qv[1]) < 0 and 
                              ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
-                            nevalp += 1
+                            
+                            # log some statistics
+                            nevalp  += 1
+                            psum    += abs(qv[0]-qv[1])
 
                             # read full parcel information
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
@@ -514,23 +574,43 @@ def main_attribution(
                             evap_idx  = np.where(evap_uptk)[0] 
 
                             if evap_idx.size==0:
+                                # log some statistics
                                 nnevalp    += 1
+                                pmiss      += abs(qv[0]-qv[1])
+                                # log for upscaling
+                                if fdupscale:
+                                    ipmiss      += abs(qv[0]-qv[1])
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(0),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
+                                    pattdata    = [pdate,str(0),str(0),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                            
                             # discount uptakes linearly, scale with precipitation fraction
                             if evap_idx.size>0:
-                                dq_disc     = np.zeros(shape=qv[:ihf_E].size-1)
+                                dq_disc     = np.zeros(shape=qv[:ihf_E].size)
                                 dq_disc[1:] = linear_discounter(v=qv[1:ihf_E], min_gain=0)
                                 if fwritestats:
-                                    statdata    = [str(datetime_seq[ix]),str(np.sum(dq_disc[evap_idx])/qv[1]),str(abs(qv[0]-qv[1]))]
-                                    append2csv(statsfile,statdata)
-                                if fexplainp:
-                                    # upscaling of fractions dq_disc/qv[1] to 1
-                                    # in order to explain the loss entirely
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc/(np.sum(dq_disc[evap_idx])/qv[1])
-                                else:
-                                    etop        = (abs(qv[0]-qv[1])/qv[1])*dq_disc
+                                    pattdata    = [pdate,str(np.sum(dq_disc[evap_idx])/qv[1]),str(1-dq_disc[-1]/qv[1]),str(abs(qv[0]-qv[1]))]
+                                    append2csv(pattfile,pattdata)
+                                ## trajectory-based upscaling
+                                prec    = abs(qv[0]-qv[1])
+                                fw_orig = dq_disc/qv[1]
+                                if explainp=="full":
+                                    # upscaling to 100% of trajectory
+                                    cfac        = qv[1]/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="max":
+                                    # upscaling to (100-IC)% of trajectory
+                                    cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[evap_idx])
+                                    etop        = prec*fw_orig*cfac
+                                elif explainp=="none":
+                                    etop        = prec*fw_orig
+                                # log for timestep-based upscaling
+                                if fdupscale:
+                                    ipatt       += np.sum(etop[evap_idx])
+                                
+                                # log some statistics
+                                patt    += np.sum(etop[evap_idx])
+                                punatt  += prec-np.sum(etop[evap_idx])
 
                             # loop through evaporative uptakes
                             for itj in evap_idx:
@@ -543,7 +623,10 @@ def main_attribution(
                     else:
                         if ( ihf_H >= 2 and
                              ztra[0] < np.max(hpbl[:4]) ):
-
+                            
+                            # log some statistics
+                            nevalh  += 1
+                            
                             # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
                             lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
 
@@ -555,6 +638,9 @@ def main_attribution(
                             heat_idx  = np.where(heat_uptk)[0]     
 
                             # discount uptakes linearly
+                            if heat_idx.size==0:
+                                # log some statistics
+                                nnevalh += 1
                             if heat_idx.size>0:
                                 dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
@@ -590,20 +676,36 @@ def main_attribution(
                     if fmemento:
                         pIDlogH[ID] = ix # NOTE: making use of heat parcel log for E-P
 
-
-        if verbose:
+        if fjumps:
+            neval   = len(ntot)-njumps
+        else: 
             neval   = len(ntot)
-            # jump stats
+        if verbose:
             if fjumps:
                 print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
-            # mask stats 
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
+            if nnevalh!=0:
+                print(" --- ATTENTION: "+str(nnevalh)+"/"+str(neval-nnevala)+" arriving parcels are not associated with any heat uptakes...")
             print(" STATS: Evaluated "+str(neval-nnevalm)+" ({:.2f}".format(100*(neval-nnevalm)/(neval)) +"%) midpoint parcels inside mask (precipitation).")
             print(" STATS: Evaluated "+str(nevalp)+" ({:.2f}".format(100*(nevalp)/(neval-nnevalm)) +"%) precipitating parcels.")
             if nnevalp!=0:
-                print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any uptakes...")
-        # Convert units, but only after the last time step of each day
+                print(" --- ATTENTION: "+str(nnevalp)+"/"+str(nevalp)+" precipitating parcels are not associated with any evap uptakes...")
+        
+        ## SOME DAILY CALCULATIONS
         if ( (ix+1)%4==0 ):
+            # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
+            if fdupscale and nnevalp!=0:
+                if ipatt==0:
+                    warnings.warn(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+                else:
+                    upsfac              = 1+(ipmiss/ipatt)
+                    ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
+                    # corrections for final statistics
+                    patt                += -np.sum(ipatt) + np.sum(ary_etop)
+                    pmiss               += -np.sum(ipmiss)
+                    if verbose:
+                        print(" * Upscaling... (factor: {:.4f}".format(upsfac)+")")
+            # Convert units
             if verbose:
                 print(" * Converting units...")
             ary_etop[:,:,:] = convertunits(ary_etop[:,:,:], garea, "E")
@@ -612,14 +714,33 @@ def main_attribution(
             if fwrite_netcdf:
                 writenc4D(ofile,arv_idx,ary_etop,ary_heat)
         
-#TODO: decide what to do with parcel mass scaling here
-#    # Scale with parcel mass
-#    if fvariable_mass:
-#        if verbose: 
-#            print(" * Applying variable mass...")
-#        ary_prec         = scale_mass(ary_prec, ary_npart, ary_rnpart)
-#        ary_evap         = scale_mass(ary_evap, ary_npart, ary_rnpart)
-#        ary_heat         = scale_mass(ary_heat, ary_npart, ary_rnpart)
+        ## STATS summary
+        tneval  += neval
+        tnjumps += njumps
+        tnnevala+= nnevala
+        tnnevalm+= nnevalm
+        tnevalp += nevalp
+        tnnevalp+= nnevalp
+        tnevalh += nevalh
+        tnnevalh+= nnevalh
+    
+    # MONTHLY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
+    if fmupscale and pmiss!=0:
+        if patt==0:
+            print(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+        else:
+            upsfac              = 1+(pmiss/patt)
+            # load full etop array and upscale
+            fdata       = nc4.Dataset(ofile,'r+')
+            uns_etop    = fdata.variables['E2P'][:]
+            ups_etop    = upsfac*uns_etop
+            fdata.variables['E2P'][:]= ups_etop
+            fdata.close()
+            # corrections for final statistics
+            patt                += np.sum(pmiss)
+            pmiss               += -np.sum(pmiss)
+            if verbose:
+                print(" * Monthly upscaling for unattributed precipitation... (factor: {:.4f}".format(upsfac)+")")
 
     if ftimethis:
         megatoc = timeit.default_timer()
@@ -628,4 +749,29 @@ def main_attribution(
     
     if verbose:
         if fwrite_netcdf:
-            print("\n Successfully written: "+ofile+" !")
+            print("\n Successfully written: "+ofile+" !\n")
+    
+    with open(statfile,'w') as sfile:
+        writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["* - PARCEL STATISTICS: "])
+        writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
+        writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
+        writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
+        if tnevalh!=0:
+            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
+        writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+        if tnevalp!=0:
+            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
+        writer.writerow([" "])
+        if psum!=0:
+            writer.writerow([" * - PRECIPITATION STATISTICS: "])
+            writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
+            writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
+            writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+    if verbose: 
+        with open(statfile, 'r') as sfile:
+            print(sfile.read())
