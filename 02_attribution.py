@@ -444,7 +444,7 @@ def main_attribution(
                                 ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
 
                             # identify uptake locations
-                            is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < trajparceldiff(hpbl[:ihf_E], 'mean') 
+                            is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_E], 'mean')
                             is_uptk     = dq[:ihf_E-1] > 0.0002
                             evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                                
@@ -494,7 +494,7 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
 
                             # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
-                            is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < trajparceldiff(hpbl[:ihf_H], 'mean') 
+                            is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_H], 'mean')
                             is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                             heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
 
