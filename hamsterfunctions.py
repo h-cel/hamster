@@ -397,17 +397,32 @@ def default_thresholds(cprec_dqv):
     return cprec_dqv
 
 
-def PBL_check(z, h, seth, tdiagnosis):
-
-    if tdiagnosis == 'KAS':
-        h[h<seth] = seth
-        before_inside = np.logical_or( z[1:] < h[:-1], z[1:]  < h[1:])  
-        after_inside  = np.logical_or(z[:-1] < h[:-1], z[:-1] < h[1:])  
-        change_inside = np.logical_and(before_inside, after_inside)
-    elif tdiagnosis == 'SOD':   
-        change_inside = ((z[1:]+z[:-1])/2) < 1.5*((h[1:]+h[:-1])/2)
-        # NOTE: factor 1.5 is hardcoded      
-
+def PBL_check(cpbl_strict, z, hpbl, sethpbl):
+    """
+    INPUT
+        - PBL strictness flag; 1 (moderate), 2 (relaxed), 3 (fully relaxed)
+        - parcel altitude
+        - PBL heigt at parcel location
+        - prescribed PBL height
+    ACTION
+        - raises any hpbl below sethpbl to this value; no effect if sethpbl=0
+        - calculates whether parcel locations 'before' and 'after' each change,
+          i.e. during analysis steps, are within PBL
+        - depending on cpbl_strict, require both before & after to be
+          inside PBL (1), either (2), or none (3), for change locations
+    RETURN
+        - returns boolean vector for all change locations
+          (True if inside PBL), length given by z.size-1
+    """
+    hpbl[hpbl<sethpbl] = sethpbl
+    befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
+    after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
+    if cpbl_strict == 1:
+        change_inside = np.logical_and(befor_inside, after_inside)
+    elif cpbl_strict == 2:
+        change_inside = np.logical_or(befor_inside, after_inside)
+    elif cpbl_strict == 3:
+        change_inside = np.ones(dtype=bool, shape=befor_inside)
     return change_inside
 
 
