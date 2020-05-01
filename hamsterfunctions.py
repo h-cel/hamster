@@ -543,7 +543,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   ### THIS ONE MAY MAKE NO SENSE YET, AS P << DQDT_MAX (P<<AMIC) 
   ## I AM RETURNING 0 ATTRIBUTION FOR NOW; THIS HAPPENS QUITE OFTEN THOUGH
   ## IT'S MORE LIKE MINIMUM ATTRIBUTION!
-    amic = np.min([np.min(qtot[1:]),dqdt[0]])
+    amic = np.min([np.min(qtot[1:]),dqdt[-1]])
     prec = dqdt[0]+amic
     #print("Not attributable fraction: "+str(amic/abs(dqdt[0])))
     if amic/abs(dqdt[0]) >= 1:
