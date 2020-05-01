@@ -33,6 +33,7 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
 import csv
+import random
 
 ###########################################################################
 ##--- PATHS
@@ -137,6 +138,8 @@ if args.steps == 2 or args.steps == 4:
               ftimethis=args.timethis, 
               fdry=args.fallingdry,
               fmemento=args.memento,
+              mattribution=args.mattribution,
+              crandomnit=args.randomnit,
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,

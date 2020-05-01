@@ -61,6 +61,8 @@ def read_cmdargs():
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         type = str,     default = "linear")
+    parser.add_argument('--randomnit',  '-rnit',help = "minimum number of iterations for random attribution",           type = int,     default = 1)
     parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               type = str,     default = "none")
     parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          type = str2bol, default = False,    nargs='?')
     parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        type = str2bol, default = False,    nargs='?')
@@ -494,6 +496,73 @@ def linear_attribution_p(qv,iupt,explainp):
         # no upscaling
         etop        = prec*fw_orig
     return(etop)
+
+def local_minima(x):
+    return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
+
+def random_attribution_p(qtot,iupt,explainp,nmin=1):
+  qtot = qtot*1000
+  # This is only coded for precipitation as of now
+  # with:
+  # qtot = specific humidity
+  # iupt = identified uptake locations
+  # explainp = none(default)/full/max analogue to linear discounting & attribution
+  #  - none: 100% is attributed to iupt + initial condition (~not explained)
+  #  - full: 100% is attributed to iupt (if possible!)
+  #  - max: (100% - initial condition) is attributed to iupt (TO BE TESTED & CHANGED!)
+  # nmin = tuning parameter; ~minimum iterations 
+  #  - the higher this value, the more iterations, the uptake locations are covered
+  #  - a value of 10 enforces min. 10 iterations
+  dqdt = qtot[:-1] - qtot[1:]
+  # append initial condition as artificial uptake
+  dqdt = np.append(dqdt,qtot[-1])
+  nt  = len(dqdt)
+  if explainp=="none":
+    iupt = np.append(iupt,nt-1)
+  # indicator for potential uptake locations (1: yes, 0: no)
+  pupt = np.zeros(shape=len(dqdt))
+  pupt[iupt]=1
+  # number of potential uptake locations
+  nupt = len(np.where(pupt==1)[0])
+  if explainp=="max":
+  ### THIS ONE MAY MAKE NO SENSE YET, AS P << DQDT_MAX (P<<AMIC) 
+  ## I AM RETURNING 0 ATTRIBUTION FOR NOW; THIS HAPPENS QUITE OFTEN THOUGH
+  ## IT'S MORE LIKE MINIMUM ATTRIBUTION!
+    amic = np.min([np.min(qtot[1:]),dqdt[0]])
+    prec = dqdt[0]+amic
+    #print("Not attributable fraction: "+str(amic/abs(dqdt[0])))
+    if amic/abs(dqdt[0]) >= 1:
+      return(np.zeros(shape=len(dqdt)))
+  else:
+    prec = dqdt[0]
+  ## starting the random attribution loop
+  dqdt_random = np.zeros(shape=len(dqdt))
+  expl      = 0
+  icount    = 0
+  while expl < abs(prec):
+    i    = random.randint(0,nupt-1) # get a random uptake location number
+    ii   = np.where(pupt==1)[0][i]  # uptake location index
+    # determine maximum attribution for current uptake location and iteration
+    imin        = min(np.where(local_minima(qtot[:ii]))[0][1:],default=1)
+    iatt        = qtot[imin]-np.sum(dqdt_random[ii:]) 
+    idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
+    # get random value
+    #rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin, abs(prec)-expl))
+    rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
+    if (expl+rvalue) > abs(prec):
+      rvalue    += -(expl+rvalue - abs(prec))
+    expl  += rvalue
+    dqdt_random[ii] += rvalue
+    icount += 1
+    # safety exit (e.g. sum of dqdt_max cannot fully explain prec)
+    if (icount >= 10000*nmin):
+        print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
+        print(str(qtot))
+        print(str(dqdt))
+        break
+  #print("Iterations:"+str(icount)+" for nupt="+str(nupt)+" with P="+str(dqdt[0])+" with E2Prandom="+str(np.sum(dqdt_random)))
+  return(dqdt_random/1000)
+
 
 def gridder(plon, plat, pval,
             glat, glon):

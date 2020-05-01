@@ -30,6 +30,8 @@ def main_attribution(
            ftimethis,
            fdry,
            fmemento,
+           mattribution,
+           crandomnit,
            explainp,fdupscale,fmupscale,
            fcc_advanced,fvariable_mass,fwritestats,
            strargs):
@@ -37,6 +39,12 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
+    if fwritestats and mattribution=="random":
+        print(" - Option <writestats> not yet available for attribution method random. Continuing anyhow...")
+    if mattribution=="random":
+        print(" !!! WARNING! THIS IS JUST A PLAYGROUND...")
+    if mattribution=="random" and explainp=="max":
+        print(" - Option <explainp> with value 'max' has not been validated yet...")  
  
     #### OUTPUT FILES
     mainpath  = ipath+str(ryyyy)+"/"
@@ -48,8 +56,8 @@ def main_attribution(
     sfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
     statfile  = opath+"/"+sfilename
     # trajectory-based precipitation statistics
-    if fwritestats:
-        pfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pattribution.csv"
+    if fwritestats and mattribution=="linear":
+        pfilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_p-linear-attribution.csv"
         pattfile  = opath+"/"+pfilename
         with open(pattfile,'w') as pfile:
                 writer=csv.writer(pfile, delimiter='\t', lineterminator='\n',)
@@ -350,7 +358,7 @@ def main_attribution(
                             evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0]
                            
                             # WRITE STATS
-                            if fwritestats:
+                            if fwritestats and mattribution=="linear":
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
                                 elif evap_idx.size>0:
@@ -368,7 +376,10 @@ def main_attribution(
                             
                             # ATTRIBUTION
                             if evap_idx.size>0:
-                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                if mattribution=="linear":
+                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                elif mattribution=="random":
+                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,nmin=crandomnit)
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
@@ -448,7 +459,7 @@ def main_attribution(
                             evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                                
                             # WRITE STATS
-                            if fwritestats:
+                            if fwritestats and mattribution=="linear":
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
                                 elif evap_idx.size>0:
@@ -466,7 +477,11 @@ def main_attribution(
                             
                             # ATTRIBUTION
                             if evap_idx.size>0:
-                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                if mattribution=="linear":
+                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                elif mattribution=="random":
+                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                    print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
@@ -546,7 +561,7 @@ def main_attribution(
                             evap_idx    = np.where(is_uptk)[0] 
 
                             # WRITE STATS
-                            if fwritestats:
+                            if fwritestats and mattribution=="linear":
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
                                 elif evap_idx.size>0:
@@ -564,7 +579,10 @@ def main_attribution(
                             
                             # ATTRIBUTION
                             if evap_idx.size>0:
-                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                if mattribution=="linear":
+                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                elif mattribution=="random":
+                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 for itj in evap_idx:
                                     ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
