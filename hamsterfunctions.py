@@ -422,7 +422,7 @@ def PBL_check(cpbl_strict, z, hpbl, sethpbl):
     elif cpbl_strict == 2:
         change_inside = np.logical_or(befor_inside, after_inside)
     elif cpbl_strict == 3:
-        change_inside = np.ones(dtype=bool, shape=befor_inside)
+        change_inside = np.ones(dtype=bool, shape=befor_inside.size)
     return change_inside
 
 
