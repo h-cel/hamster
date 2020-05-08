@@ -378,7 +378,7 @@ def main_attribution(
                             # ATTRIBUTION
                             if evap_idx.size>0:
                                 if mattribution=="linear":
-                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,nmin=crandomnit)
                                 for itj in evap_idx:
@@ -479,7 +479,7 @@ def main_attribution(
                             # ATTRIBUTION
                             if evap_idx.size>0:
                                 if mattribution=="linear":
-                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                     print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
@@ -581,7 +581,7 @@ def main_attribution(
                             # ATTRIBUTION
                             if evap_idx.size>0:
                                 if mattribution=="linear":
-                                    etop    = linear_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 for itj in evap_idx:
