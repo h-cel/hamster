@@ -737,12 +737,14 @@ def main_attribution(
         writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
         writer.writerow([" "])
         writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
-        writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
+        if tnnevala!=tneval:
+            writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
         if tnevalh!=0:
             writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
         writer.writerow([" "])
         writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
-        writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+        if tnnevalm!=tneval:
+            writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
         if tnevalp!=0:
             writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
         writer.writerow([" "])
