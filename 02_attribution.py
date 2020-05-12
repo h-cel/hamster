@@ -244,6 +244,10 @@ def main_attribution(
                 print("--------------------------------------------------------------------------------------")
         print("Processing "+str(fdatetime_seq[ix]))
 
+        # safety exit hardcoded for FLEXPART–ERA-Interim runs
+        if ryyyy==ayyyy and am==12 and ix==range(ntime)[-1]:
+            continue
+
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readpom( idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
