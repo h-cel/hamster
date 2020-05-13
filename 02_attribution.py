@@ -392,6 +392,7 @@ def main_attribution(
                                 punatt  += prec-np.sum(etop[evap_idx])
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
+                                    ipmiss      += prec-np.sum(etop[evap_idx])
 
                     ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
                     if not mask[alat_ind,alon_ind]==maskval:
@@ -494,7 +495,7 @@ def main_attribution(
                                 punatt  += prec-np.sum(etop[evap_idx])
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
-  
+                                    ipmiss      += prec-np.sum(etop[evap_idx]) 
     
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
                     if not mask[alat_ind,alon_ind]==maskval:
@@ -595,7 +596,7 @@ def main_attribution(
                                 punatt  += prec-np.sum(etop[evap_idx])
                                 if fdupscale:
                                     ipatt       += np.sum(etop[evap_idx])
-   
+                                    ipmiss      += prec-np.sum(etop[evap_idx]) 
 
                     ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
                     if not mask[alat_ind,alon_ind]==maskval:
@@ -677,7 +678,7 @@ def main_attribution(
         ## SOME DAILY CALCULATIONS
         if ( (ix+1)%4==0 ):
             # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
-            if fdupscale and nnevalp!=0:
+            if fdupscale and (nnevalp!=0 or ipmiss!=0):
                 if ipatt==0:
                     warnings.warn(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
                 else:
