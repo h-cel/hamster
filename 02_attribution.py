@@ -709,11 +709,11 @@ def main_attribution(
         tnnevalh+= nnevalh
     
     # MONTHLY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
-    if fmupscale and pmiss!=0:
+    if fmupscale and (pmiss!=0 or punatt!=0):
         if patt==0:
             print(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
         else:
-            upsfac              = 1+(pmiss/patt)
+            upsfac              = 1+((pmiss+punatt)/patt)
             # load full etop array and upscale
             fdata       = nc4.Dataset(ofile,'r+')
             uns_etop    = fdata.variables['E2P'][:]
@@ -721,8 +721,9 @@ def main_attribution(
             fdata.variables['E2P'][:]= ups_etop
             fdata.close()
             # corrections for final statistics
-            patt                += np.sum(pmiss)
+            patt                += np.sum(pmiss) +np.sum(punatt)
             pmiss               += -np.sum(pmiss)
+            punatt              += -np.sum(punatt)
             if verbose:
                 print(" * Monthly upscaling for unattributed precipitation... (factor: {:.4f}".format(upsfac)+")")
 
