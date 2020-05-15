@@ -538,6 +538,10 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   pupt[iupt]=1
   # number of potential uptake locations
   nupt = len(np.where(pupt==1)[0])
+  # adjust minimum number of iterations
+  if nmin < nupt:
+      nmin=nupt
+  #
   if explainp=="max":
   ### THIS ONE MAY MAKE NO SENSE YET, AS P << DQDT_MAX (P<<AMIC) 
   ## I AM RETURNING 0 ATTRIBUTION FOR NOW; THIS HAPPENS QUITE OFTEN THOUGH
