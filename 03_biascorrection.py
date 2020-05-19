@@ -185,12 +185,13 @@ def main_biascorrection(
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
-    xla, xlo = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
-    weights = gridded_area_exact_1D_TEMPORARY(lats_centr=lats[xla], res=1.0, R=6371)
-    ibgn = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
-    PrefTS    =  np.nansum(weights*Pref[ibgn:,xla, xlo], axis=1)/np.nansum(weights)
-    PtotTS  =  np.nansum(weights*Ptot[ibgn:,xla, xlo], axis=1)/np.nansum(weights)
-        
+    xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
+    areas       = gridded_area_exact_1D_TEMPORARY(lats_centr=lats[xla], res=1.0, R=6371)
+    weights     = areas/np.nansum(areas)
+    ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
+    PrefTS      = np.nansum(weights*Pref[ibgn:,xla, xlo], axis=1)
+    PtotTS      = np.nansum(weights*Ptot[ibgn:,xla, xlo], axis=1)
+
     ## here is where the magic (part I) happens.
     #******************************************************************************
     alpha_Had = Had / Htot
