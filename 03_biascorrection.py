@@ -162,7 +162,7 @@ def main_biascorrection(
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
-    Pref = eraloader_12hourly(var='tp',
+    Pref = -eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      uptake_years=uyears,
@@ -218,7 +218,7 @@ def main_biascorrection(
     
     ## for P-scaling, a bit more effort is required: 
     # 1. figure out relative P bias per arrival day (NOT per uptake day!)
-    Pratio =  PrefTS / -PtotTS # make sure this stays positive
+    Pratio =  PrefTS / PtotTS # make sure this stays positive
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
     
     # 2.) now check how much E2P changed due to E-scaling already
