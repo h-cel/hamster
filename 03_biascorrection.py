@@ -153,21 +153,23 @@ def main_biascorrection(
     Eref = eraloader_12hourly(var='e',
                      datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
+                     maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
         
     Href = eraloader_12hourly(var='sshf',
                      datapath=ipathR+"/sshf_12hourly/H_1deg_",
                      maskpos=True,
+                     maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
     Pref = -eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
+                     maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
-    
     
     ##--4. scale ##################################################################
     

@@ -942,7 +942,7 @@ def freakshow(pommaskpath):
     return(mask1deg, lat1deg, lon1deg)
     
 
-def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats, lons):
+def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):
     """
     quickly adjusted to enable multi-annual support at the cost of reading in
     two entire years, instead of just what is needed.
@@ -977,6 +977,9 @@ def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats,
     ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
     if maskpos:
         array[array>0] = np.NaN
+    ## mask negative values (P only!)
+    if maskneg:
+        array[array<0] = 0
             
     ## aggregate to daily
     refudates = np.unique(refdates)
