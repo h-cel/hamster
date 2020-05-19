@@ -229,12 +229,12 @@ def main_biascorrection(
     ################ update: yeah, it is even crappier now thanks to having
     ################ reintroduced some old-ass function, to be fixed
     ## create 3D weights to be fed into nanweight function
-    areas = gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371)
-    weights2D = areas.repeat(lons.size).reshape(lats.size, lons.size)
-    weights3D = np.broadcast_to(array=weights2D, shape=(arrival_time.size, lats.size, lons.size))
-    E2P_Escaled_ts = nanweight3Dary(array=np.nansum(E2P_Escaled, axis=1), weights=weights3D)
-    E2P_ts         = nanweight3Dary(array=np.nansum(E2P, axis=1), weights=weights3D)
-    f_Escaled      = E2P_Escaled_ts / E2P_ts
+    gareas          = gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371)
+    weights2D       = gareas.repeat(lons.size).reshape(lats.size, lons.size)
+    weights3D       = np.broadcast_to(array=weights2D, shape=(arrival_time.size, lats.size, lons.size))
+    E2P_Escaled_ts  = nanweight3Dary(array=np.nansum(E2P_Escaled, axis=1), weights=weights3D)
+    E2P_ts          = nanweight3Dary(array=np.nansum(E2P, axis=1), weights=weights3D)
+    f_Escaled       = E2P_Escaled_ts / E2P_ts
     
     # 3.) alright, now calculate how much more scaling is needed to match P too
     f_remain = Pratio / f_Escaled
