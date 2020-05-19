@@ -87,7 +87,7 @@ def main_biascorrection(
             totlons = f['lon'][:]
             
         if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
-            raise SystemExit("------ no can do")
+            raise SystemExit("--- ERROR: your grids aren't identical...")
     
     ## must check if data comes in daily resolution; fix if not
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in time])
