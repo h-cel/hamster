@@ -241,7 +241,6 @@ def main_biascorrection(
         plt.plot(f_remain, label="remaining scaling factor")
         plt.plot(Pratio, label="P ratio (REF/FLEX)")
         plt.legend()
-        plt.title("note: ratio is negative because FLEX-P is <0")
         plt.show()    
     
     #******************************************************************************
