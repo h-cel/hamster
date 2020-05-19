@@ -187,7 +187,7 @@ def main_biascorrection(
     if verbose: print("---- INFO: area-weighting precipitation data...")
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     xareas      = gridded_area_exact_1D_TEMPORARY(lats_centr=lats[xla], res=1.0, R=6371)
-    xweights    = areas/np.nansum(areas)
+    xweights    = xareas/np.nansum(xareas)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     PrefTS      = np.nansum(xweights*Pref[ibgn:,xla, xlo], axis=1)
     PtotTS      = np.nansum(xweights*Ptot[ibgn:,xla, xlo], axis=1)
