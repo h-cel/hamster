@@ -208,7 +208,7 @@ def main_biascorrection(
     ## have a look if you're curious
     if fdebug:
         alphascreener(alpha_Had, var='Had')
-        alphascreener(-alpha_E2P, var='E2P') # feed in >0 alphas for simplicity
+        alphascreener(alpha_E2P, var='E2P')
     
     ## here comes the magic (part II); plugging in reference dat; DONE
     #******************************************************************************
