@@ -953,7 +953,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     with nc4.Dataset(datapath+str(uyears[0])+'.nc', mode='r') as f: 
         reflats   = np.asarray(f['latitude'][:])
         reflons   = np.asarray(f['longitude'][:])
-        reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+        reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
         refdates  = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
         array     = np.asarray(f[var][:,:,:]) # not ideal to load everything..
         units     = f[var].units
@@ -961,7 +961,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     for ii in range(1,uyears.size):
 
         with nc4.Dataset(datapath+str(uyears[ii])+'.nc', mode='r') as f:
-            reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+            reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
             reftime  = np.concatenate((reftime, reftimeY))
             refdates = np.concatenate((refdates, np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftimeY])))
             array    = np.concatenate((array, np.asarray(f[var][:,:,:])), axis=0)
