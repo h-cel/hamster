@@ -976,7 +976,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
         
     ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
     if maskpos:
-        array[array>0] = np.NaN
+        array[array>0] = 0
     ## mask negative values (P only!)
     if maskneg:
         array[array<0] = 0
