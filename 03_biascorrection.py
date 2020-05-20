@@ -226,10 +226,10 @@ def main_biascorrection(
     ## convert from mm to m3 as for P before, take areas into account
     E2P_Escaled_ts  = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
     E2P_ts          = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
-    f_Escaled       = E2P_Escaled_ts / E2P_ts
+    f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
     
     # 3.) alright, now calculate how much more scaling is needed to match P too
-    f_remain = Pratio / f_Escaled
+    f_remain = np.divide(Pratio, f_Escaled)
     
     if fdebug:
         plt.figure
