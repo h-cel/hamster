@@ -227,6 +227,13 @@ def main_biascorrection(
     E2P_Escaled_ts  = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
     E2P_ts          = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
     f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
+    ### Jessica: I believe the part below should be correct. It gives 1e-8 differences in E2P_EPscaled though, as a result of different f_Escaled
+    ### ... to test, just uncomment the next lines
+    #print(f_Escaled)
+    #E2P_Escaled_ts  = np.nansum(np.multiply(areas,E2P_Escaled/1e3),axis=(1,2,3))
+    #E2P_ts          = np.nansum(np.multiply(areas,E2P/1e3),axis=(1,2,3))
+    #f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
+    #print(f_Escaled)
     
     # 3.) alright, now calculate how much more scaling is needed to match P too
     f_remain = np.divide(Pratio, f_Escaled)
