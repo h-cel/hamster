@@ -41,7 +41,7 @@ def main_biascorrection(
         uptake_time  = nc4.num2date(f['uptake-time'][:], f['uptake-time'].units, f['uptake-time'].calendar)
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
-    
+        areas        = 1e6*np.nan_to_num(gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371))
     
     date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day) 
     date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day) 
@@ -185,11 +185,10 @@ def main_biascorrection(
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
-    areas       = gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371) # also used below
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     # convert from mm to m3
-    PrefTS      = np.nansum(1e6*areas[xla]*Pref[ibgn:,xla,xlo], axis=1)/1e3
-    PtotTS      = np.nansum(1e6*areas[xla]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
+    PrefTS      = np.nansum(areas[xla]*Pref[ibgn:,xla,xlo], axis=1)/1e3
+    PtotTS      = np.nansum(areas[xla]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
 
     ## here is where the magic (part I) happens.
     #******************************************************************************
@@ -225,8 +224,8 @@ def main_biascorrection(
     
     # 2.) now check how much E2P changed due to E-scaling already
     ## convert from mm to m3 as for P before, take areas into account
-    E2P_Escaled_ts  = np.nansum(1e6*areas*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
-    E2P_ts          = np.nansum(1e6*areas*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
+    E2P_Escaled_ts  = np.nansum(areas*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
+    E2P_ts          = np.nansum(areas*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
     f_Escaled       = E2P_Escaled_ts / E2P_ts
     
     # 3.) alright, now calculate how much more scaling is needed to match P too
