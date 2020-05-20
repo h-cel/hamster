@@ -473,7 +473,7 @@ def main_attribution(
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                     print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
                                 for itj in evap_idx:
-                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
@@ -512,7 +512,7 @@ def main_attribution(
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
                                 #NOTE: hardcoded for writing daily data 
-                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                             # update parcel log
                             if fmemento:
