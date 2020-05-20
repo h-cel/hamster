@@ -751,7 +751,7 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,
     nc_f['H_n_part'][ix,:,:]  = ary_hnpart
     nc_f.close()
 
-def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
+def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision):
                 
     # delete nc file if it is present (avoiding error message)
     try:
@@ -763,18 +763,18 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
     
     # create dimensions 
-    nc_f.createDimension('arrival-time', len(fdate_seq))
-    nc_f.createDimension('uptake-time', len(fuptdate_seq))
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('level', upt_days.size) # could use len() too
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    atimes              = nc_f.createVariable('arrival-time', 'f8', 'arrival-time')
-    utimes              = nc_f.createVariable('uptake-time', 'f8', 'uptake-time')
+    atimes              = nc_f.createVariable('time', 'f8', 'time')
+    utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('arrival-time','uptake-time','lat','lon'))
-    etops               = nc_f.createVariable('E2P', precision, ('arrival-time','uptake-time','lat','lon'))
+    heats               = nc_f.createVariable('H', precision, ('time','level','lat','lon'))
+    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'))
     
     # set attributes
     nc_f.title          = "Attribution (02) of sources using FLEXPART output"
@@ -785,8 +785,8 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
-    utimes.units        = 'hours since 1900-01-01 00:00:00'
-    utimes.calendar     = 'Standard' 
+    utimes.long_name    = 'Difference between uptake and arrival time, in days'
+    utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     heats.units         = 'W m-2'
@@ -796,15 +796,14 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
   
     # write data
     atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)[:]
-    utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)[:]
+    utimes[:]           = upt_days[:]
     longitudes[:]       = glon[:]
     latitudes[:]        = glat[:]
         
     # close file
     nc_f.close()
 
-    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(len(fuptdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
-
+    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(upt_days.size)+","+str(glat.size)+","+str(glon.size)+") !")
         
 def writenc4D(ofile,ix,ary_etop,ary_heat):
     if verbose:
