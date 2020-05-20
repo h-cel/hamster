@@ -115,31 +115,21 @@ def main_attribution(
         fdatetime_seq.append(idatetime)
         idatetime += timestep
 
-    # add uptake time dimension
+    # figure out when first uptakes occur (for pre-loop)
     uptdatetime_bgn = datetime_bgn - datetime.timedelta(days=ctraj_len) - datetime.timedelta(hours=3)
-    fuptdatetime_seq   = []
-    iuptdatetime       = uptdatetime_bgn
-    while iuptdatetime < datetime_end - datetime.timedelta(hours=3):
-        fuptdatetime_seq.append(iuptdatetime)
-        iuptdatetime += timestep
 
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
     fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
-    fuptdate_seq = np.unique([fdt.date() for fdt in fuptdatetime_seq]).tolist()
     # keep a copy of datetime.date formatted list for arv_idx further below
     fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
     # convert these datetime.date objects to datetime.datetime objects for netCDF writing
     for idt in range(len(fdate_seq)):
         fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
-    for idt in range(len(fuptdate_seq)):
-        fuptdate_seq[idt] = datetime.datetime(fuptdate_seq[idt].year, fuptdate_seq[idt].month, fuptdate_seq[idt].day)
     # NOTE: better to keep these as lists to maintain consistency
 
     # calculate number of time steps, also aggregated to daily resolution
     ntime           = len(fdatetime_seq)
-    nupttime        = len(fuptdatetime_seq)
     ndaytime        = len(fdate_seq)
-    ndayupttime     = len(fuptdate_seq)
 
     ## TESTMODE
     if mode == "test":
@@ -154,18 +144,14 @@ def main_attribution(
         fdate_seq        = fdate_seq[ctraj_len:ctraj_len+ndaytime]
         fdateasdate      = fdateasdate[ctraj_len:ctraj_len+ndaytime]
 
-        nupttime         = ntime + 4*ctraj_len
-        # NOTE: this is not coded 'universally' at this point... CAUTION
-        fuptdatetime_seq = fuptdatetime_seq[4*ctraj_len_orig:4*ctraj_len_orig+nupttime]
-        ndayupttime      = ctraj_len + 1
-        fuptdate_seq     = fuptdate_seq[ctraj_len_orig:ctraj_len_orig+ndayupttime]
-
     ## -- WRITE NETCDF OUTPUT (empty, to be filled)
     if fwrite_netcdf:
-        writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision)
+        writeemptync4D(ofile,fdate_seq,np.arange(-ctraj_len,1),glat,glon,strargs,precision)
 
-    # traj max len
-    tml = nupttime - ntime
+    # traj max len, expressed in input data (6-hourly) steps
+    tml = 4*ctraj_len # hardcoded for 6-hourly input
+    # compact form of max traj len in days (used for array filling w/ shortened uptake dim)
+    ctl = ctraj_len
 
     ## prepare parcel log to handle trajectories properly 
     if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
@@ -227,8 +213,6 @@ def main_attribution(
     
     
     ###--- MAIN LOOP
-    ## prepare uptake indices
-    upt_idx = np.asarray([floor(x) for x in np.arange(0,nupttime)/4])
 
     ## prepare STATS
     # number of parcels
@@ -268,8 +252,8 @@ def main_attribution(
 
         # pre-allocate arrays (repeat at every 4th step)
         if ix%4==0:
-            ary_heat     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
-            ary_etop     = np.zeros(shape=(ndayupttime,glat.size,glon.size))
+            ary_heat     = np.zeros(shape=(ctl+1,glat.size,glon.size))
+            ary_etop     = np.zeros(shape=(ctl+1,glat.size,glon.size))
             # upscaling measures (currently has to be per day as well)
             if fdupscale:
                 ipatt = ipmiss = 0
@@ -386,7 +370,7 @@ def main_attribution(
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,nmin=crandomnit)
                                 for itj in evap_idx:
-                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
@@ -427,7 +411,7 @@ def main_attribution(
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
                                 #NOTE: hardcoded for writing daily data 
-                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                             # update parcel log
                             if fmemento:
@@ -489,7 +473,7 @@ def main_attribution(
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                     print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
                                 for itj in evap_idx:
-                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
@@ -528,7 +512,7 @@ def main_attribution(
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
                                 #NOTE: hardcoded for writing daily data 
-                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                             # update parcel log
                             if fmemento:
@@ -590,7 +574,7 @@ def main_attribution(
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 for itj in evap_idx:
-                                    ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
                                 patt    += np.sum(etop[evap_idx])
                                 punatt  += prec-np.sum(etop[evap_idx])
@@ -628,7 +612,7 @@ def main_attribution(
                             # loop through sensible heat uptakes
                             for itj in heat_idx:
                                 #NOTE: hardcoded for writing daily data 
-                                ary_heat[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
                             # update parcel log
                             if fmemento:

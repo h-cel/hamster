@@ -43,17 +43,16 @@ import random
 wpath = os.getcwd()
 
 ## load input and output paths & input file name base(s)
-with open(wpath+"/paths.txt") as f: 
-    content = imp.load_source('','',f) # load like a python module
-    ipath_REF = content.ipath_REF # input path (01_diagnosis)
-    ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
-    ibase_DGN = content.ibase_DGN # input file name base(s)
-    opath_DGN = content.opath_DGN # output path
-    ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
-    ibase_ATR = content.ibase_ATR 
-    opath_ATR = content.opath_ATR 
-    opath_BIA = content.opath_BIA
-    maskfile  = content.maskfile
+content = imp.load_source('',wpath+"/paths.txt") # load like a python module
+ipath_REF = content.ipath_REF # input path (01_diagnosis)
+ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
+ibase_DGN = content.ibase_DGN # input file name base(s)
+opath_DGN = content.opath_DGN # output path
+ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
+ibase_ATR = content.ibase_ATR
+opath_ATR = content.opath_ATR
+opath_BIA = content.opath_BIA
+maskfile  = content.maskfile
 
 ###########################################################################
 ##--- MAIN
