@@ -192,8 +192,8 @@ def main_biascorrection(
 
     ## here is where the magic (part I) happens.
     #******************************************************************************
-    alpha_Had = Had / Htot
-    alpha_E2P = E2P / Etot 
+    alpha_Had = np.divide(Had, Htot)
+    alpha_E2P = np.divide(E2P, Etot)
     #******************************************************************************
    
     ## NOTE: as of now, there is absolutely no check whatsoever concerning
@@ -213,8 +213,8 @@ def main_biascorrection(
     
     ## here comes the magic (part II); plugging in reference dat; DONE
     #******************************************************************************
-    Had_Hscaled  = alpha_Had * Href
-    E2P_Escaled  = alpha_E2P * Eref
+    Had_Hscaled  = np.multiply(alpha_Had, Href)
+    E2P_Escaled  = np.multiply(alpha_E2P, Eref)
     #******************************************************************************
     
     ## for P-scaling, a bit more effort is required: 
