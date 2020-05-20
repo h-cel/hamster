@@ -186,11 +186,11 @@ def main_biascorrection(
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
-    xareas      = gridded_area_exact_1D_TEMPORARY(lats_centr=lats[xla], res=1.0, R=6371)
-    xweights    = xareas/np.nansum(xareas)
+    areas       = gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371) # also used below
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
-    PrefTS      = np.nansum(xweights*Pref[ibgn:,xla, xlo], axis=1)
-    PtotTS      = np.nansum(xweights*Ptot[ibgn:,xla, xlo], axis=1)
+    # convert from mm to m3
+    PrefTS      = np.nansum(1e6*areas[xla]*Pref[ibgn:,xla,xlo], axis=1)/1e3
+    PtotTS      = np.nansum(1e6*areas[xla]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
 
     ## here is where the magic (part I) happens.
     #******************************************************************************
@@ -225,15 +225,9 @@ def main_biascorrection(
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
     
     # 2.) now check how much E2P changed due to E-scaling already
-    ################ TODO: this part is pretty crappy, to be improved #############
-    ################ update: yeah, it is even crappier now thanks to having
-    ################ reintroduced some old-ass function, to be fixed
-    ## create 3D weights to be fed into nanweight function
-    gareas          = gridded_area_exact_1D_TEMPORARY(lats_centr=lats, res=1.0, R=6371)
-    gareas2d        = gareas.repeat(lons.size).reshape(lats.size, lons.size)
-    gareas3d        = np.broadcast_to(array=gareas2d, shape=(arrival_time.size, lats.size, lons.size))
-    E2P_Escaled_ts  = nanweight3Dary(array=np.nansum(E2P_Escaled, axis=1), weights=gareas3d)
-    E2P_ts          = nanweight3Dary(array=np.nansum(E2P, axis=1), weights=gareas3d)
+    ## convert from mm to m3 as for P before, take areas into account
+    E2P_Escaled_ts  = np.nansum(1e6*areas*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
+    E2P_ts          = np.nansum(1e6*areas*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
     f_Escaled       = E2P_Escaled_ts / E2P_ts
     
     # 3.) alright, now calculate how much more scaling is needed to match P too
