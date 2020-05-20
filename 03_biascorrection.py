@@ -15,7 +15,6 @@ def main_biascorrection(
            opath, ofile_base,           # output
            maskfile,
            maskval,
-           set_negERA_to0,    
            verbose,
            fdebug,
            fwrite_netcdf,
