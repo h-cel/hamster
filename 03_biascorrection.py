@@ -35,17 +35,29 @@ def main_biascorrection(
 
     ##--1. load attribution data; grab all uptake days ############################    
     with nc4.Dataset(attrfile, mode="r") as f:
-        E2P          = np.asarray(f['E2P'][:])
-        Had          = np.asarray(f['H'][:])
-        arrival_time = nc4.num2date(f['arrival-time'][:], f['arrival-time'].units, f['arrival-time'].calendar)
-        uptake_time  = nc4.num2date(f['uptake-time'][:], f['uptake-time'].units, f['uptake-time'].calendar)
+        E2Psrt       = np.asarray(f['E2P'][:])
+        Hadsrt       = np.asarray(f['H'][:])
+        arrival_time = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+        utime_srt    = np.asarray(f['level'][:])
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
-    
-    date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day) 
-    date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day) 
-    
+
+    ## expand uptake dimension to conform to original approach
+    utime_first = arrival_time[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
+    uptake_time = np.asarray([utime_first+timedelta(days=nday) for nday in range(utime_srt.size-1+arrival_time.size)])
+
+    date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
+    date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
+
+    ## 'reshape' arrays accordingly
+    E2P = np.empty(shape=(arrival_time.size,uptake_time.size,lats.size,lons.size))
+    Had = np.empty(shape=(arrival_time.size,uptake_time.size,lats.size,lons.size))
+    for iat in range(arrival_time.size):
+        E2P[iat,iat:iat+utime_srt.size,:,:] = E2Psrt[iat,:,:,:]
+        Had[iat,iat:iat+utime_srt.size,:,:] = Hadsrt[iat,:,:,:]
+    del(E2Psrt, Hadsrt) # not needed anymore
+
     
     ##--2. load diagnosis data ####################################################
     ## NOTE: this was first coded with the intention of being able to deal with
