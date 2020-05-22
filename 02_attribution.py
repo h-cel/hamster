@@ -153,17 +153,15 @@ def main_attribution(
     # compact form of max traj len in days (used for array filling w/ shortened uptake dim)
     ctl = ctraj_len
 
-    ## prepare parcel log to handle trajectories properly 
-    if fmemento: # NOTE: must fill array with negative number whose abs exceeds max traj len  
-        pidlog = -999*np.ones(shape=2000001).astype(int) 
-
-
-    ###--- pre-loop to produce independent monthly output
+    ### MEMENTO --- pre-loop to produce independent monthly output
     ## NOTE: this is irrelevant for E2P, but crucial for Had (& Ead)
     ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
-    if fmemento and mode == "oper": # skip if multi-counting somehow desired and/or if testing
-
-        pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
+    ## NOTE: must fill array with negative number whose abs exceeds max traj len  
+    if fmemento: 
+        pidlog = -999*np.ones(shape=2000001).astype(int) 
+        
+        if mode == "oper": # skip if multi-counting somehow desired and/or if testing
+            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
                          ipath, ifile_base, ryyyy,
                          mask, mlat, mlon, maskval,
                          pidlog, tml,
