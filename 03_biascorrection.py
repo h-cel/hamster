@@ -21,6 +21,11 @@ def main_biascorrection(
            fwrite_netcdf,
            precision,
            strargs):
+    
+    # Consistency checks
+    if mode=="oper" and precision=="f4":
+        precision = "f8"
+        print("Single precision should only be used for testing. Reset to double-precision.")
 
     ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
     ## suppressing warnings, such as
