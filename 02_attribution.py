@@ -298,10 +298,9 @@ def main_attribution(
                                 ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                                     
                             # identify evaporative moisture uptakes
-                            is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], sethpbl=cevap_hgt)
-                            is_uptk     = (dTHe[:ihf_E-1] - dTH[:ihf_E-1]) > cheat_dtemp 
-                            is_uptkcc   = np.abs(dTH[:ihf_E-1]) < cevap_cc * (dq[:ihf_E-1]) * dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E])
-                            evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0]
+                            evap_idx = uptake_locator_KAS(cevap_hgt, cpbl_strict, hgt[:ihf_E], hpbl[:ihf_E],
+                                                          (dTHe-dTH)[:ihf_E-1], cheat_dtemp, dTH[:ihf_E-1], dq[:ihf_E-1], cevap_cc,
+                                                          dTdqs(p_hPa=pres[1:ihf_E]/1e2, q_kgkg=qv[1:ihf_E]))
                            
                             # WRITE STATS
                             if fwritestats and mattribution=="linear":
@@ -353,10 +352,9 @@ def main_attribution(
                             dTH         = trajparceldiff(pottemp[:], 'diff')
                             
                             # identify sensible heat uptakes (NOTE: ihf_H is technically not needed below)
-                            is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
-                            is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
-                            is_uptkcc   = np.abs(dq[:ihf_H-1]) < cheat_cc * (dTH[:ihf_H-1]) * dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF)
-                            heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0]
+                            heat_idx = uptake_locator_KAS(cheat_hgt, cpbl_strict, hgt[:ihf_H], hpbl[:ihf_H],
+                                                          dTH[:ihf_H-1], cheat_dtemp, dq[:ihf_H-1], dTH[:ihf_H-1], cheat_cc,
+                                                          dqsdT(p_hPa=pres[1:ihf_H]/1e2, T_degC=temp[1:ihf_H]-TREF))
 
                             # discount uptakes linearly
                             if heat_idx.size==0:
