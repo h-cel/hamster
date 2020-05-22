@@ -13,6 +13,7 @@ def main_biascorrection(
            opathD, # diagnosis (output)
            ipathR, # reference data (input)
            opath, ofile_base,           # output
+           mode,
            maskfile,
            maskval,
            verbose,

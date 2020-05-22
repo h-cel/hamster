@@ -155,6 +155,7 @@ if args.steps == 3 or args.steps == 4:
                ipathR=ipath_REF,
                opath=opath_BIA, 
                ofile_base=args.expid, # output
+               mode=args.mode,
                maskfile=maskfile,
                maskval=args.maskval,
                verbose=args.verbose,
