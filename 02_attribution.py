@@ -46,6 +46,11 @@ def main_attribution(
         print(" !!! WARNING! THIS IS JUST A PLAYGROUND...")
     if mattribution=="random" and explainp=="max":
         print(" - Option <explainp> with value 'max' has not been validated yet...")  
+    
+    # Consistency checks
+    if mode=="oper" and precision=="f4":
+        precision = "f8"
+        print("Single precision should only be used for testing. Reset to double-precision.")
  
     #### OUTPUT FILES
     mainpath  = ipath+str(ryyyy)+"/"
