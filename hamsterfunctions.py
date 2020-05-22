@@ -1124,3 +1124,55 @@ def append2csv(filename, listvals):
     with open(filename, 'a+', newline='\n') as write_obj:
         csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
         csv_writer.writerow(listvals)
+
+def preloop(datetime_bgn, uptdatetime_bgn, timestep,
+            ipath, ifile_base, ryyyy,
+            mask, mlat, mlon, maskval,
+            pidlog, tml,
+            verbose):
+
+    ## p1) create required datetime string object
+    predatetime_bgn = uptdatetime_bgn + datetime.timedelta(hours=3)
+    predatetime_end = datetime_bgn
+    predatetime_seq = []
+    idatetime       = predatetime_bgn
+    while idatetime < predatetime_end:
+        predatetime_seq.append(idatetime.strftime('%Y%m%d%H'))
+        idatetime += timestep # timestep was defined above
+    npretime = len(predatetime_seq)
+
+    if verbose:
+        print("\n--------------------------------------------------------------------------------------")
+        print("\n ! performing pre-loop to log advected parcels arriving prior to analysis time")
+        print("\n ! estimating remaining time for pre-loop ...")
+
+    ## p2) loop through files (.. to log in-ABL hits)
+    pretic = timeit.default_timer()
+    for pix in range(npretime):
+        if verbose and pix==1:
+            pretoc = timeit.default_timer()
+            print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
+
+        ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
+        ary = readpom( idate    = predatetime_seq[pix],
+                       ipath    = ipath+"/"+str(ryyyy),
+                       ifile_base = ifile_base,
+                       verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
+
+        nparcel   = ary.shape[1]
+        ntot    = range(nparcel)
+
+        ## p4) now loop through parcels
+        for i in ntot:
+            ## check for arriving parcels
+            alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+            if not mask[alat_ind,alon_ind]==maskval:
+               continue
+            ## read ONLY parcel and ABL heights
+            hgt, hpbl = readheights(ary[:4,i,:])
+
+            ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
+            if ( hgt[0] < np.max(hpbl[:4]) ):
+                ID = int(ary[0,i,0])
+                pidlog[ID] = pix - tml # NOTE: tml != npretime (double-check?)
+    return(pidlog)
