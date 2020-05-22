@@ -1175,4 +1175,12 @@ def preloop(datetime_bgn, uptdatetime_bgn, timestep,
             if ( hgt[0] < np.max(hpbl[:4]) ):
                 ID = int(ary[0,i,0])
                 pidlog[ID] = pix - tml # NOTE: tml != npretime (double-check?)
-    return(pidlog)
+    return( pidlog )
+
+def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
+                       dX, dtemp, dA, dB, c_cc, dAdB):
+    ## NOTE: for heat, dX==dB, but not for evap!
+    is_inpbl    = PBL_check(cpbl_strict, z=hgt, hpbl=hpbl, sethpbl=c_hgt)
+    is_uptk     = dX > dtemp
+    is_uptkcc   = np.abs(dA) < c_cc * dB * dAdB
+    return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
