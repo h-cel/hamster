@@ -45,6 +45,10 @@ def main_diagnosis(
         with the advantage of being used both for E,H & P 
         (as of now, dz>0 is used for P anyways).
     """
+    # Consistency checks
+    if mode=="oper" and precision=="f4":
+        precision = "f8"
+        print("Single precision should only be used for testing. Reset to double-precision.")
 
     ## construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
