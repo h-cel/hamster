@@ -53,6 +53,13 @@ ibase_ATR = content.ibase_ATR
 opath_ATR = content.opath_ATR
 opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
+# create output directories if they do not exist
+if not os.path.exists(opath_DGN):
+        os.makedirs(opath_DGN)
+if not os.path.exists(opath_ATR):
+        os.makedirs(opath_ATR)
+if not os.path.exists(opath_BIA):
+        os.makedirs(opath_BIA)
 
 ###########################################################################
 ##--- MAIN
