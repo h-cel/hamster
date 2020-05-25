@@ -109,35 +109,12 @@ def main_biascorrection(
     ## must check if data comes in daily resolution; fix if not
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
     udates = np.unique(dates)
+
     if udates.size != dates.size:
-        ## might need to redo dates in case uptakes are stored on arrival times...
-        if ftime[0].hour in [0, 6, 12, 18]:
-            ## simple fix, subtract 3 hours
-            ftime = np.asarray([t - datetime.timedelta(hours=3) for t in ftime])
-            dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
-            udates = np.unique(dates)
-        elif ftime[0].hour in [3, 9, 15, 21]:
-            ## NOTE: this is the new norm! retain "old style" for now, though    
-            pass 
-        
-        Etot = np.zeros(shape=(ftime.size, lats.size, lons.size))
-        Ptot = np.zeros(shape=(ftime.size, lats.size, lons.size))
-        Htot = np.zeros(shape=(ftime.size, lats.size, lons.size))
-        
-        ## this isn't fast or elegant, but works for literally anything sub-daily
-        for i in range(udates.size):
-            
-            iud = udates[i]       
-            sel = np.where(dates == iud)[0]
-     
-            ## TODO: clean up; there should be a check whether 4 files are present, imo
-            if sel.size != 4:
-                warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
-           
-            Etot[i,:,:] = np.nansum(E[sel, :, :], axis=0) # nan likely unnecessary
-            Ptot[i,:,:] = np.nansum(P[sel, :, :], axis=0)
-            Htot[i,:,:] = np.nanmean(H[sel, :, :], axis=0) # NOTE: mean here!
-    
+        print(E.shape)
+        Etot    = convert2daily(E,ftime,udates,fagg="sum")
+        Ptot    = convert2daily(P,ftime,udates,fagg="sum")
+        Htot    = convert2daily(H,ftime,udates,fagg="mean")
     else: ## NOTE: preparing for DAILY OUTPUT from 01_diagnosis
         ## neat, we can just proceed
         Etot = E

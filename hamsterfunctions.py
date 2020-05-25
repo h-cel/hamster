@@ -1188,3 +1188,37 @@ def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
     is_uptk     = dX > dtemp
     is_uptkcc   = np.abs(dA) < c_cc * dB * dAdB
     return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
+    
+
+def convert2daily(xar,ftime,dtime,fagg="mean"):
+    dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
+
+    if ftime[0].hour in [0, 6, 12, 18]:
+        ## simple fix, subtract 3 hours
+        ftime   = np.asarray([t - datetime.timedelta(hours=3) for t in ftime])
+        dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
+    elif ftime[0].hour in [3, 9, 15, 21]:
+        ## NOTE: this is the new norm! retain "old style" for now, though    
+        pass
+    dtime   = np.unique(dates)
+
+    xtot = np.zeros(shape=(ftime.size, xar.shape[1], xar.shape[2]))
+
+    ## this isn't fast or elegant, but works for literally anything sub-daily
+    for i in range(dtime.size):
+
+        iud = dtime[i]
+        sel = np.where(dates == iud)[0]
+
+        ## TODO: clean up; there should be a check whether 4 files are present, imo
+        if sel.size != 4:
+            warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
+
+        if fagg=="sum":
+            xtot[i,:,:] = np.nansum(xar[sel, :, :], axis=0)
+        if fagg=="mean":
+            xtot[i,:,:] = np.nanmean(xar[sel, :, :], axis=0)
+
+    return(xtot)
+
+
