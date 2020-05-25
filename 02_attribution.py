@@ -8,7 +8,7 @@ MAIN FUNCTIONS FOR 02_attribution
 #############################    SETTINGS ##################################
 
 def main_attribution(
-           ryyyy, ayyyy, am,
+           ryyyy, ayyyy, am, ad,
            ipath, ifile_base, 
            opath, ofile_base,
            mode,
@@ -107,7 +107,7 @@ def main_attribution(
 
     ## -- DATES
     # NOTE: we begin at 06 UTC...
-    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-01-06", "%Y-%m-%d-%H") 
+    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-06", "%Y-%m-%d-%H") 
     datetime_end    = datetime_bgn + relativedelta(months=1)
     timestep        = datetime.timedelta(hours=6)
     datetime_seq    = []

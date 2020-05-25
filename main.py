@@ -116,7 +116,7 @@ if args.steps == 1 or args.steps == 4:
               strargs=printsettings(args,1))
 
 if args.steps == 2 or args.steps == 4:
-    main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+    main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
               ipath=ipath_ATR,
               ifile_base=ibase_ATR,
               opath=opath_ATR,
