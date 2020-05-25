@@ -1221,4 +1221,43 @@ def convert2daily(xar,ftime,dtime,fagg="mean"):
 
     return(xtot)
 
+def read01data(opathD,ofile_base,ryyyy,uptake_time,var="E"):
+    # get required months
+    ayears  = np.asarray([ut.year  for ut in uptake_time])
+    amonths = np.asarray([ut.month for ut in uptake_time])
+    uset    = np.unique(np.column_stack((ayears, amonths)), axis=0)
+    uyears, umonths = uset[:,0], uset[:,1]
+
+    # loop over months
+    for jj in range(umonths.size):
+        uyr  = str(uyears[jj])
+        umon = str(umonths[jj])
+        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
+        with nc4.Dataset(diagfile, mode="r") as f:
+            if var not in ["grid"]:
+                ix     = f[var][:]
+                timex  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+
+        ## concatenate 'em!
+        if var=="grid":
+            with nc4.Dataset(diagfile, mode="r") as f:
+                lats    = f['lat'][:]
+                lons    = f['lon'][:]
+        else:
+            # concatenate 
+            if umon == str(umonths[0]):
+                x       = np.copy(ix)
+                ftime   = np.copy(timex)
+            else:
+                x       = np.concatenate((x, ix), axis=0)
+                ftime   = np.concatenate((ftime, timex))
+
+    # return
+    if var=="time":
+        return(ftime)
+    if var=="grid":
+        return(lats, lons)
+    if var not in ["grid","time"]:
+        return(x)
+
 

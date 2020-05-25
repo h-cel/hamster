@@ -66,45 +66,20 @@ def main_biascorrection(
 
     
     ##--2. load diagnosis data ####################################################
-    ## NOTE: this was first coded with the intention of being able to deal with
-    ## basically any sort of attribution input, i.e. multi-monthly data..
-    ## should be cleaned up since we will, as discussed on 04-03-2020, stick
-    ## to the monthly format
+    
+    # get required months
+    ayears  = np.asarray([ut.year  for ut in uptake_time])
+    amonths = np.asarray([ut.month for ut in uptake_time])
+    uyears = (np.unique(np.column_stack((ayears, amonths)), axis=0))[:,0]
 
-    ayears  =  np.asarray([ut.year  for ut in uptake_time])
-    amonths =  np.asarray([ut.month for ut in uptake_time])
-    uset = np.unique(np.column_stack((ayears, amonths)), axis=0)
-    uyears, umonths = uset[:,0], uset[:,1]
-    
-    for jj in range(umonths.size):
-        uyr  = str(uyears[jj])
-        umon = str(umonths[jj])
-        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
-        with nc4.Dataset(diagfile, mode="r") as f:
-            Ex     = f['E'][:]
-            Px     = f['P'][:]
-            Hx     = f['H'][:]
-            timex  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
-        
-        ## concatenate 'em!
-        if umon == str(umonths[0]):
-            E = np.copy(Ex)
-            P = np.copy(Px)
-            H = np.copy(Hx)
-            ftime = np.copy(timex)
-        else:
-            E = np.concatenate((E, Ex), axis=0)
-            P = np.concatenate((P, Px), axis=0)
-            H = np.concatenate((H, Hx), axis=0)
-            ftime = np.concatenate((ftime, timex))
-    
-        ## check if coordinates are the same
-        with nc4.Dataset(diagfile, mode="r") as f:
-            totlats = f['lat'][:]
-            totlons = f['lon'][:]
-            
-        if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
-            raise SystemExit("--- ERROR: your grids aren't identical...")
+    # read concatenated data
+    totlats, totlons    = read01data(opathD,ofile_base,ryyyy,uptake_time,var="grid")
+    if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
+        raise SystemExit("--- ERROR: your grids aren't identical...")
+    ftime               = read01data(opathD,ofile_base,ryyyy,uptake_time,var="time")
+    E                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="E")
+    P                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="P")
+    H                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     ## must check if data comes in daily resolution; fix if not
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
@@ -137,7 +112,8 @@ def main_biascorrection(
         raise SystemExit("---- hold your horses; datetime matching failed!")
     
     ## clean up a bit
-    del(E, P, H, Ex, Px, Hx)
+    #del(E, P, H, Ex, Px, Hx)
+    del(E, P, H)
 
     ##--3. load reference data ####################################################
     """
