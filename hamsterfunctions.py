@@ -553,6 +553,19 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
       return(np.zeros(shape=len(dqdt)))
   else:
     prec        = dqdt[0]
+  dqdt_max  = np.zeros(shape=len(dqdt))
+  for ii in iupt[::-1]:
+    try:
+        imin        = np.argmin(qtot[1:ii])+1
+    except:
+        imin        = 1
+    iatt    = qtot[imin]-round(np.sum(dqdt_max[imin:]),8)
+    idqdt   = min(iatt,dqdt[ii]-dqdt_max[ii])
+    dqdt_max[ii] = idqdt
+  maxatt    = np.sum(dqdt_max)/abs(dqdt[0])
+  if maxatt<1: 
+      prec = maxatt*dqdt[0]
+      print(" * Maximum attribution along trajectory: {:.2f}".format(100*maxatt)+"%")
   ## starting the random attribution loop
   dqdt_random = np.zeros(shape=len(dqdt))
   expl      = 0
