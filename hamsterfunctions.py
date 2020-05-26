@@ -566,7 +566,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
     try:
-        imin        = np.argmin(qv[1:ii])+1
+        imin        = np.argmin(qtot[1:ii])+1
     except:
         imin        = 1
     iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
