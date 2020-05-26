@@ -565,14 +565,19 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     i    = random.randint(0,nupt-1) # get a random uptake location number
     ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
-    imin        = min(np.where(local_minima(qtot[:ii]))[0][1:],default=1)
-    iatt        = qtot[imin]-np.sum(dqdt_random[ii:]) 
+    try:
+        imin        = np.argmin(qv[1:ii])+1
+    except:
+        imin        = 1
+    iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
     idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
     # get random value
     #rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin, abs(prec)-expl))
     rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
     if (expl+rvalue) > abs(prec):
       rvalue    = abs(prec)-expl
+      if rvalue<0:
+          print("OHOH")
     expl  += rvalue
     dqdt_random[ii] += rvalue
     icount += 1
