@@ -572,7 +572,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     #rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin, abs(prec)-expl))
     rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
     if (expl+rvalue) > abs(prec):
-      rvalue    += -(expl+rvalue - abs(prec))
+      rvalue    = abs(prec)-expl
     expl  += rvalue
     dqdt_random[ii] += rvalue
     icount += 1
