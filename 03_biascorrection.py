@@ -171,10 +171,6 @@ def main_biascorrection(
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
-    if fdebug: 
-        basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
-        mask[(mask>0) & (mask!=maskval)] = 0
-        basicplot(mask, mlat, mlon, title="mask used for bias-correction")
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
     if verbose: print("---- INFO: area-weighting precipitation data...")
@@ -200,10 +196,6 @@ def main_biascorrection(
          (np.any(alpha_E2P > 1.0001) or np.any(np.isinf(alpha_E2P))) ):
         warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
  
-    ## have a look if you're curious
-    if fdebug:
-        alphascreener(alpha_Had, var='Had')
-        alphascreener(alpha_E2P, var='E2P')
     
     ## here comes the magic (part II); plugging in reference dat; DONE
     #******************************************************************************
@@ -234,13 +226,6 @@ def main_biascorrection(
     # 3.) alright, now calculate how much more scaling is needed to match P too
     f_remain = np.divide(Pratio, f_Escaled)
     
-    if fdebug:
-        plt.figure
-        plt.plot(f_remain, label="remaining scaling factor")
-        plt.plot(Pratio, label="P ratio (REF/FLEX)")
-        plt.legend()
-        plt.show()    
-    
     #******************************************************************************
     ## swap axes to enable numpy broadcasting; 
     ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
@@ -267,7 +252,17 @@ def main_biascorrection(
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
     
-    if fdebug:
+    if fdebug: 
+        basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
+        mask[(mask>0) & (mask!=maskval)] = 0
+        basicplot(mask, mlat, mlon, title="mask used for bias-correction")
+        alphascreener(alpha_Had, var='Had')
+        alphascreener(alpha_E2P, var='E2P')
+        plt.figure
+        plt.plot(f_remain, label="remaining scaling factor")
+        plt.plot(Pratio, label="P ratio (REF/FLEX)")
+        plt.legend()
+        plt.show()    
         basicplot(np.nanmean(Had, axis=0), lats, lons, 
                   title="raw Had, daily mean")
         basicplot(np.nanmean(Had_scaled, axis=0), lats, lons, 
@@ -280,7 +275,6 @@ def main_biascorrection(
                   title="P-scaled E2P, daily mean")
         basicplot(np.nanmean(E2P_EPscaled, axis=0), lats, lons, 
                   title="E-P-scaled E2P, daily mean")
-    
     
     ##--6. save output ############################################################
     if fwrite_netcdf:
