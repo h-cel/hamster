@@ -81,13 +81,20 @@ def main_attribution(
     if mode=="oper" and precision=="f4":
         precision = "f8"
         print(" ! Single precision should only be used for testing. Reset to double-precision.")
+    if verbose:
         print(" ! using input path: \t", 	ipath)
+        print(" ! using internal timer: \t" +str(ftimethis) )
+        print(" ! using mode: \t" +str(mode))
+        print(" ! using attribution method (P): \t" +str(mattribution))
+        print(" ! using trajectory-based upscaling: \t" +str(explainp))
+        if mattribution == "random":
+            print(" ! using minimum iterations: \t" +str(crandomnit))
+        print(" ! using daily upscaling: \t" +str(fdupscale))
+        print(" ! using monthly upscaling: \t" +str(fmupscale))
         if fwrite_netcdf:
             print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
             print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
-        print(" ! using internal timer: \t" +str(ftimethis) )
-        print(" ! using mode: \t" +str(mode))
         print(" ! additional statistics in: \t"+str(statfile))
         if fwritestats:
             print(" ! precipitation statistics in: \t"+str(pattfile))
