@@ -1299,7 +1299,8 @@ def calc_alpha(top,bot):
     ## hence, check if any alpha clearly exceeds 1, and warn the user
     ## AGAIN that the output cannot be fully trusted (but continue)
     if np.any(alpha>1.0001) or np.any(np.isinf(alpha)):
-        print(" \n !!! WARNING: scaling fractions exceed 1 !!!")
+        print(" \n  \t !!! WARNING: scaling fractions exceed 1 !!!")
+        print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
     return(alpha)
 
 def udays2udate(atime,utime_srt):
