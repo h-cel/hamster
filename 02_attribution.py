@@ -40,18 +40,6 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
-    if fwritestats and mattribution=="random":
-        print(" - Option <writestats> not yet available for attribution method random. Continuing anyhow...")
-    if mattribution=="random":
-        print(" !!! WARNING! THIS IS JUST A PLAYGROUND...")
-    if mattribution=="random" and explainp=="max":
-        print(" - Option <explainp> with value 'max' does not exist. Resetting to 'none'.")
-        explainp = "none"
-    
-    # Consistency checks
-    if mode=="oper" and precision=="f4":
-        precision = "f8"
-        print("Single precision should only be used for testing. Reset to double-precision.")
  
     #### OUTPUT FILES
     mainpath  = ipath+str(ryyyy)+"/"
@@ -81,7 +69,16 @@ def main_attribution(
     if verbose:
         disclaimer()
         print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2))
-        print("\n============================================================================================================")
+        print("\n============================================================================================================\n")
+    ## Resets & consistency checks
+    if fwritestats and mattribution=="random":
+        print(" ! Option <writestats> not yet available for attribution method random. Continuing anyhow...")
+    if mattribution=="random" and explainp=="max":
+        print(" ! Option <explainp> with value 'max' does not exist. Resetting to 'none'.")
+        explainp = "none"
+    if mode=="oper" and precision=="f4":
+        precision = "f8"
+        print(" ! Single precision should only be used for testing. Reset to double-precision.")
         print(" ! using input path: \t", 	ipath)
         if fwrite_netcdf:
             print(" ! writing netcdf output: \t" +str(fwrite_netcdf) )
