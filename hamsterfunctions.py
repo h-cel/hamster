@@ -539,7 +539,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   # with:
   # qtot = specific humidity
   # iupt = identified uptake locations
-  # explainp = none(default)/full/max analogue to linear discounting & attribution
+  # explainp = none(default)/full analogue to linear discounting & attribution
   #  - none: 100% is attributed to iupt + initial condition (~not explained)
   #  - full: 100% is attributed to iupt (if possible!)
   # nmin = tuning parameter; ~minimum iterations 
