@@ -430,7 +430,7 @@ def main_attribution(
                                     etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
-                                            verbose=verbose,veryverbose=veryverbose)
+                                            nmin=crandomnit,verbose=verbose,veryverbose=veryverbose)
                                     print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
                                 for itj in evap_idx:
                                     ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
@@ -533,7 +533,7 @@ def main_attribution(
                                     etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
                                 elif mattribution=="random":
                                     etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
-                                            verbose=verbose,veryverbose=veryverbose)
+                                            nmin=crandomnit,verbose=verbose,veryverbose=veryverbose)
                                 for itj in evap_idx:
                                     ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
                                 # log some statistics (for upscaling)
