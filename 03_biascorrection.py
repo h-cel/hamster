@@ -98,7 +98,7 @@ def main_biascorrection(
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
     udates = np.unique(dates)
 
-    if udates.size != dates.size:
+    if udates.size != ftime.size:
         Etot    = convert2daily(E,ftime,udates,fagg="sum")
         Ptot    = convert2daily(P,ftime,udates,fagg="sum")
         Htot    = convert2daily(H,ftime,udates,fagg="mean")
