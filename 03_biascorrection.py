@@ -95,8 +95,7 @@ def main_biascorrection(
 
     # read concatenated data
     totlats, totlons    = read01data(opathD,ofile_base,ryyyy,uptake_time,var="grid")
-    if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
-        raise SystemExit("--- ERROR: your grids aren't identical...")
+    gridcheck(lats,totlats,lons,totlons)
     ftime               = read01data(opathD,ofile_base,ryyyy,uptake_time,var="time")
     E                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="E")
     P                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="P")

@@ -1270,4 +1270,7 @@ def read01data(opathD,ofile_base,ryyyy,uptake_time,var="E"):
     if var not in ["grid","time"]:
         return(x)
 
+def gridcheck(lats,totlats,lons,totlons):
+    if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
+        raise SystemExit("--- ERROR: your grids aren't identical...")
 
