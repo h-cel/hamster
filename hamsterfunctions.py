@@ -542,7 +542,6 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   # explainp = none(default)/full/max analogue to linear discounting & attribution
   #  - none: 100% is attributed to iupt + initial condition (~not explained)
   #  - full: 100% is attributed to iupt (if possible!)
-  #  - max: (100% - initial condition) is attributed to iupt (TO BE TESTED & CHANGED!)
   # nmin = tuning parameter; ~minimum iterations 
   #  - the higher this value, the more iterations, the uptake locations are covered
   #  - a value of 10 enforces min. 10 iterations
@@ -561,17 +560,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   if nmin < nupt:
       nmin=nupt
   #
-  if explainp=="max":
-  ### THIS ONE MAY MAKE NO SENSE YET, AS P << DQDT_MAX (P<<AMIC) 
-  ## I AM RETURNING 0 ATTRIBUTION FOR NOW; THIS HAPPENS QUITE OFTEN THOUGH
-  ## IT'S MORE LIKE MINIMUM ATTRIBUTION!
-    amic = np.min([np.min(qtot[1:]),dqdt[-1]])
-    prec = dqdt[0]+amic
-    #print("Not attributable fraction: "+str(amic/abs(dqdt[0])))
-    if amic/abs(dqdt[0]) >= 1:
-      return(np.zeros(shape=len(dqdt)))
-  else:
-    prec        = dqdt[0]
+  prec        = dqdt[0]
   # calculate maximum attributable fraction
   maxatt    = calc_maxatt(qtot, iupt)
   if maxatt<1: 
