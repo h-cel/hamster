@@ -117,7 +117,7 @@ def main_biascorrection(
     datestot = fdays[ibgn:iend+1]  
     
     ## make sure we grabbed the right data
-    uptake_dates = np.asarray([datetime.date(iut.year, iut.month, iut.day) for iut in uptake_time])
+    uptake_dates = cal2date(uptake_time)
     if not np.array_equal(uptake_dates, datestot):
         raise SystemExit("---- hold your horses; datetime matching failed!")
     
