@@ -103,11 +103,9 @@ def main_biascorrection(
         Htot = H
         
     ## only keep what is really needed
-    date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
-    date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
-    datecheck(date_bgn,fdays)
-    ibgn = np.where(fdays==date_bgn)[0][0]
-    iend = np.where(fdays==date_end)[0][0]
+    datecheck(uptake_dates[0],fdays)
+    ibgn = np.where(fdays==uptake_dates[0])[0][0]
+    iend = np.where(fdays==uptake_dates[-1])[0][0]
     Etot = Etot[ibgn:iend+1]
     Ptot = Ptot[ibgn:iend+1]
     Htot = Htot[ibgn:iend+1]
