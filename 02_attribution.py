@@ -45,7 +45,8 @@ def main_attribution(
     if mattribution=="random":
         print(" !!! WARNING! THIS IS JUST A PLAYGROUND...")
     if mattribution=="random" and explainp=="max":
-        print(" - Option <explainp> with value 'max' has not been validated yet...")  
+        print(" - Option <explainp> with value 'max' does not exist. Resetting to 'none'.")
+        explainp = "none"
     
     # Consistency checks
     if mode=="oper" and precision=="f4":
