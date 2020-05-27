@@ -67,6 +67,9 @@ def main_biascorrection(
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
+        # get attributes for later
+        istrargs     = getattr(nc4.Dataset(attrfile),"description")
+        strargs      = istrargs.replace("02_attribution","03_biascorrection") 
 
     ## expand uptake dimension to conform to original approach
     utime_first = arrival_time[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
