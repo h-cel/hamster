@@ -511,6 +511,25 @@ def linear_attribution_p(qv,iupt,explainp):
         etop        = prec*fw_orig
     return(etop)
 
+def calc_maxatt(qtot, iupt):
+  dqdt = qtot[:-1] - qtot[1:]
+  dqdt = np.append(dqdt,qtot[-1])
+  nt   = len(dqdt)
+  dqdt_max  = np.zeros(shape=nt)
+  for ii in iupt[::-1]:
+    try:
+        imin        = np.argmin(qtot[1:ii])+1
+    except:
+        imin        = 1
+    iatt    = qtot[imin]-round(np.sum(dqdt_max[imin:]),8)
+    idqdt   = min(iatt,dqdt[ii]-dqdt_max[ii])
+    dqdt_max[ii] = idqdt
+  maxatt    = np.sum(dqdt_max)/abs(dqdt[0])
+  if maxatt<1:
+    print(" * Maximum attribution along trajectory: {:.2f}".format(100*maxatt)+"%")
+  return(maxatt)
+
+
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
 
@@ -553,19 +572,10 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
       return(np.zeros(shape=len(dqdt)))
   else:
     prec        = dqdt[0]
-  dqdt_max  = np.zeros(shape=len(dqdt))
-  for ii in iupt[::-1]:
-    try:
-        imin        = np.argmin(qtot[1:ii])+1
-    except:
-        imin        = 1
-    iatt    = qtot[imin]-round(np.sum(dqdt_max[imin:]),8)
-    idqdt   = min(iatt,dqdt[ii]-dqdt_max[ii])
-    dqdt_max[ii] = idqdt
-  maxatt    = np.sum(dqdt_max)/abs(dqdt[0])
+  # calculate maximum attributable fraction
+  maxatt    = calc_maxatt(qtot, iupt)
   if maxatt<1: 
-      prec = maxatt*dqdt[0]
-      print(" * Maximum attribution along trajectory: {:.2f}".format(100*maxatt)+"%")
+      prec = maxatt*dqdt[0] # reset prec to increase efficiency
   ## starting the random attribution loop
   dqdt_random = np.zeros(shape=len(dqdt))
   expl      = 0
