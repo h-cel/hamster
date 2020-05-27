@@ -23,11 +23,6 @@ def main_biascorrection(
            precision,
            strargs):
     
-    # Consistency checks
-    if mode=="oper" and precision=="f4":
-        precision = "f8"
-        print("Single precision should only be used for testing. Reset to double-precision.")
-
     ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
     ## suppressing warnings, such as
     #  invalid value encountered in true_divide
@@ -39,6 +34,26 @@ def main_biascorrection(
     attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
+
+    #### DISCLAIMER
+    if verbose:
+        disclaimer()
+        print("\n PROCESSING: \t", 	ayyyy, "-", str(am).zfill(2)+"\n")
+    ## Resets & consistency checks
+    if mode=="oper" and precision=="f4":
+        precision = "f8"
+        print(" ! Single precision should only be used for testing. Reset to double-precision.")
+    if verbose:
+        print(" ! using input paths: \t")
+        print("\t"+str(opathD))
+        print("\t"+str(opathA))
+        print(" ! using reference data from: \t")
+        print("\t"+str(ipathR))
+        print(" ! using mode: \t" +str(mode))
+        print(" ! writing netcdf output: \t")
+        print("\t"+str(ofile))
+        print("\n============================================================================================================")
+        print("\n")
 
     ##--1. load attribution data; grab all uptake days ############################    
     with nc4.Dataset(attrfile, mode="r") as f:
