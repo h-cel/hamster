@@ -56,6 +56,9 @@ def main_biascorrection(
         print("\n")
 
     ##--1. load attribution data; grab all uptake days ############################    
+    if verbose: 
+        print(" * Reading attribution data...")
+
     with nc4.Dataset(attrfile, mode="r") as f:
         E2Psrt       = np.asarray(f['E2P'][:])
         Hadsrt       = np.asarray(f['H'][:])
@@ -82,6 +85,8 @@ def main_biascorrection(
 
     
     ##--2. load diagnosis data ####################################################
+    if verbose: 
+        print(" * Reading diagnosis data...")
     
     # get required months
     ayears  = np.asarray([ut.year  for ut in uptake_time])
@@ -135,6 +140,9 @@ def main_biascorrection(
     this part is STRICTLY CODED FOR (12-hourly) ERA-INTERIM only (so far),
     and HARDCODED too
     """
+    if verbose: 
+        print(" * Reading reference data...")
+    
     Eref = eraloader_12hourly(var='e',
                      datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
@@ -157,6 +165,8 @@ def main_biascorrection(
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
     ##--4. scale ##################################################################
+    if verbose: 
+        print(" * Starting bias correction...")
     
     ## P-scaling requires arrival region mask
     with nc4.Dataset(maskfile) as f:
@@ -199,6 +209,8 @@ def main_biascorrection(
     
     ## here comes the magic (part II); plugging in reference dat; DONE
     #******************************************************************************
+    if verbose: 
+        print("   --- Bias correction using source data...")
     Had_Hscaled  = np.multiply(alpha_Had, Href)
     E2P_Escaled  = np.multiply(alpha_E2P, Eref)
     #******************************************************************************
@@ -235,12 +247,18 @@ def main_biascorrection(
     ## swap axes to enable numpy broadcasting; 
     ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
     ## swap back and then store    
+    if verbose: 
+        print("   --- Bias correction using sink data...")
     E2P_Pscaled  = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
+    if verbose: 
+        print("   --- Bias correction using source and sink data...")
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     #******************************************************************************
     
     
     ##--5. aggregate ##############################################################
+    if verbose: 
+        print(" * Writing final output... ")
     
     ## uptake time dimension is no longer needed!
     Had          = np.nansum(Had, axis=1)
@@ -268,5 +286,8 @@ def main_biascorrection(
     
     ##--6. save output ############################################################
     if fwrite_netcdf:
+        if verbose: 
+            print(" * Writing final output... ")
+        
         writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_scaled, 
                  E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=strargs, precision=precision)
