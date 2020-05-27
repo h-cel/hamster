@@ -94,12 +94,12 @@ def main_biascorrection(
     uyears = (np.unique(np.column_stack((ayears, amonths)), axis=0))[:,0]
 
     # read concatenated data
-    totlats, totlons    = read01data(opathD,ofile_base,ryyyy,uptake_time,var="grid")
+    totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="grid")
     gridcheck(lats,totlats,lons,totlons)
-    ftime               = read01data(opathD,ofile_base,ryyyy,uptake_time,var="time")
-    E                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="E")
-    P                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="P")
-    H                   = read01data(opathD,ofile_base,ryyyy,uptake_time,var="H")
+    ftime               = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="time")
+    E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
+    P                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
+    H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     ## must check if data comes in daily resolution; fix if not
     dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])

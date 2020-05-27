@@ -1231,7 +1231,7 @@ def convert2daily(xar,ftime,dtime,fagg="mean"):
 
     return(xtot)
 
-def read01data(opathD,ofile_base,ryyyy,uptake_time,var="E"):
+def read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E"):
     # get required months
     ayears  = np.asarray([ut.year  for ut in uptake_time])
     amonths = np.asarray([ut.month for ut in uptake_time])
