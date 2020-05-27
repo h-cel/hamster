@@ -240,9 +240,6 @@ def main_biascorrection(
     
     
     ##--5. aggregate ##############################################################
-    if verbose: 
-        print(" * Writing final output... ")
-    
     ## uptake time dimension is no longer needed!
     Had          = np.nansum(Had, axis=1)
     Had_scaled   = np.nansum(Had_Hscaled, axis=1)
