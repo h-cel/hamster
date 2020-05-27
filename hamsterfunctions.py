@@ -534,7 +534,7 @@ def calc_maxatt(qtot, iupt):
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
 
-def random_attribution_p(qtot,iupt,explainp,nmin=1):
+def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=False):
   qtot = qtot*1000
   # This is only coded for precipitation as of now
   # with:
@@ -592,7 +592,8 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
         break
-  #print("Iterations:"+str(icount)+" for nupt="+str(nupt)+" with P="+str(dqdt[0])+" with E2Prandom="+str(np.sum(dqdt_random)))
+  if veryverbose:
+      print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
   return(dqdt_random/1000)
 
 
