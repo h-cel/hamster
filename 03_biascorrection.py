@@ -58,12 +58,15 @@ def main_biascorrection(
     ##--1. load attribution data; grab all uptake days ############################    
     if verbose: 
         print(" * Reading attribution data...")
+        if veryverbose:
+            print("   --- file: "+str(attrfile))
 
     with nc4.Dataset(attrfile, mode="r") as f:
         E2Psrt       = np.asarray(f['E2P'][:])
         Hadsrt       = np.asarray(f['H'][:])
         arrival_time = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
         utime_srt    = np.asarray(f['level'][:])
+        uptake_time  = udays2udate(arrival_time,utime_srt)
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
@@ -73,9 +76,6 @@ def main_biascorrection(
     Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
     #del(E2Psrt, Hadsrt) # not needed anymore
 
-    uptake_time = udays2udate(arrival_time,utime_srt)
-    date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
-    date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
     
     ##--2. load diagnosis data ####################################################
     if verbose: 
@@ -109,6 +109,8 @@ def main_biascorrection(
         Htot = H
         
     ## only keep what is really needed
+    date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
+    date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
     datecheck(date_bgn,udates)
     ibgn = np.where(udates==date_bgn)[0][0]
     iend = np.where(udates==date_end)[0][0]
