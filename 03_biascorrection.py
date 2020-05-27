@@ -95,12 +95,12 @@ def main_biascorrection(
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     ## must check if data comes in daily resolution; fix if not
-    udates = np.unique(np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime]))
+    udays = np.unique(np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime]))
 
-    if udates.size != ftime.size:
-        Etot    = convert2daily(E,ftime,udates,fagg="sum")
-        Ptot    = convert2daily(P,ftime,udates,fagg="sum")
-        Htot    = convert2daily(H,ftime,udates,fagg="mean")
+    if udays.size != ftime.size:
+        Etot    = convert2daily(E,ftime,udays,fagg="sum")
+        Ptot    = convert2daily(P,ftime,udays,fagg="sum")
+        Htot    = convert2daily(H,ftime,udays,fagg="mean")
     else: ## NOTE: preparing for DAILY OUTPUT from 01_diagnosis
         ## neat, we can just proceed
         Etot = E
@@ -110,13 +110,13 @@ def main_biascorrection(
     ## only keep what is really needed
     date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
     date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
-    datecheck(date_bgn,udates)
-    ibgn = np.where(udates==date_bgn)[0][0]
-    iend = np.where(udates==date_end)[0][0]
+    datecheck(date_bgn,udays)
+    ibgn = np.where(udays==date_bgn)[0][0]
+    iend = np.where(udays==date_end)[0][0]
     Etot = Etot[ibgn:iend+1]
     Ptot = Ptot[ibgn:iend+1]
     Htot = Htot[ibgn:iend+1]
-    datestot = udates[ibgn:iend+1]  
+    datestot = udays[ibgn:iend+1]  
     
     ## make sure we grabbed the right data
     uptake_dates = np.asarray([datetime.date(iut.year, iut.month, iut.day) for iut in uptake_time])
