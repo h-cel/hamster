@@ -181,20 +181,9 @@ def main_biascorrection(
 
     ## here is where the magic (part I) happens.
     #******************************************************************************
-    alpha_Had = np.divide(Had, Htot)
-    alpha_E2P = np.divide(E2P, Etot)
+    alpha_Had = calc_alpha(Had, Htot)
+    alpha_E2P = calc_alpha(E2P, Etot)
     #******************************************************************************
-   
-    ## NOTE: as of now, there is absolutely no check whatsoever concerning
-    ## the fractions; if e.g. only 3 6-hourly values are used to generate
-    ## daily diagnosis data, this can result in a division by zero above,
-    ## so that scaled data blows up to infinity (this actually happened).
-    ## hence, check if any alpha clearly exceeds 1, and warn the user
-    ## AGAIN that the output cannot be fully trusted (but continue)
-    if ( (np.any(alpha_Had > 1.0001) or np.any(np.isinf(alpha_Had))) or 
-         (np.any(alpha_E2P > 1.0001) or np.any(np.isinf(alpha_E2P))) ):
-        warnings.warn("\n\n----------------- WARNING: scaling fractions exceed 1, might encounter infinity!\n\n")
- 
     
     ## here comes the magic (part II); plugging in reference dat; DONE
     #******************************************************************************
