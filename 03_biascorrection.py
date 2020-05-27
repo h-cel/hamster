@@ -76,8 +76,9 @@ def main_biascorrection(
     # expand uptake dimension to dates (instead of backward days)
     E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
     Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
-    #del(E2Psrt, Hadsrt) # not needed anymore
-
+    
+    # clean up
+    del(E2Psrt, Hadsrt)
     
     ##--2. load diagnosis data ####################################################
     if verbose: 
@@ -114,8 +115,7 @@ def main_biascorrection(
     if not np.array_equal(uptake_dates, fdates):
         raise SystemExit("---- hold your horses; datetime matching failed!")
     
-    ## clean up a bit
-    #del(E, P, H, Ex, Px, Hx)
+    ## clean up
     del(E, P, H)
 
     ##--3. load reference data ####################################################
