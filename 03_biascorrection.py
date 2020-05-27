@@ -68,6 +68,7 @@ def main_biascorrection(
         utime_srt    = np.asarray(f['level'][:])
         uptake_time  = udays2udate(arrival_time,utime_srt)
         uptake_dates = cal2date(uptake_time)
+        uyears       = np.unique(date2year(uptake_time))
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
@@ -82,11 +83,6 @@ def main_biascorrection(
     if verbose: 
         print(" * Reading diagnosis data...")
     
-    # get required months
-    ayears   = date2year(uptake_time)
-    amonths  = date2month(uptake_time)
-    uyears = (np.unique(np.column_stack((ayears, amonths)), axis=0))[:,0]
-
     # read concatenated data
     totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="grid")
     gridcheck(lats,totlats,lons,totlons)
