@@ -87,7 +87,6 @@ def main_biascorrection(
     udates = np.unique(dates)
 
     if udates.size != dates.size:
-        print(E.shape)
         Etot    = convert2daily(E,ftime,udates,fagg="sum")
         Ptot    = convert2daily(P,ftime,udates,fagg="sum")
         Htot    = convert2daily(H,ftime,udates,fagg="mean")
