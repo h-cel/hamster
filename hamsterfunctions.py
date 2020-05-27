@@ -1274,3 +1274,6 @@ def gridcheck(lats,totlats,lons,totlons):
     if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
         raise SystemExit("--- ERROR: your grids aren't identical...")
 
+def datecheck(idate,dateseq):
+    if idate not in dateseq: 
+        raise SystemExit("\n !!! ERROR: INPUT DATA MISSING: date "+str(idate)+" not available as output from 01_diagnosis! Aborting here. !!!\n")
