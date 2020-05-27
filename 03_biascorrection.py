@@ -109,10 +109,9 @@ def main_biascorrection(
     Etot = Etot[ibgn:iend+1]
     Ptot = Ptot[ibgn:iend+1]
     Htot = Htot[ibgn:iend+1]
-    datestot = fdays[ibgn:iend+1]  
-    
+    fdates = fdays[ibgn:iend+1]  
     ## make sure we grabbed the right data
-    if not np.array_equal(uptake_dates, datestot):
+    if not np.array_equal(uptake_dates, fdates):
         raise SystemExit("---- hold your horses; datetime matching failed!")
     
     ## clean up a bit
