@@ -59,6 +59,7 @@ def read_cmdargs():
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
     parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    type = str2bol, default = False,    nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         type = str,     default = "linear")

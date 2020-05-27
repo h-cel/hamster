@@ -166,6 +166,7 @@ if args.steps == 3 or args.steps == 4:
                maskfile=maskfile,
                maskval=args.maskval,
                verbose=args.verbose,
+               veryverbose=args.veryverbose,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                precision=args.precision,

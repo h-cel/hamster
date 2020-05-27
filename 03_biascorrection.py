@@ -17,6 +17,7 @@ def main_biascorrection(
            maskfile,
            maskval,
            verbose,
+           veryverbose,
            fdebug,
            fwrite_netcdf,
            precision,
