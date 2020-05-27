@@ -161,8 +161,8 @@ def main_biascorrection(
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
-    
-    ##--4. scale ##################################################################
+     
+    ##--4. biascorrection #########################################################
     if verbose: 
         print(" * Starting bias correction...")
     
@@ -171,34 +171,41 @@ def main_biascorrection(
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
-    
-    ## area-weight arrival region precipitation (FLEXPART & REF)
-    xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
-    ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
-    # convert from mm to m3
-    PrefTS      = np.nansum(areas[xla,xlo]*Pref[ibgn:,xla,xlo], axis=1)/1e3
-    PtotTS      = np.nansum(areas[xla,xlo]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
 
-    ## here is where the magic (part I) happens.
     #******************************************************************************
-    alpha_Had = calc_alpha(Had, Htot)
-    alpha_E2P = calc_alpha(E2P, Etot)
-    #******************************************************************************
-    
-    ## here comes the magic (part II); plugging in reference dat; DONE
+    ## (i) BIAS CORRECTING THE SOURCE
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source data...")
+    # calculate source fraction contribution (FLEXPART data only)
+    alpha_Had = calc_alpha(Had, Htot)
+    alpha_E2P = calc_alpha(E2P, Etot)
+    # and use reference data for bias-correcting the totals 
     Had_Hscaled  = np.multiply(alpha_Had, Href)
     E2P_Escaled  = np.multiply(alpha_E2P, Eref)
+    
     #******************************************************************************
-    
-    ## for P-scaling, a bit more effort is required: 
-    # 1. figure out relative P bias per arrival day (NOT per uptake day!)
-    Pratio =  PrefTS / PtotTS # make sure this stays positive
+    ## (ii) BIAS CORRETING THE SINK (P only)
+    #******************************************************************************
+    if verbose: 
+        print("   --- Bias correction using sink data...")
+    # sum up precpitation (arrival days) over mask only
+    xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
+    ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
+    # +convert from mm to m3
+    PrefTS      = np.nansum(areas[xla,xlo]*Pref[ibgn:,xla,xlo], axis=1)/1e3
+    PtotTS      = np.nansum(areas[xla,xlo]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
+    # calculate bias correction fractor
+    Pratio      =  PrefTS / PtotTS # make sure this stays positive
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
+    E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
     
-    # 2.) now check how much E2P changed due to E-scaling already
+    #******************************************************************************
+    ## (iii) BIAS CORRETING THE SOURCE AND THE SINK (P only)
+    #******************************************************************************
+    if verbose: 
+        print("   --- Bias correction using source and sink data...")
+    ## step 1: check how much E2P changed due to E-scaling already
     ## convert from mm to m3 as for P before, take areas into account
     E2P_Escaled_ts  = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
     E2P_ts          = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
@@ -210,33 +217,23 @@ def main_biascorrection(
     #E2P_ts          = np.nansum(np.multiply(areas,E2P/1e3),axis=(1,2,3))
     #f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
     #print(f_Escaled)
-    
-    # 3.) alright, now calculate how much more scaling is needed to match P too
+    # step 2: calculate how much more scaling is needed to match P too 
     f_remain = np.divide(Pratio, f_Escaled)
-    
-    #******************************************************************************
     ## swap axes to enable numpy broadcasting; 
     ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
     ## swap back and then store    
-    if verbose: 
-        print("   --- Bias correction using sink data...")
-    E2P_Pscaled  = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
-    if verbose: 
-        print("   --- Bias correction using source and sink data...")
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
-    #******************************************************************************
-    
     
     ##--5. aggregate ##############################################################
-    ## uptake time dimension is no longer needed!
+    ## aggregate over uptake time (uptake time dimension is no longer needed!)
     Had          = np.nansum(Had, axis=1)
     Had_scaled   = np.nansum(Had_Hscaled, axis=1)
-    
     E2P          = np.nansum(E2P, axis=1)
     E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
     
+    ##--6. debugging needed? ######################################################
     ### plots that help to debug
     if fdebug: 
         debugmask(mask,maskval,mlat,mlon)
@@ -256,7 +253,7 @@ def main_biascorrection(
         basicplot(np.nanmean(E2P_EPscaled, axis=0), lats, lons, 
                   title="E-P-scaled E2P, daily mean")
     
-    ##--6. save output ############################################################
+    ##--7. save output ############################################################
     if fwrite_netcdf:
         if verbose: 
             print(" * Writing final output... ")
