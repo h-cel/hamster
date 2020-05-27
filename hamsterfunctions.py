@@ -1302,3 +1302,17 @@ def calc_alpha(top,bot):
         print(" \n !!! WARNING: scaling fractions exceed 1 !!!")
     return(alpha)
 
+def udays2udate(atime,utime_srt):
+    utime_first = atime[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
+    uptake_time = np.asarray([utime_first+timedelta(days=nday) for nday in range(utime_srt.size-1+atime.size)])
+    return(uptake_time)
+
+def expand4Darray(myarray,atime,utime_srt,veryverbose):
+    utime       = udays2udate(atime,utime_srt)
+    myshape     = myarray.shape
+    myarray_exp = np.empty(shape=(myshape[0],utime.size,myshape[2],myshape[3]))
+    if veryverbose:
+        print(" * Expanding array from "+str(myshape)+" to "+str(myarray_exp.shape))
+    for iat in range(atime.size):
+        myarray_exp[iat,iat:iat+utime_srt.size,:,:] = myarray[iat,:,:,:]
+    return(myarray_exp)

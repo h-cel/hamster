@@ -68,21 +68,14 @@ def main_biascorrection(
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
 
-    ## expand uptake dimension to conform to original approach
-    utime_first = arrival_time[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
-    uptake_time = np.asarray([utime_first+timedelta(days=nday) for nday in range(utime_srt.size-1+arrival_time.size)])
+    # expand uptake dimension to dates (instead of backward days)
+    E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
+    Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
+    #del(E2Psrt, Hadsrt) # not needed anymore
 
+    uptake_time = udays2udate(arrival_time,utime_srt)
     date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
     date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
-
-    ## 'reshape' arrays accordingly
-    E2P = np.empty(shape=(arrival_time.size,uptake_time.size,lats.size,lons.size))
-    Had = np.empty(shape=(arrival_time.size,uptake_time.size,lats.size,lons.size))
-    for iat in range(arrival_time.size):
-        E2P[iat,iat:iat+utime_srt.size,:,:] = E2Psrt[iat,:,:,:]
-        Had[iat,iat:iat+utime_srt.size,:,:] = Hadsrt[iat,:,:,:]
-    del(E2Psrt, Hadsrt) # not needed anymore
-
     
     ##--2. load diagnosis data ####################################################
     if verbose: 
