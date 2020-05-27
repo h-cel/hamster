@@ -113,7 +113,7 @@ def printsettings(args,step):
         "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"))
     
     ## 02_ATTRIBUTION
-    if (step == 2 or step == 3) and args.tdiagnosis in ['KAS']:
+    if (step == 2) and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
@@ -122,7 +122,7 @@ def printsettings(args,step):
          +", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)+ ", "+
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
          ))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SOD']:
+    if (step == 2) and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
@@ -133,7 +133,7 @@ def printsettings(args,step):
          + "; REFERENCE: " +
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
         ))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SOD2']:
+    if (step == 2) and args.tdiagnosis in ['SOD2']:
         return(str("Diagnosis following Sodemann (2020) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.1, " +
@@ -143,7 +143,7 @@ def printsettings(args,step):
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SAJ']:
+    if (step == 2) and args.tdiagnosis in ['SAJ']:
         return(str("Diagnosis following Stohl and James (2004) with the following settings: " +
          "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
          + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps) + ", "+ 
