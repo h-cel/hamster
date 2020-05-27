@@ -87,7 +87,7 @@ verbose = args.verbose
 print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
-if args.steps == 1 or args.steps == 4:
+if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
               ipath=ipath_DGN,
               ifile_base=ibase_DGN, 
@@ -117,7 +117,7 @@ if args.steps == 1 or args.steps == 4:
               fvariable_mass=args.variable_mass,
               strargs=printsettings(args,1))
 
-if args.steps == 2 or args.steps == 4:
+if args.steps == 2:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
               ipath=ipath_ATR,
               ifile_base=ibase_ATR,
@@ -159,7 +159,7 @@ if args.steps == 2 or args.steps == 4:
               fwritestats=args.writestats,
               strargs=printsettings(args,2))
 
-if args.steps == 3 or args.steps == 4:
+if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
                opathA=opath_ATR, 
                opathD=opath_DGN, 
