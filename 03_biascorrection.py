@@ -90,16 +90,16 @@ def main_biascorrection(
     totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="grid")
     gridcheck(lats,totlats,lons,totlons)
     ftime               = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="time")
-    udays               = np.unique(cal2date(ftime))
+    fdays               = np.unique(cal2date(ftime))
     E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
     P                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     # make sure we use daily aggregates
-    if udays.size != ftime.size:
-        Etot    = convert2daily(E,ftime,udays,fagg="sum")
-        Ptot    = convert2daily(P,ftime,udays,fagg="sum")
-        Htot    = convert2daily(H,ftime,udays,fagg="mean")
+    if fdays.size != ftime.size:
+        Etot    = convert2daily(E,ftime,fdays,fagg="sum")
+        Ptot    = convert2daily(P,ftime,fdays,fagg="sum")
+        Htot    = convert2daily(H,ftime,fdays,fagg="mean")
     else: 
         Etot = E
         Ptot = P
@@ -108,13 +108,13 @@ def main_biascorrection(
     ## only keep what is really needed
     date_bgn = datetime.date(uptake_time[0].year, uptake_time[0].month, uptake_time[0].day)
     date_end = datetime.date(uptake_time[-1].year, uptake_time[-1].month, uptake_time[-1].day)
-    datecheck(date_bgn,udays)
-    ibgn = np.where(udays==date_bgn)[0][0]
-    iend = np.where(udays==date_end)[0][0]
+    datecheck(date_bgn,fdays)
+    ibgn = np.where(fdays==date_bgn)[0][0]
+    iend = np.where(fdays==date_end)[0][0]
     Etot = Etot[ibgn:iend+1]
     Ptot = Ptot[ibgn:iend+1]
     Htot = Htot[ibgn:iend+1]
-    datestot = udays[ibgn:iend+1]  
+    datestot = fdays[ibgn:iend+1]  
     
     ## make sure we grabbed the right data
     uptake_dates = np.asarray([datetime.date(iut.year, iut.month, iut.day) for iut in uptake_time])
