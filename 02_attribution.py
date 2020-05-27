@@ -195,7 +195,7 @@ def main_attribution(
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readpom( idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
-                       ifile_base = ifile_base)
+                       ifile_base = ifile_base, verbose=verbose)
 
         nparcel   = ary.shape[1]
         ntrajleng   = ary.shape[0]

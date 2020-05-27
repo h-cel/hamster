@@ -139,7 +139,8 @@ def main_diagnosis(
         ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
         ary         = readpom( idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
-                               ifile_base   = ifile_base)
+                               ifile_base   = ifile_base,
+                               verbose      = verbose)
         nparticle   = ary.shape[1]
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")

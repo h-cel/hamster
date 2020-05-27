@@ -512,7 +512,7 @@ def linear_attribution_p(qv,iupt,explainp):
         etop        = prec*fw_orig
     return(etop)
 
-def calc_maxatt(qtot, iupt):
+def calc_maxatt(qtot, iupt, verbose):
   dqdt = qtot[:-1] - qtot[1:]
   dqdt = np.append(dqdt,qtot[-1])
   nt   = len(dqdt)
@@ -526,7 +526,7 @@ def calc_maxatt(qtot, iupt):
     idqdt   = min(iatt,dqdt[ii]-dqdt_max[ii])
     dqdt_max[ii] = idqdt
   maxatt    = np.sum(dqdt_max)/abs(dqdt[0])
-  if maxatt<1:
+  if maxatt<1 and verbose:
     print(" * Maximum attribution along trajectory: {:.2f}".format(100*maxatt)+"%")
   return(maxatt)
 
@@ -560,7 +560,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   if nmin < nupt:
       nmin  = nupt
   # determine precip. (or max. attr. fraction)
-  maxatt    = calc_maxatt(qtot, iupt)
+  maxatt    = calc_maxatt(qtot, iupt, verbose)
   if maxatt>=1:
       prec  = dqdt[0]
   else:
