@@ -82,20 +82,20 @@ def main_biascorrection(
         print(" * Reading diagnosis data...")
     
     # get required months
-    ayears  = np.asarray([ut.year  for ut in uptake_time])
-    amonths = np.asarray([ut.month for ut in uptake_time])
+    ayears   = date2year(uptake_time)
+    amonths  = date2month(uptake_time)
     uyears = (np.unique(np.column_stack((ayears, amonths)), axis=0))[:,0]
 
     # read concatenated data
     totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="grid")
     gridcheck(lats,totlats,lons,totlons)
     ftime               = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="time")
+    udays               = np.unique(cal2date(ftime))
     E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
     P                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     # make sure we use daily aggregates
-    udays = np.unique(np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime]))
     if udays.size != ftime.size:
         Etot    = convert2daily(E,ftime,udays,fagg="sum")
         Ptot    = convert2daily(P,ftime,udays,fagg="sum")

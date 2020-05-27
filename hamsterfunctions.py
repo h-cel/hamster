@@ -1316,3 +1316,10 @@ def expand4Darray(myarray,atime,utime_srt,veryverbose):
     for iat in range(atime.size):
         myarray_exp[iat,iat:iat+utime_srt.size,:,:] = myarray[iat,:,:,:]
     return(myarray_exp)
+
+def date2year(mydates):
+    return( np.asarray([it.year for it in mydates]))
+def date2month(mydates):
+    return( np.asarray([it.month for it in mydates]))
+def cal2date(mydates):
+    return( np.asarray([datetime.date(it.year, it.month, it.day) for it in mydates]))
