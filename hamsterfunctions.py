@@ -552,7 +552,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   if explainp=="none":
     iupt = np.append(iupt,nt-1)
   # indicator for potential uptake locations (1: yes, 0: no)
-  pupt = np.zeros(shape=len(dqdt))
+  pupt = np.zeros(shape=nt)
   pupt[iupt]=1
   # number of potential uptake locations
   nupt = len(np.where(pupt==1)[0])
@@ -566,7 +566,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   if maxatt<1: 
       prec = maxatt*dqdt[0] # reset prec to increase efficiency
   ## starting the random attribution loop
-  dqdt_random = np.zeros(shape=len(dqdt))
+  dqdt_random = np.zeros(shape=nt)
   expl      = 0
   icount    = 0
   while expl < abs(prec):
