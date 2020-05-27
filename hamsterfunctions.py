@@ -545,26 +545,25 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
   # nmin = tuning parameter; ~minimum iterations 
   #  - the higher this value, the more iterations, the uptake locations are covered
   #  - a value of 10 enforces min. 10 iterations
-  dqdt = qtot[:-1] - qtot[1:]
+  dqdt  = qtot[:-1] - qtot[1:]
   # append initial condition as artificial uptake
-  dqdt = np.append(dqdt,qtot[-1])
-  nt  = len(dqdt)
+  dqdt  = np.append(dqdt,qtot[-1])
+  nt    = len(dqdt)
   if explainp=="none":
     iupt = np.append(iupt,nt-1)
   # indicator for potential uptake locations (1: yes, 0: no)
-  pupt = np.zeros(shape=nt)
+  pupt  = np.zeros(shape=nt)
   pupt[iupt]=1
-  # number of potential uptake locations
-  nupt = len(np.where(pupt==1)[0])
+  nupt  = len(np.where(pupt==1)[0])
   # adjust minimum number of iterations
   if nmin < nupt:
-      nmin=nupt
-  #
-  prec        = dqdt[0]
-  # calculate maximum attributable fraction
+      nmin  = nupt
+  # determine precip. (or max. attr. fraction)
   maxatt    = calc_maxatt(qtot, iupt)
-  if maxatt<1: 
-      prec = maxatt*dqdt[0] # reset prec to increase efficiency
+  if maxatt>=1:
+      prec  = dqdt[0]
+  else:
+      prec  = maxatt*dqdt[0]
   ## starting the random attribution loop
   dqdt_random = np.zeros(shape=nt)
   expl      = 0
@@ -574,13 +573,12 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
     try:
-        imin        = np.argmin(qtot[1:ii])+1
+        imin    = np.argmin(qtot[1:ii])+1
     except:
-        imin        = 1
+        imin    = 1
     iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
     idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
     # get random value
-    #rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin, abs(prec)-expl))
     rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
     if (expl+rvalue) > abs(prec):
       rvalue    = abs(prec)-expl
@@ -592,8 +590,6 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1):
     # safety exit (e.g. sum of dqdt_max cannot fully explain prec)
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
-        print(str(qtot))
-        print(str(dqdt))
         break
   #print("Iterations:"+str(icount)+" for nupt="+str(nupt)+" with P="+str(dqdt[0])+" with E2Prandom="+str(np.sum(dqdt_random)))
   return(dqdt_random/1000)
