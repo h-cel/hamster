@@ -252,17 +252,12 @@ def main_biascorrection(
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
     
+    ### plots that help to debug
     if fdebug: 
-        basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
-        mask[(mask>0) & (mask!=maskval)] = 0
-        basicplot(mask, mlat, mlon, title="mask used for bias-correction")
+        debugmask(mask,maskval,mlat,mlon)
         alphascreener(alpha_Had, var='Had')
         alphascreener(alpha_E2P, var='E2P')
-        plt.figure
-        plt.plot(f_remain, label="remaining scaling factor")
-        plt.plot(Pratio, label="P ratio (REF/FLEX)")
-        plt.legend()
-        plt.show()    
+        plotpratio(f_remain,Pratio)
         basicplot(np.nanmean(Had, axis=0), lats, lons, 
                   title="raw Had, daily mean")
         basicplot(np.nanmean(Had_scaled, axis=0), lats, lons, 

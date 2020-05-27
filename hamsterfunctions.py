@@ -1277,3 +1277,15 @@ def gridcheck(lats,totlats,lons,totlons):
 def datecheck(idate,dateseq):
     if idate not in dateseq: 
         raise SystemExit("\n !!! ERROR: INPUT DATA MISSING: date "+str(idate)+" not available as output from 01_diagnosis! Aborting here. !!!\n")
+
+def debugmask(mask,maskval,mlat,mlon):
+    basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
+    mask[(mask>0) & (mask!=maskval)] = 0
+    basicplot(mask, mlat, mlon, title="mask used for bias-correction")
+
+def plotpratio(f_remain,Pratio):
+    plt.figure
+    plt.plot(f_remain, label="remaining scaling factor")
+    plt.plot(Pratio, label="P ratio (REF/FLEX)")
+    plt.legend()
+    plt.show()    
