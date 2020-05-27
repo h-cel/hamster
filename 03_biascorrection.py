@@ -173,7 +173,6 @@ def main_biascorrection(
         mlon = f['lon'][:]   
     
     ## area-weight arrival region precipitation (FLEXPART & REF)
-    if verbose: print("---- INFO: area-weighting precipitation data...")
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     # convert from mm to m3
