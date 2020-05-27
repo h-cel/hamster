@@ -67,6 +67,7 @@ def main_biascorrection(
         arrival_time = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
         utime_srt    = np.asarray(f['level'][:])
         uptake_time  = udays2udate(arrival_time,utime_srt)
+        uptake_dates = cal2date(uptake_time)
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
@@ -117,7 +118,6 @@ def main_biascorrection(
     datestot = fdays[ibgn:iend+1]  
     
     ## make sure we grabbed the right data
-    uptake_dates = cal2date(uptake_time)
     if not np.array_equal(uptake_dates, datestot):
         raise SystemExit("---- hold your horses; datetime matching failed!")
     
