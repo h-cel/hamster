@@ -95,8 +95,7 @@ def main_biascorrection(
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     
     ## must check if data comes in daily resolution; fix if not
-    dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
-    udates = np.unique(dates)
+    udates = np.unique(np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime]))
 
     if udates.size != ftime.size:
         Etot    = convert2daily(E,ftime,udates,fagg="sum")
