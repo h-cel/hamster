@@ -15,6 +15,8 @@ def main_attribution(
            gres,
            maskfile,
            maskval,
+           verbose,
+           veryverbose,
            tdiagnosis,
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)

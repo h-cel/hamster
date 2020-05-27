@@ -14,6 +14,8 @@ def main_diagnosis(
            opath, ofile_base,
            mode,
            gres,
+           verbose,
+           veryverbose,
            tdiagnosis,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
