@@ -67,9 +67,6 @@ def main_biascorrection(
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
-        # get attributes for later
-        istrargs     = getattr(nc4.Dataset(attrfile),"description")
-        strargs      = istrargs.replace("02_attribution","03_biascorrection") 
 
     ## expand uptake dimension to conform to original approach
     utime_first = arrival_time[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
@@ -257,9 +254,14 @@ def main_biascorrection(
                   title="E-P-scaled E2P, daily mean")
     
     ##--7. save output ############################################################
-    if fwrite_netcdf:
-        if verbose: 
-            print(" * Writing final output... ")
+    if verbose: 
+        print(" * Writing final output... ")
         
+    if fwrite_netcdf:
+        # get attributes from attribution file and modify
+        attrdesc    = getattr(nc4.Dataset(attrfile),"description")
+        biasdesc    = attrdesc.replace("02_attribution","03_biascorrection") 
+
+        # write to netcdf
         writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_scaled, 
-                 E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=strargs, precision=precision)
+                 E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=biasdesc, precision=precision)

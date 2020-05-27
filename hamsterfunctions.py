@@ -1091,7 +1091,7 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
-    nc_f.description    = "03_biascorrection - " + str(strargs)
+    nc_f.description    = str(strargs)
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
