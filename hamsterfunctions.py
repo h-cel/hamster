@@ -569,7 +569,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   dqdt_random = np.zeros(shape=nt)
   expl      = 0
   icount    = 0
-  while expl < abs(prec):
+  while round(expl,8) < round(abs(prec),8):
     i    = random.randint(0,nupt-1) # get a random uptake location number
     ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
