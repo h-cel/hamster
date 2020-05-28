@@ -1043,7 +1043,7 @@ def convert2daily(xar,ftime,dtime,fagg="mean"):
         pass
     dtime   = np.unique(dates)
 
-    xtot = np.zeros(shape=(ftime.size, xar.shape[1], xar.shape[2]))
+    xtot = np.zeros(shape=(dtime.size, xar.shape[1], xar.shape[2]))
 
     ## this isn't fast or elegant, but works for literally anything sub-daily
     for i in range(dtime.size):
