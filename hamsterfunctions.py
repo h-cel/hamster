@@ -828,41 +828,6 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
     nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
 
-def basicplot(array, lats, lons, title, coastlines=True, colorbar=True):
-    """
-    does exactly what the name suggests, 
-    produces a very basic plot.
-    
-    array.shape == lats.size,lons.size
-    
-    data must be on a regular lat/lon grid!
-    """
-    
-    ## obtain resolution and check if this is a 
-    if (abs(lats[1]-lats[0]) == abs(lons[1]-lons[0])):
-        res = abs(lats[1]-lats[0])
-    else:
-        raise SystemExit("------ ERROR: input coordinates not as required, ABORTING!")
-
-    ## create quadrilateral corner coords (dimensions of X & Y one greater than array!)
-    cornerlats = np.unique((lats-res/2).tolist()+(lats+res/2).tolist())
-    cornerlons = np.unique((lons-res/2).tolist()+(lons+res/2).tolist())
-    
-    ## prepare figure & plot, add coastlines if desired
-    plt.figure()
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    plot_data = ax.pcolormesh(cornerlons, cornerlats, array, 
-                              transform=ccrs.PlateCarree())
-    if coastlines:
-        coast = NaturalEarthFeature(category='physical', scale='50m',
-                                    facecolor='none', name='coastline')
-        ax.add_feature(coast, edgecolor='gray')
-    if colorbar:
-        plt.colorbar(plot_data, ax=ax, orientation = "horizontal")
-    plt.title(title)
-    plt.show()
-
-
 def regrid_2Dto1deg(data, lats_in, lons_in, nmin_perpixel=1):
     """
     input: data with axes lats x lons, lons [-180 .. 180]
@@ -1277,11 +1242,6 @@ def gridcheck(lats,totlats,lons,totlons):
 def datecheck(idate,dateseq):
     if idate not in dateseq: 
         raise SystemExit("\n !!! ERROR: INPUT DATA MISSING: date "+str(idate)+" not available as output from 01_diagnosis! Aborting here. !!!\n")
-
-def debugmask(mask,maskval,mlat,mlon):
-    basicplot(mask, mlat, mlon, title="content of mask file (all values plotted)")
-    mask[(mask>0) & (mask!=maskval)] = 0
-    basicplot(mask, mlat, mlon, title="mask used for bias-correction")
 
 def plotpratio(f_remain,Pratio):
     plt.figure

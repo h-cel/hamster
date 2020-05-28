@@ -221,23 +221,10 @@ def main_biascorrection(
     
     ##--6. debugging needed? ######################################################
     ### plots that help to debug
-    if fdebug: 
-        debugmask(mask,maskval,mlat,mlon)
+    if fdebug:
         alphascreener(alpha_Had, var='Had')
         alphascreener(alpha_E2P, var='E2P')
         plotpratio(f_remain,Pratio)
-        basicplot(np.nanmean(Had, axis=0), lats, lons, 
-                  title="raw Had, daily mean")
-        basicplot(np.nanmean(Had_scaled, axis=0), lats, lons, 
-                  title="H-scaled Had, daily mean")
-        basicplot(np.nanmean(E2P, axis=0), lats, lons, 
-                  title="raw E2P, daily mean")
-        basicplot(np.nanmean(E2P_Escaled, axis=0), lats, lons, 
-                  title="E-scaled E2P, daily mean")    
-        basicplot(np.nanmean(E2P_Pscaled, axis=0), lats, lons, 
-                  title="P-scaled E2P, daily mean")
-        basicplot(np.nanmean(E2P_EPscaled, axis=0), lats, lons, 
-                  title="E-P-scaled E2P, daily mean")
     
     ##--7. save output ############################################################
     if verbose: 
