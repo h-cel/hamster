@@ -828,98 +828,6 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
     nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
 
-def regrid_2Dto1deg(data, lats_in, lons_in, nmin_perpixel=1):
-    """
-    input: data with axes lats x lons, lons [-180 .. 180]
-    action: regrid to regular 1 degree grid
-    
-    ===> CAUTION: lats, lons must increase monotonically!
-    
-    DSc, April 2019, alpha version
-    """
-    
-    ## check if input coordinates do increase monotonically...
-    if np.all(np.diff(lats_in)>0) and np.all(np.diff(lons_in)>0):
-        pass
-    else:
-        print("---------- WARNING: function cannot handle input coordinates!")
-        return(False,False,False)
-    
-    ## proceed
-    lats_rounded     = np.round(lats_in)
-    lats_new         = np.unique(lats_rounded)
-    lons_rounded     = np.round(lons_in)
-
-    if lons_rounded[-1] == 180 and lons_rounded[0] == -180:
-        lons_rounded[lons_rounded==180] = -180  # set 180 to -180 degrees !
-    lons_new         = np.unique(lons_rounded)
-    
-    data_rg = np.zeros(shape=(lats_new.size, lons_new.size))
-    
-    ## loop through
-    for jlat in range(lats_new.size):
-        xlat = np.where(lats_rounded==lats_new[jlat])[0]
-        for jlon in range(lons_new.size):
-            xlon = np.where(lons_rounded==lons_new[jlon])[0]
-            
-            #######################################
-            if xlat.size*xlon.size>nmin_perpixel:
-                pass
-            else:
-                continue
-            #######################################
-            
-            if xlat.size==1 or xlon.size==1: # values at boundaries might be wrong.. (not double-checked)
-                data_rg[jlat,jlon] = np.nanmean(data[xlat,xlon])
-            else: # feeding in xlat, xlon directly results in weird shapes..
-                data_rg[jlat,jlon] = np.nanmean(data[xlat[0]:xlat[-1]+1,xlon[0]:xlon[-1]+1])
-                
-    return(data_rg, lats_new, lons_new)
-    
-def freakshow(pommaskpath):
-    """
-    
-    this function is appropriately called 'freakshow',
-    because it is 
-     - terribly ugly,
-     - has only been checked for two ANYAS ecoregions (NGP, AUS)
-    
-    maskpath: should point to XXXXXXXX_mask.dat produced by particle-o-matic
-    
-    RETURNS:
-        
-        1 x 1° gridded mask as obtained from particle-o-matic,
-        including coordinates
-    """
-
-    ## load mask file
-    mask = np.asarray(pd.read_table(pommaskpath, sep="\s", engine='python', header=None))
-    
-    
-    ## data are on a regular 0.2 x 0.2° grid, [90 .. -90], [0 .. 360] 
-    dy = 180/mask.shape[0] 
-    dx = 360/mask.shape[1]
-    mask = np.flip(mask, axis=0) # flip latitudinal axis already
-    assume_lats = np.arange(-90, 90+dy, dy) 
-    assume_lons = np.arange(  0,   360, dx)
-    ## regrid lons from 0 .. 359 to -180 .. 179
-    mask_bu        = np.copy(mask)
-    assume_lons_bu = np.copy(assume_lons)
-    assume_lons[:int(assume_lons.size/2)] = assume_lons_bu[int(assume_lons.size/2):] - 360
-    assume_lons[int(assume_lons.size/2):] = assume_lons_bu[:int(assume_lons.size/2)]
-    mask[:,:int(assume_lons.size/2)] = mask_bu[:,int(assume_lons.size/2):]
-    mask[:,int(assume_lons.size/2):] = mask_bu[:,:int(assume_lons.size/2)]
-    
-    ## use this crap function for regridding from 0.2 to 1.0°
-    mask1deg, lat1deg, lon1deg = regrid_2Dto1deg(data=mask, lats_in=assume_lats, lons_in=assume_lons, nmin_perpixel=1)
-    
-    ## now ditch some pixels and pray it ends up making sense
-    mask1deg[(mask1deg>0) & (mask1deg<0.5)] = 0
-    mask1deg[(mask1deg>=0.5)]          = 1
-
-    return(mask1deg, lat1deg, lon1deg)
-    
-
 def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):
     """
     quickly adjusted to enable multi-annual support at the cost of reading in
@@ -995,21 +903,6 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
         raise SystemExit("---- aborted: no can do.")
     
     return daily
-
-def nanweight3Dary(array, weights):
-    """
-    purpose: weight 3-dim array and sum up along spatial dimensions
-                if array does not contain data, corresponding weight is
-                NOT taken into account as to not distort the average
-    input:   3D array (time x lat x lon), weights of same shape
-    output:  weighted averages, 1D (timeseries)
-    """
-    array   = array.reshape(array.shape[0],array.shape[1]*array.shape[2])
-    weights = weights.reshape(array.shape)
-    weightsum = np.zeros(shape=array.shape[0])
-    for ii in range(array.shape[0]):    
-        weightsum[ii] = np.nansum(weights[ii,np.where(~np.isnan(weights[ii,]*array[ii,]))])
-    return( np.nansum(weights*array, axis=1)/weightsum )
     
 def writefinalnc(ofile,fdate_seq,glon,glat,
                  Had, Had_Hs,
