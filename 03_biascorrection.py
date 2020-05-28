@@ -107,13 +107,13 @@ def main_biascorrection(
         Ptot = P
         Htot = H
         
-    ## only keep what is really needed
+    ## only keep what is really needed (P is stored analogous to E and H for consistency)
     datecheck(uptake_dates[0],fdays)
     ibgn = np.where(fdays==uptake_dates[0])[0][0]
     iend = np.where(fdays==uptake_dates[-1])[0][0]
-    Etot = Etot[ibgn:iend+1]
-    Ptot = Ptot[ibgn:iend+1]
-    Htot = Htot[ibgn:iend+1]
+    Etot = Etot[ibgn:iend+1,:,:]
+    Ptot = Ptot[ibgn:iend+1,:,:]
+    Htot = Htot[ibgn:iend+1,:,:]
     fdates = fdays[ibgn:iend+1]  
     ## make sure we grabbed the right data
     if not np.array_equal(uptake_dates, fdates):
