@@ -99,9 +99,9 @@ def main_biascorrection(
 
     # make sure we use daily aggregates
     if fdays.size != ftime.size:
-        Etot    = convert2daily(E,ftime,fdays,fagg="sum")
-        Ptot    = convert2daily(P,ftime,fdays,fagg="sum")
-        Htot    = convert2daily(H,ftime,fdays,fagg="mean")
+        Etot    = convert2daily(E,ftime,fagg="sum")
+        Ptot    = convert2daily(P,ftime,fagg="sum")
+        Htot    = convert2daily(H,ftime,fagg="mean")
     else: 
         Etot = E
         Ptot = P

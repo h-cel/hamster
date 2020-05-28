@@ -1031,15 +1031,15 @@ def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
     return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
     
 
-def convert2daily(xar,ftime,dtime,fagg="mean"):
-    dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
+def convert2daily(xar,ftime,fagg="mean"):
 
     if ftime[0].hour in [0, 6, 12, 18]:
         ## simple fix, subtract 3 hours
         ftime   = np.asarray([t - datetime.timedelta(hours=3) for t in ftime])
-        dates   = np.asarray([datetime.date(it.year, it.month, it.day) for it in ftime])
+        dates   = cal2date(ftime)
     elif ftime[0].hour in [3, 9, 15, 21]:
         ## NOTE: this is the new norm! retain "old style" for now, though    
+        dates   = cal2date(ftime)
         pass
     dtime   = np.unique(dates)
 
