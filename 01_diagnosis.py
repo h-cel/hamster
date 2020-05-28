@@ -270,13 +270,6 @@ def main_diagnosis(
                 if (dTH > cheat_dtemp):
                     ary_heat[lat_ind,lon_ind] += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
-
-            ## SAJ: STOHL AND JAMES, 2004
-            elif tdiagnosis == 'SAJ':
-
-                ## precipitation AND evaporation
-                ary_prec[lat_ind,lon_ind] += dq
-                ary_evap[lat_ind,lon_ind] += dq
         
         # print stats
         if verbose:
@@ -288,15 +281,9 @@ def main_diagnosis(
         # Convert units
         if verbose:
             print(" * Converting units...")
-        if tdiagnosis == 'KAS' or tdiagnosis == 'SOD' or tdiagnosis == 'SOD2':
-            ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
-            ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
-            ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
-        elif tdiagnosis =='SAJ':
-            ary_evap[ary_evap<0]= 0
-            ary_prec[ary_prec>0]= 0
-            ary_evap[:,:]   = convertunits(ary_evap, garea, "E")
-            ary_prec[:,:]   = convertunits(ary_prec, garea, "P")
+        ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
+        ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
+        ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
 
         # Scale with parcel mass
         if fvariable_mass:
