@@ -71,12 +71,13 @@ def main_biascorrection(
         uyears       = np.unique(date2year(uptake_time))
         lats         = np.asarray(f['lat'][:])
         lons         = np.asarray(f['lon'][:])
-        areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))
-
+        areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))[:,0]
     # expand uptake dimension to dates (instead of backward days)
     E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
     Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
-    
+    # convert water fluxes from mm-->m3
+    E2P = convert_mm_m3(E2P, areas)
+
     # clean up
     del(E2Psrt, Hadsrt)
     
@@ -92,7 +93,10 @@ def main_biascorrection(
     E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
     P                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
-    
+    # convert water fluxes from mm-->m3 to avoid area weighting in between
+    E                   = convert_mm_m3(E, areas)
+    P                   = convert_mm_m3(P, areas)
+
     # make sure we use daily aggregates
     if fdays.size != ftime.size:
         Etot    = convert2daily(E,ftime,fdays,fagg="sum")
@@ -114,7 +118,7 @@ def main_biascorrection(
     ## make sure we grabbed the right data
     if not np.array_equal(uptake_dates, fdates):
         raise SystemExit("---- hold your horses; datetime matching failed!")
-    
+
     ## clean up
     del(E, P, H)
 
@@ -132,6 +136,8 @@ def main_biascorrection(
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    # convert water fluxes from mm-->m3 to avoid area weighting in between
+    Eref = convert_mm_m3(Eref, areas)
         
     Href = eraloader_12hourly(var='sshf',
                      datapath=ipathR+"/sshf_12hourly/H_1deg_",
@@ -146,6 +152,8 @@ def main_biascorrection(
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    # convert water fluxes from mm-->m3 to avoid area weighting in between
+    Pref = convert_mm_m3(Pref, areas)
      
     ##--4. biascorrection #########################################################
     if verbose: 
@@ -177,11 +185,10 @@ def main_biascorrection(
     # sum up precpitation (arrival days) over mask only
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
-    # +convert from mm to m3
-    PrefTS      = np.nansum(areas[xla,xlo]*Pref[ibgn:,xla,xlo], axis=1)/1e3
-    PtotTS      = np.nansum(areas[xla,xlo]*Ptot[ibgn:,xla,xlo], axis=1)/1e3
+    PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
+    PtotTS      = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
     # calculate bias correction fractor
-    Pratio      =  PrefTS / PtotTS # make sure this stays positive
+    Pratio      = PrefTS / PtotTS # make sure this stays positive
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
     E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
     
@@ -191,22 +198,11 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source and sink data...")
     ## step 1: check how much E2P changed due to E-scaling already
-    ## convert from mm to m3 as for P before, take areas into account
-    E2P_Escaled_ts  = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P_Escaled,axis=1), 1, 2), axis=(1,2))/1e3
-    E2P_ts          = np.nansum(areas[:,0]*np.moveaxis(np.nansum(E2P,axis=1), 1, 2), axis=(1,2))/1e3
+    E2P_Escaled_ts  = np.nansum(E2P_Escaled,axis=(1,2,3))
+    E2P_ts          = np.nansum(E2P,axis=(1,2,3))
     f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
-    ### Jessica: I believe the part below should be correct. It gives 1e-8 differences in E2P_EPscaled though, as a result of different f_Escaled
-    ### ... to test, just uncomment the next lines
-    #print(f_Escaled)
-    #E2P_Escaled_ts  = np.nansum(np.multiply(areas,E2P_Escaled/1e3),axis=(1,2,3))
-    #E2P_ts          = np.nansum(np.multiply(areas,E2P/1e3),axis=(1,2,3))
-    #f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
-    #print(f_Escaled)
     # step 2: calculate how much more scaling is needed to match P too 
     f_remain = np.divide(Pratio, f_Escaled)
-    ## swap axes to enable numpy broadcasting; 
-    ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
-    ## swap back and then store    
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     
     ##--5. aggregate ##############################################################
@@ -217,6 +213,11 @@ def main_biascorrection(
     E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+    # and convert water fluxes back from m3 --> mm
+    E2P          = convert_m3_mm(E2P,areas)
+    E2P_Escaled  = convert_m3_mm(E2P_Escaled,areas)
+    E2P_Pscaled  = convert_m3_mm(E2P_Pscaled,areas)
+    E2P_EPscaled = convert_m3_mm(E2P_EPscaled,areas)
     
     ##--6. debugging needed? ######################################################
     ### plots that help to debug

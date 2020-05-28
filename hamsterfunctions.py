@@ -1324,3 +1324,29 @@ def date2month(mydates):
     return( np.asarray([it.month for it in mydates]))
 def cal2date(mydates):
     return( np.asarray([datetime.date(it.year, it.month, it.day) for it in mydates]))
+
+def convert_mm_m3(myarray,areas):
+    # we ALWAYS follow the array dimensions order: (anything(s) x lat x lon) here
+    if len(areas.shape) > 1:
+        # attention: broadcasting with a 2D array in numpy can lead to differences 
+        # 1e-9 (f4) or 1e-17 (f8)
+        carray = np.multiply(areas,myarray/1e3)
+    if len(areas.shape) == 1:
+        ## swap axes to enable numpy broadcasting;
+        ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
+        ldim   = len(myarray.shape)-1  
+        carray = np.swapaxes(areas*np.moveaxis(myarray/1e3, ldim-1, ldim), ldim-1, ldim)
+    return(carray)
+    #return( np.multiply(areas,myarray/1e3) ) 
+def convert_m3_mm(myarray,areas):
+    # we ALWAYS follow the array dimensions order: (anything(s) x lat x lon) here
+    if len(areas.shape) > 1:
+        # attention: broadcasting with a 2D array in numpy can lead to differences 
+        # 1e-9 (f4) or 1e-17 (f8)
+        carray = np.nan_to_num(np.divide(myarray*1e3,areas))
+    if len(areas.shape) == 1:
+        ## swap axes to enable numpy broadcasting;
+        ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
+        ldim   = len(myarray.shape)-1 
+        carray = np.swapaxes(np.nan_to_num(np.divide(np.moveaxis(myarray*1e3, ldim-1, ldim), areas)), ldim-1, ldim)
+    return(carray) 
