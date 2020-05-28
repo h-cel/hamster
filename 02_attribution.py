@@ -586,29 +586,6 @@ def main_attribution(
                             if fmemento:
                                 pidlog[ID] = ix # NOTE: double-check
 
-
-                ##  - 2.3)-SAJ: Stohl and James, 2004
-                elif tdiagnosis == 'SAJ':
-
-                    if not mask[mlat_ind,mlon_ind]==maskval:
-                        nnevalm += 1
-                        continue
-                    
-                    ## (a) E-P based on ALL parcels residing over target region, no precipitation-criterion used
-                    # read full parcel information (but only what is needed; ihf_H)
-                    lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
-
-                    # calculate all required changes along trajectory
-                    dq          = trajparceldiff(qv[:], 'diff')
-
-                    # add any moisture change along trajectory to respective column sum
-                    for itj in range(ihf_H-1):
-                        ary_etop[upt_idx[ix+tml-itj],:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dq[itj], glon=glon, glat=glat)
-
-                    # update parcel log
-                    if fmemento:
-                        pidlog[ID] = ix # NOTE: making use of heat parcel log for E-P
-
         if fjumps:
             neval   = len(ntot)-njumps
         else: 
