@@ -222,9 +222,8 @@ def main_biascorrection(
     ##--6. debugging needed? ######################################################
     ### plots that help to debug
     if fdebug:
-        alphascreener(alpha_Had, var='Had')
-        alphascreener(alpha_E2P, var='E2P')
-        plotpratio(f_remain,Pratio)
+        print("   --- Creating debugging file")
+        # this is where debugging function will be called
     
     ##--7. save output ############################################################
     if verbose: 

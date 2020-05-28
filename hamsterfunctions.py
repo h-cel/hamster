@@ -995,19 +995,6 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
         raise SystemExit("---- aborted: no can do.")
     
     return daily
-    
-def alphascreener(alpha, var):
-    alphasum = np.nansum(alpha, axis=0)
-    plt.figure()
-    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
-    plt.title(var+' :: alphas summed over arrival days -- auto range')
-    plt.show()
-    plt.figure()
-    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
-    plt.title(var+' :: same as above, manual plotting range')
-    plt.ylim(0,2e2)
-    plt.show()
-    print("--- this value should not really exceed 1.0 ===>", np.nanmax(alphasum))
 
 def nanweight3Dary(array, weights):
     """
@@ -1242,13 +1229,6 @@ def gridcheck(lats,totlats,lons,totlons):
 def datecheck(idate,dateseq):
     if idate not in dateseq: 
         raise SystemExit("\n !!! ERROR: INPUT DATA MISSING: date "+str(idate)+" not available as output from 01_diagnosis! Aborting here. !!!\n")
-
-def plotpratio(f_remain,Pratio):
-    plt.figure
-    plt.plot(f_remain, label="remaining scaling factor")
-    plt.plot(Pratio, label="P ratio (REF/FLEX)")
-    plt.legend()
-    plt.show()    
 
 def calc_alpha(top,bot):
     alpha   = np.divide(top,bot)
