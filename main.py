@@ -171,6 +171,7 @@ if args.steps == 3:
                maskval=args.maskval,
                verbose=args.verbose,
                veryverbose=args.veryverbose,
+               fuseattp=args.useattp,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                precision=args.precision,
