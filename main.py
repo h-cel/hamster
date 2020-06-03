@@ -174,5 +174,6 @@ if args.steps == 3:
                fuseattp=args.useattp,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
+               fwritestats=args.writestats,
                precision=args.precision,
                strargs=printsettings(args,3))
