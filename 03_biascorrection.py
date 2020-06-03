@@ -51,6 +51,7 @@ def main_biascorrection(
         print(" ! using reference data from: \t")
         print("\t"+str(ipathR))
         print(" ! using mode: \t" +str(mode))
+        print(" ! using attribution data to bias-correct P: \t" +str(fuseattp))
         print(" ! writing netcdf output: \t")
         print("\t"+str(ofile))
         print("\n============================================================================================================")
