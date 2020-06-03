@@ -35,6 +35,9 @@ def main_biascorrection(
     attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
+    ## additional statistic output files includes P validation data (*.csv)
+    sfilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
+    sfile     = opath+"/"+sfilename
 
     #### DISCLAIMER
     if verbose:
@@ -234,6 +237,10 @@ def main_biascorrection(
     E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
     E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+    
+    # write some additional statistics about P-biascorrection before converting back to mm
+    evalp(sfile,Pref,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled,xla,xlo,ibgn)
+
     # and convert water fluxes back from m3 --> mm
     E2P          = convert_m3_mm(E2P,areas)
     E2P_Escaled  = convert_m3_mm(E2P_Escaled,areas)

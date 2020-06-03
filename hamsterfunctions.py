@@ -1209,3 +1209,66 @@ def needmonthlyp(pdiag,pref):
         print("   --- ATTENTION: Using monthly precipitation for bias correction for consistency.")
         returnval   = True
     return(returnval)
+
+
+def evalp(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
+    with open(sfile,'w') as ifile:
+        writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["* - PRECIPITATION STATISTICS: "])
+        ndays       = Pref[ibgn:,:,:].shape[0]
+        writer.writerow(["   --- # DAYS EVALUATED:              {:.0f}".format(ndays)])
+        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(-np.nansum(Pref[ibgn:,xla,xlo]))])
+        writer.writerow(["   --- P_E2P_unscaled [m3]:           {:.2f}".format(np.nansum(P_E2P))])
+        writer.writerow(["   --- P_E2P_Escaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Escaled))])
+        writer.writerow(["   --- P_E2P_Pscaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Pscaled))])
+        writer.writerow(["   --- P_E2P_EPscaled [m3]:           {:.2f}".format(np.nansum(P_E2P_EPscaled))])
+        # some contingency table statistics... 
+        writer.writerow([" "])
+        writer.writerow(["* - CONTINGENCY TABLE SCORES "])
+        pref_sum    = -np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
+        pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
+        myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
+        myscores    = calc_ctab_measures(myctab)
+        writer.writerow(["   --- * DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
+        writer.writerow(["   --- * DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
+        writer.writerow(["   --- * DAYS OF HITS:                {:.0f}".format(myctab["a"])])
+        writer.writerow(["   --- * DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
+        writer.writerow(["   --- * SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
+        writer.writerow(["   --- * FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
+        writer.writerow(["   --- * FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
+        writer.writerow(["   --- * PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
+        writer.writerow(["   --- * PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
+        writer.writerow(["   --- * PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
+
+
+def contingency_table(ref,mod,thresh=0):
+    # creates a contingency table based on 1D np.arrays
+    ieventobs   = (np.where(ref>thresh)[0])
+    ineventobs  = (np.where(ref<=thresh)[0])
+    a           = len(np.where(mod[ieventobs]>thresh)[0])     # hits
+    b           = len(np.where(mod[ineventobs]>thresh)[0])    # false alarms
+    c           = len(np.where(mod[ieventobs]<=thresh)[0])    # misses
+    d           = len(np.where(mod[ineventobs]<=thresh)[0])   # correct negatives
+    return({"a":a,"b":b,"c":c,"d":d})
+
+def calc_ctab_measures(cdict):
+    # calculates common contingency table scores
+    # scores following definitions from https://www.cawcr.gov.au/projects/verification/
+    a           = cdict["a"]    # hits
+    b           = cdict["b"]    # false alarms
+    c           = cdict["c"]    # misses
+    d           = cdict["d"]    # correct negatives
+    # calculate scores
+    acc         = (a+d)/(a+b+c+d)   # accuracy
+    far         = b/(a+b)           # false alarm ratio
+    fbias       = (a+b)/(a+c)       # frequency bias
+    pod         = a/(a+c)           # probability of detection (hit rate)
+    pofd        = b/(b+d)           # probability of false detection (false alarm rate)
+    sr          = a/(a+b)           # success ratio
+    ts          = a/(a+c+b)         # threat score (critical success index)
+    a_random    = (a+c)*(a+b)/(a+b+c+d)
+    ets         = (a-a_random)/(a+b+c+a_random) # equitable threat score (gilbert skill score)
+    pss         = pod-pofd          # peirce's skill score (true skill statistic)
+    odr         = a*d/c*b           # odd's ratio      
+    return({"acc":acc,"far":far,"fbias":fbias,"pod":pod,"pofd":pofd,"sr":sr,"pss":pss,"odr":odr})
+
