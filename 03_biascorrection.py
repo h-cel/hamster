@@ -167,6 +167,9 @@ def main_biascorrection(
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     
+    ## preliminary checks
+    useatt = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P)
+    
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
     #******************************************************************************

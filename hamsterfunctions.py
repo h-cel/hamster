@@ -1171,10 +1171,29 @@ def convert_m3_mm(myarray,areas):
     return(carray) 
 
 def checkprec(pdiag,pattr):
+    returnval   = False
     pdiag_sum   = -np.nansum(pdiag,axis=(1))
-    print(pdiag_sum)
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
-    print(pattr_sum)
-    print(pdiag_sum-pattr_sum)
+    if round(np.nansum(pdiag_sum),4) != round(np.nansum(pattr_sum),4):
+        print("   --- WARNING: total precipitation from 01_diagnosis and 02_attribution differ")
+        print(" \t --- Absolute difference: {:.2f}".format(np.nansum(pdiag_sum)-np.nansum(pattr_sum))+" m3")
+        printwarning = True
+    if np.any(pdiag_sum-pattr_sum != 0):
+        print("   --- WARNING: daily precipitation from 01_diagnosis and 02_attribution differ")
+        ndiffs  = len(np.where(pdiag_sum-pattr_sum !=0)[0])
+        print(" \t --- "+str(ndiffs)+" days have different precipitation sums. ")
+        ndiffs  = len(np.where(pdiag_sum>pattr_sum)[0])
+        print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) > P(02_attribution)")
+        ndiffs  = len(np.where(pdiag_sum<pattr_sum)[0])
+        print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) < P(02_attribution)")
+        printwarning = True
+    if printwarning: 
+        print("   --- ATTENTION: Using 02_attribution data for bias correction for consistency.")
+        returnval   = True
+    #print(pattr_sum)
+    #print(np.nansum(pattr_sum))
+    #print(pdiag_sum)
+    #print(np.nansum(pdiag_sum))
+    #print(pdiag_sum-pattr_sum)
     #print(np.nan_to_num(100*(pdiag_sum-pattr_sum)/pattr_sum))
-    return(pdiag_sum-pattr_sum)
+    return(returnval)
