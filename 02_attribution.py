@@ -664,30 +664,8 @@ def main_attribution(
     if verbose:
         if fwrite_netcdf:
             print("\n Successfully written: "+ofile+" !\n")
-    
-    with open(statfile,'w') as sfile:
-        writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
-        writer.writerow(["* - PARCEL STATISTICS: "])
-        writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
-        writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
-        writer.writerow([" "])
-        writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
-        if tnnevala!=tneval:
-            writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
-        if tnevalh!=0:
-            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
-        writer.writerow([" "])
-        writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
-        if tnnevalm!=tneval:
-            writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
-        if tnevalp!=0:
-            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
-        writer.writerow([" "])
-        if psum!=0:
-            writer.writerow([" * - PRECIPITATION STATISTICS: "])
-            writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
-            writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
-            writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+
+    writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
     if verbose: 
         with open(statfile, 'r') as sfile:
             print(sfile.read())
