@@ -110,7 +110,7 @@ def main_attribution(
     glon, glat, garea = makegrid(resolution=gres)
     ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
     if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
-        warnings.warn("\n----------------- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
+        print("\n--- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
 
     ## -- DATES
     # NOTE: we begin at 06 UTC...
@@ -609,7 +609,7 @@ def main_attribution(
             # DAILY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
             if fdupscale and (nnevalp!=0 or ipmiss!=0):
                 if ipatt==0:
-                    warnings.warn(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+                    print(" \n--- WARNING: there were no trajectories with uptakes, so upscaling is impossible...\n ")
                 else:
                     upsfac              = 1+(ipmiss/ipatt)
                     ary_etop[:,:,:]     = upsfac*ary_etop[:,:,:]
@@ -640,7 +640,7 @@ def main_attribution(
     # MONTHLY UPSCALING of E2P, taking into account the missing trajectories (i.e. the ones without any uptakes)
     if fmupscale and (pmiss!=0 or punatt!=0):
         if patt==0:
-            print(" --- WARNING: there were no trajectories with uptakes, so upscaling is impossible...")
+            print(" \n--- WARNING: there were no trajectories with uptakes, so upscaling is impossible...\n")
         else:
             upsfac              = 1+((pmiss+punatt)/patt)
             # load full etop array and upscale
