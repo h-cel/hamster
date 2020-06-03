@@ -1198,3 +1198,14 @@ def checkprec(pdiag,pattr):
     #print(pdiag_sum-pattr_sum)
     #print(np.nan_to_num(100*(pdiag_sum-pattr_sum)/pattr_sum))
     return(returnval)
+
+def needmonthlyp(pdiag,pref):
+    returnval   = False
+    tocheck     = np.where(pref<0)[0]
+    if np.any(pdiag[tocheck]==0):
+        print("   --- WARNING: daily bias correction of precipitation not possible.")
+        ndiffs  = len(np.where(pdiag[tocheck]==0)[0])
+        print(" \t --- "+str(ndiffs)+" days have no diagnosed but observed precipitation.")
+        print("   --- ATTENTION: Using monthly precipitation for bias correction for consistency.")
+        returnval   = True
+    return(returnval)

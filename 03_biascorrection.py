@@ -193,13 +193,22 @@ def main_biascorrection(
     # sum up precpitation (arrival days) over mask only
     PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
     if fuseattp:
-        PtotTS  = -np.nansum(E2P[:,:,xla,xlo],axis=(1,2))
+        PtotTS  = -np.nansum(E2P,axis=(1,2,3))
     else:    
         PtotTS  = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
+    # switch to monthly bias correction of P if necessary
+    # attention: still writing out daily data though (days won't match!)
+    fusemonthly = needmonthlyp(pdiag=PtotTS,pref=PrefTS)    
+    if fusemonthly:
+        ndays   = PtotTS.shape[0] 
+        PtotTS  = np.repeat(np.nansum(PtotTS),ndays)
+        PrefTS  = np.repeat(np.nansum(PrefTS),ndays)
     # calculate bias correction fractor
     Pratio      = PrefTS / PtotTS # make sure this stays positive
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
     E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
+    if round(np.nansum(E2P_Pscaled),4) != round(np.nansum(-Pref[ibgn:,xla,xlo]),4):
+        print("  --- OOOPS... something must be wrong in the biascorrection of P.")
     
     #******************************************************************************
     ## (iii) BIAS CORRETING THE SOURCE AND THE SINK (P only)
@@ -213,6 +222,8 @@ def main_biascorrection(
     # step 2: calculate how much more scaling is needed to match P too 
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
+    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(-Pref[ibgn:,xla,xlo]),4):
+        print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
