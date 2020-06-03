@@ -169,7 +169,9 @@ def main_biascorrection(
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     
     ## preliminary checks
-    fuseattp = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P)
+    if not fuseattp:
+        # re-evaluate precip. data to check if it can be used
+        fuseattp = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P)
     
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
