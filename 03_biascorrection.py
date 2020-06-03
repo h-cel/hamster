@@ -164,7 +164,9 @@ def main_biascorrection(
         mask = f['mask'][:]
         mlat = f['lat'][:]
         mlon = f['lon'][:]   
-
+    xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
+    ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
+    
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
     #******************************************************************************
@@ -183,8 +185,6 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using sink data...")
     # sum up precpitation (arrival days) over mask only
-    xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
-    ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
     PtotTS      = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
     # calculate bias correction fractor

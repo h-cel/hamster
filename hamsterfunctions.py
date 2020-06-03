@@ -1169,3 +1169,12 @@ def convert_m3_mm(myarray,areas):
         ldim   = len(myarray.shape)-1 
         carray = np.swapaxes(np.nan_to_num(np.divide(np.moveaxis(myarray*1e3, ldim-1, ldim), areas)), ldim-1, ldim)
     return(carray) 
+
+def checkprec(pdiag,pattr):
+    pdiag_sum   = -np.nansum(pdiag,axis=(1))
+    print(pdiag_sum)
+    pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
+    print(pattr_sum)
+    print(pdiag_sum-pattr_sum)
+    #print(np.nan_to_num(100*(pdiag_sum-pattr_sum)/pattr_sum))
+    return(pdiag_sum-pattr_sum)
