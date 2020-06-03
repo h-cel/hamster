@@ -189,7 +189,10 @@ def main_biascorrection(
         print("   --- Bias correction using sink data...")
     # sum up precpitation (arrival days) over mask only
     PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
-    PtotTS      = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
+    if useatt:
+        PtotTS  = -np.nansum(E2P[:,:,xla,xlo],axis=(1,2))
+    else:    
+        PtotTS  = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
     # calculate bias correction fractor
     Pratio      = PrefTS / PtotTS # make sure this stays positive
     Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
