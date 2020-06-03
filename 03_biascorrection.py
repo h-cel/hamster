@@ -168,7 +168,7 @@ def main_biascorrection(
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     
     ## preliminary checks
-    useatt = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P)
+    fuseattp = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P)
     
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
@@ -189,7 +189,7 @@ def main_biascorrection(
         print("   --- Bias correction using sink data...")
     # sum up precpitation (arrival days) over mask only
     PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
-    if useatt:
+    if fuseattp:
         PtotTS  = -np.nansum(E2P[:,:,xla,xlo],axis=(1,2))
     else:    
         PtotTS  = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
