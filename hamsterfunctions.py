@@ -687,7 +687,7 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
@@ -783,7 +783,7 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision):
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.long_name    = 'Difference between uptake and arrival time, in days'
@@ -927,7 +927,7 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
@@ -1362,7 +1362,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     utimes.units        = 'hours since 1900-01-01 00:00:00'
