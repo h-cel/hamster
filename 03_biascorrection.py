@@ -195,7 +195,7 @@ def main_biascorrection(
     E2P_Escaled  = np.multiply(alpha_E2P, Eref)
     
     #******************************************************************************
-    ## (ii) BIAS CORRETING THE SINK (P only)
+    ## (ii) BIAS CORRECTING THE SINK (P only)
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using sink data...")
@@ -220,7 +220,7 @@ def main_biascorrection(
         print("  --- OOOPS... something must be wrong in the biascorrection of P.")
     
     #******************************************************************************
-    ## (iii) BIAS CORRETING THE SOURCE AND THE SINK (P only)
+    ## (iii) BIAS CORRECTING THE SOURCE AND THE SINK (P only)
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source and sink data...")
