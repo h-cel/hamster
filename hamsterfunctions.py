@@ -1172,6 +1172,7 @@ def convert_m3_mm(myarray,areas):
     return(carray) 
 
 def check_attributedp(pdiag,pattr,veryverbose):
+    printwarning= False
     returnval   = False
     pdiag_sum   = -np.nansum(pdiag,axis=(1))
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
