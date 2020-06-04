@@ -244,7 +244,7 @@ def main_biascorrection(
     E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        evalp(sfile,Pref,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled,xla,xlo,ibgn)
+        writestats_03(sfile,Pref,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled,xla,xlo,ibgn)
 
     # and convert water fluxes back from m3 --> mm
     E2P          = convert_m3_mm(E2P,areas)

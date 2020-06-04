@@ -1211,7 +1211,7 @@ def needmonthlyp(pdiag,pref):
     return(returnval)
 
 
-def evalp(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
+def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
     with open(sfile,'w') as ifile:
         writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
         writer.writerow(["* - PRECIPITATION STATISTICS: "])
