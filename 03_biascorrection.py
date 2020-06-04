@@ -38,7 +38,7 @@ def main_biascorrection(
     ofile     = opath+"/"+ofilename
     ## additional statistic output files includes P validation data (*.csv)
     if fwritestats:
-        sfilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_pstats.csv"
+        sfilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_stats.csv"
         sfile     = opath+"/"+sfilename
 
     #### DISCLAIMER
