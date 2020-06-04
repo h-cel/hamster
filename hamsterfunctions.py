@@ -715,29 +715,6 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     nc_f.close()
     print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
 
-
-def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
-    if verbose:
-        print(" * Writing to netcdf...")
-
-    nc_f = nc4.Dataset(ofile, 'r+')
-    nc_f['P'][ix,:,:]       = ary_prec
-    nc_f['E'][ix,:,:]       = ary_evap
-    nc_f['H'][ix,:,:]       = ary_heat
-    nc_f['n_part'][ix,:,:]  = ary_npart
-    nc_f['P_n_part'][ix,:,:]  = ary_pnpart
-    nc_f['E_n_part'][ix,:,:]  = ary_enpart
-    nc_f['H_n_part'][ix,:,:]  = ary_hnpart
-    
-    # write data
-    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
-    longitudes[:]       = glon
-    latitudes[:]        = glat
-    # close file
-    nc_f.close()
-    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
-
-
 def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
     if verbose:
         print(" * Writing to netcdf...")
