@@ -1305,7 +1305,7 @@ def mask3darray(xarray,xla,xlo):
     return(marray)
 
 def writedebugnc(ofile,fdate_seq,glon,glat,mask,
-                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
                  strargs,precision):
    
     Prefsum     = np.nansum(Pref,axis=(1,2))
@@ -1344,6 +1344,8 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
     nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
     nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
     nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
+    nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
+    nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1376,6 +1378,10 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
     nc_pattrs_eps.long_name= 'sum of attributed precipitation (E2P_EPscaled, 02_attr)'
     nc_pratio.units        = '-'
     nc_pratio.long_name	   = 'pratio = pref/pdiag'
+    nc_fescaled.units      = '-'
+    nc_fescaled.long_name  = 'f_Escaled'
+    nc_fremain.units       = '-'
+    nc_fremain.long_name   = 'f_remain'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1391,6 +1397,8 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
     nc_pattrs_ps[:]     = Pattrsum_Ps[:]
     nc_pattrs_eps[:]    = Pattrsum_EPs[:]
     nc_pratio[:]        = Pratio[:]
+    nc_fescaled[:]      = f_Escaled[:]
+    nc_fremain[:]       = f_remain[:]
 
     # close file
     nc_f.close()
