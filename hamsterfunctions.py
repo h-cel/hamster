@@ -299,18 +299,6 @@ def glanceparcel(parray):
 
     return ztra, hpbl, temp, qv, dens, pres
 
-def parceldiff(pvals, meval):
-    # difference 
-    if meval in ['diff']:
-        dpval   = pvals[0] - pvals[1]
-    # mean
-    if meval in ['mean']:
-        dpval   = (pvals[0]+pvals[1])/2#np.mean(pvals)
-    # mean
-    if meval in ['max']:
-        dpval   = np.max(pvals)
-    return(dpval)
-
 
 def trajparceldiff(pvals, meval):
     # difference 
