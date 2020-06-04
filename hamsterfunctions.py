@@ -1171,7 +1171,7 @@ def convert_m3_mm(myarray,areas):
         carray = np.swapaxes(np.nan_to_num(np.divide(np.moveaxis(myarray*1e3, ldim-1, ldim), areas)), ldim-1, ldim)
     return(carray) 
 
-def checkprec(pdiag,pattr):
+def checkprec(pdiag,pattr,veryverbose):
     returnval   = False
     pdiag_sum   = -np.nansum(pdiag,axis=(1))
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
@@ -1181,12 +1181,13 @@ def checkprec(pdiag,pattr):
         printwarning = True
     if np.any(pdiag_sum-pattr_sum != 0):
         print("   --- WARNING: daily precipitation from 01_diagnosis and 02_attribution differ")
-        ndiffs  = len(np.where(pdiag_sum-pattr_sum !=0)[0])
-        print(" \t --- "+str(ndiffs)+" days have different precipitation sums. ")
-        ndiffs  = len(np.where(pdiag_sum>pattr_sum)[0])
-        print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) > P(02_attribution)")
-        ndiffs  = len(np.where(pdiag_sum<pattr_sum)[0])
-        print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) < P(02_attribution)")
+        if veryverbose:
+            ndiffs  = len(np.where(pdiag_sum-pattr_sum !=0)[0])
+            print(" \t --- "+str(ndiffs)+" days have different precipitation sums. ")
+            ndiffs  = len(np.where(pdiag_sum>pattr_sum)[0])
+            print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) > P(02_attribution)")
+            ndiffs  = len(np.where(pdiag_sum<pattr_sum)[0])
+            print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) < P(02_attribution)")
         printwarning = True
     if printwarning: 
         print("   --- ATTENTION: Using 02_attribution data for bias correction for consistency.")
