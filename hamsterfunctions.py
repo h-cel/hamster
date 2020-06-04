@@ -1304,7 +1304,7 @@ def mask3darray(xarray,xla,xlo):
     marray[:,xla,xlo] = xarray[:,xla,xlo]
     return(marray)
 
-def writedebugnc(ofile,fdate_seq,glon,glat,mask,
+def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
                  strargs,precision):
    
@@ -1325,11 +1325,13 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
 
     ### create dimensions ###
     nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('uptaketime', len(udate_seq))
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
 
     # create variables
     times               = nc_f.createVariable('time', 'f8', 'time')
+    utimes              = nc_f.createVariable('uptaketime', 'f8', 'uptaketime')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
     # Variables
@@ -1356,6 +1358,8 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
     nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
+    utimes.units        = 'hours since 1900-01-01 00:00:00'
+    utimes.calendar     = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     nc_pref.units          = 'm3'
@@ -1385,6 +1389,7 @@ def writedebugnc(ofile,fdate_seq,glon,glat,mask,
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    utimes[:]           = nc4.date2num(udate_seq, utimes.units, utimes.calendar)
     latitudes[:]        = glat
     longitudes[:]       = glon
     nc_pref[:]          = Pref[:]
