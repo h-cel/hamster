@@ -33,13 +33,13 @@ def read_cmdargs():
     DEP:    uses argparse
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--steps',      '-st',  help = "steps performed (1: 01_diagnosis, ..., 4: all)",                type = int,     default = 4)
+    parser.add_argument('--steps',      '-st',  help = "steps performed (1: diagnosis, 2: attribution, 3: bias correction)",                type = int,     default = 1)
     parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
     parser.add_argument('--ad',         '-ad',  help = "analysis day (D)",                                              type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
-    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2, SAJ)",                         type = str,     default = "KAS")
+    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2)",                              type = str,     default = "KAS")
     parser.add_argument('--maskval',    '-mv',  help = "use <value> from maskfile for masking",                         type = int,     default = 1)
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
@@ -57,18 +57,20 @@ def read_cmdargs():
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f4")
+    parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    type = str2bol, default = False,    nargs='?')
     parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         type = str,     default = "linear")
+    parser.add_argument('--randomnit',  '-rnit',help = "minimum number of iterations for random attribution",           type = int,     default = 10)
     parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               type = str,     default = "none")
     parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          type = str2bol, default = False,    nargs='?')
     parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--useattp',    '-uatt',help = "use precipitation from attribution for bias-correction",        type = str2bol, default = False,    nargs='?')
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
     parser.add_argument('--writestats','-ws',   help = "write additional stats to file (02 only; flag)",                type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--setnegzero', '-sz',  help = "set negative ERA-I E & H fluxes to zero (flag)",                type = str2bol, default = True,     nargs='?')
     parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--frankenstein','-fr', help = "PRELIM: pom mask.dat used for P-scaling (flag)",                type = str2bol, default = True,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = None)
@@ -103,15 +105,9 @@ def printsettings(args,step):
          + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
-    if step == 1 and args.tdiagnosis in ['SAJ']:
-        return(str("Diagnosis following Stohl and James (2004) with the following settings: " +
-         "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)
-         + "; REFERENCE: " +
-        "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"))
     
     ## 02_ATTRIBUTION
-    if (step == 2 or step == 3) and args.tdiagnosis in ['KAS']:
+    if (step == 2) and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
@@ -120,7 +116,7 @@ def printsettings(args,step):
          +", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)+ ", "+
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
          ))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SOD']:
+    if (step == 2) and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
@@ -131,7 +127,7 @@ def printsettings(args,step):
          + "; REFERENCE: " +
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
         ))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SOD2']:
+    if (step == 2) and args.tdiagnosis in ['SOD2']:
         return(str("Diagnosis following Sodemann (2020) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.1, " +
@@ -141,14 +137,6 @@ def printsettings(args,step):
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
-    if (step == 2 or step == 3) and args.tdiagnosis in ['SAJ']:
-        return(str("Diagnosis following Stohl and James (2004) with the following settings: " +
-         "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps) + ", "+ 
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", memento = "+str(args.memento) 
-         + "; REFERENCE: " +
-        "Stohl, A., & James, P. (2004). A Lagrangian analysis of the atmospheric branch of the global water cycle. Part I: Method description, validation, and demonstration for the August 2002 flooding in central Europe. Journal of Hydrometeorology, 5(4), 656-678. https://doi.org/10.1175/1525-7541(2004)005<0656:ALAOTA>2.0.CO;2"))
-
 
 def readpom(idate,      # run year
             ipath,      # input data path
@@ -395,17 +383,32 @@ def default_thresholds(cprec_dqv):
     return cprec_dqv
 
 
-def PBL_check(z, h, seth, tdiagnosis):
-
-    if tdiagnosis == 'KAS':
-        h[h<seth] = seth
-        before_inside = np.logical_or( z[1:] < h[:-1], z[1:]  < h[1:])  
-        after_inside  = np.logical_or(z[:-1] < h[:-1], z[:-1] < h[1:])  
-        change_inside = np.logical_and(before_inside, after_inside)
-    elif tdiagnosis == 'SOD':   
-        change_inside = ((z[1:]+z[:-1])/2) < 1.5*((h[1:]+h[:-1])/2)
-        # NOTE: factor 1.5 is hardcoded      
-
+def PBL_check(cpbl_strict, z, hpbl, sethpbl):
+    """
+    INPUT
+        - PBL strictness flag; 1 (moderate), 2 (relaxed), 3 (fully relaxed)
+        - parcel altitude
+        - PBL heigt at parcel location
+        - prescribed PBL height
+    ACTION
+        - raises any hpbl below sethpbl to this value; no effect if sethpbl=0
+        - calculates whether parcel locations 'before' and 'after' each change,
+          i.e. during analysis steps, are within PBL
+        - depending on cpbl_strict, require both before & after to be
+          inside PBL (1), either (2), or none (3), for change locations
+    RETURN
+        - returns boolean vector for all change locations
+          (True if inside PBL), length given by z.size-1
+    """
+    hpbl[hpbl<sethpbl] = sethpbl
+    befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
+    after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
+    if cpbl_strict == 1:
+        change_inside = np.logical_and(befor_inside, after_inside)
+    elif cpbl_strict == 2:
+        change_inside = np.logical_or(befor_inside, after_inside)
+    elif cpbl_strict == 3:
+        change_inside = np.ones(dtype=bool, shape=befor_inside.size)
     return change_inside
 
 
@@ -475,6 +478,110 @@ def linear_discounter2(qtot):
     #fw[which(is.na(fw))]=0
     #fw  = fw[::-1]
     #return(fw)
+
+def linear_attribution_p(qv,iupt,explainp):
+    dq_disc     = np.zeros(shape=qv.size)
+    dq_disc[1:] = linear_discounter(v=qv[1:], min_gain=0)
+    ## trajectory-based upscaling
+    prec    = abs(qv[0]-qv[1])
+    fw_orig = dq_disc/qv[1]
+    if explainp=="full":
+        # upscaling to 100% of trajectory
+        cfac        = qv[1]/np.sum(dq_disc[iupt])
+        etop        = prec*fw_orig*cfac
+    elif explainp=="max":
+        # upscaling to (100-IC)% of trajectory
+        cfac        = (qv[1]-dq_disc[-1])/np.sum(dq_disc[iupt])
+        etop        = prec*fw_orig*cfac
+    elif explainp=="none":
+        # no upscaling
+        etop        = prec*fw_orig
+    return(etop)
+
+def calc_maxatt(qtot, iupt, verbose):
+  dqdt = qtot[:-1] - qtot[1:]
+  dqdt = np.append(dqdt,qtot[-1])
+  nt   = len(dqdt)
+  dqdt_max  = np.zeros(shape=nt)
+  for ii in iupt[::-1]:
+    try:
+        imin        = np.argmin(qtot[1:ii])+1
+    except:
+        imin        = 1
+    iatt    = qtot[imin]-round(np.sum(dqdt_max[imin:]),8)
+    idqdt   = min(iatt,dqdt[ii]-dqdt_max[ii])
+    dqdt_max[ii] = idqdt
+  maxatt    = np.sum(dqdt_max)/abs(dqdt[0])
+  if maxatt<1 and verbose:
+    print(" * Maximum attribution along trajectory: {:.2f}".format(100*maxatt)+"%")
+  return(maxatt)
+
+
+def local_minima(x):
+    return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
+
+def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=False):
+  qtot = qtot*1000
+  # This is only coded for precipitation as of now
+  # with:
+  # qtot = specific humidity
+  # iupt = identified uptake locations
+  # explainp = none(default)/full analogue to linear discounting & attribution
+  #  - none: 100% is attributed to iupt + initial condition (~not explained)
+  #  - full: 100% is attributed to iupt (if possible!)
+  # nmin = tuning parameter; ~minimum iterations 
+  #  - the higher this value, the more iterations, the uptake locations are covered
+  #  - a value of 10 enforces min. 10 iterations
+  dqdt  = qtot[:-1] - qtot[1:]
+  # append initial condition as artificial uptake
+  dqdt  = np.append(dqdt,qtot[-1])
+  nt    = len(dqdt)
+  if explainp=="none":
+    iupt = np.append(iupt,nt-1)
+  # indicator for potential uptake locations (1: yes, 0: no)
+  pupt  = np.zeros(shape=nt)
+  pupt[iupt]=1
+  nupt  = len(np.where(pupt==1)[0])
+  # adjust minimum number of iterations
+  if nmin < nupt:
+      nmin  = nupt
+  # determine precip. (or max. attr. fraction)
+  maxatt    = calc_maxatt(qtot, iupt, verbose)
+  if maxatt>=1:
+      prec  = dqdt[0]
+  else:
+      prec  = maxatt*dqdt[0]
+  ## starting the random attribution loop
+  dqdt_random = np.zeros(shape=nt)
+  expl      = 0
+  icount    = 0
+  while round(expl,8) < round(abs(prec),8):
+    i    = random.randint(0,nupt-1) # get a random uptake location number
+    ii   = np.where(pupt==1)[0][i]  # uptake location index
+    # determine maximum attribution for current uptake location and iteration
+    try:
+        imin    = np.argmin(qtot[1:ii])+1
+    except:
+        imin    = 1
+    iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
+    idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
+    # get random value
+    rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
+    if (expl+rvalue) > abs(prec):
+      rvalue    = abs(prec)-expl
+      if rvalue<0:
+          print("OHOH")
+    expl  += rvalue
+    dqdt_random[ii] += rvalue
+    icount += 1
+    # safety exit (e.g. sum of dqdt_max cannot fully explain prec)
+    if (icount >= 10000*nmin):
+        print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
+        break
+  if veryverbose:
+      print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
+  return(dqdt_random/1000)
+
 
 def gridder(plon, plat, pval,
             glat, glon):
@@ -645,7 +752,7 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,
     nc_f['H_n_part'][ix,:,:]  = ary_hnpart
     nc_f.close()
 
-def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
+def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision):
                 
     # delete nc file if it is present (avoiding error message)
     try:
@@ -657,18 +764,18 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
     
     # create dimensions 
-    nc_f.createDimension('arrival-time', len(fdate_seq))
-    nc_f.createDimension('uptake-time', len(fuptdate_seq))
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('level', upt_days.size) # could use len() too
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
     
     # create variables
-    atimes              = nc_f.createVariable('arrival-time', 'f8', 'arrival-time')
-    utimes              = nc_f.createVariable('uptake-time', 'f8', 'uptake-time')
+    atimes              = nc_f.createVariable('time', 'f8', 'time')
+    utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('arrival-time','uptake-time','lat','lon'))
-    etops               = nc_f.createVariable('E2P', precision, ('arrival-time','uptake-time','lat','lon'))
+    heats               = nc_f.createVariable('H', precision, ('time','level','lat','lon'))
+    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'))
     
     # set attributes
     nc_f.title          = "Attribution (02) of sources using FLEXPART output"
@@ -679,8 +786,8 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
     nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
-    utimes.units        = 'hours since 1900-01-01 00:00:00'
-    utimes.calendar     = 'Standard' 
+    utimes.long_name    = 'Difference between uptake and arrival time, in days'
+    utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     heats.units         = 'W m-2'
@@ -690,15 +797,14 @@ def writeemptync4D(ofile,fdate_seq,fuptdate_seq,glat,glon,strargs,precision):
   
     # write data
     atimes[:]           = nc4.date2num(fdate_seq, atimes.units, atimes.calendar)[:]
-    utimes[:]           = nc4.date2num(fuptdate_seq, utimes.units, utimes.calendar)[:]
+    utimes[:]           = upt_days[:]
     longitudes[:]       = glon[:]
     latitudes[:]        = glat[:]
         
     # close file
     nc_f.close()
 
-    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(len(fuptdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
-
+    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(upt_days.size)+","+str(glat.size)+","+str(glon.size)+") !")
         
 def writenc4D(ofile,ix,ary_etop,ary_heat):
     if verbose:
@@ -709,134 +815,7 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
     nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
 
-def basicplot(array, lats, lons, title, coastlines=True, colorbar=True):
-    """
-    does exactly what the name suggests, 
-    produces a very basic plot.
-    
-    array.shape == lats.size,lons.size
-    
-    data must be on a regular lat/lon grid!
-    """
-    
-    ## obtain resolution and check if this is a 
-    if (abs(lats[1]-lats[0]) == abs(lons[1]-lons[0])):
-        res = abs(lats[1]-lats[0])
-    else:
-        raise SystemExit("------ ERROR: input coordinates not as required, ABORTING!")
-
-    ## create quadrilateral corner coords (dimensions of X & Y one greater than array!)
-    cornerlats = np.unique((lats-res/2).tolist()+(lats+res/2).tolist())
-    cornerlons = np.unique((lons-res/2).tolist()+(lons+res/2).tolist())
-    
-    ## prepare figure & plot, add coastlines if desired
-    plt.figure()
-    ax = plt.axes(projection=ccrs.PlateCarree())
-    plot_data = ax.pcolormesh(cornerlons, cornerlats, array, 
-                              transform=ccrs.PlateCarree())
-    if coastlines:
-        coast = NaturalEarthFeature(category='physical', scale='50m',
-                                    facecolor='none', name='coastline')
-        ax.add_feature(coast, edgecolor='gray')
-    if colorbar:
-        plt.colorbar(plot_data, ax=ax, orientation = "horizontal")
-    plt.title(title)
-    plt.show()
-
-
-def regrid_2Dto1deg(data, lats_in, lons_in, nmin_perpixel=1):
-    """
-    input: data with axes lats x lons, lons [-180 .. 180]
-    action: regrid to regular 1 degree grid
-    
-    ===> CAUTION: lats, lons must increase monotonically!
-    
-    DSc, April 2019, alpha version
-    """
-    
-    ## check if input coordinates do increase monotonically...
-    if np.all(np.diff(lats_in)>0) and np.all(np.diff(lons_in)>0):
-        pass
-    else:
-        print("---------- WARNING: function cannot handle input coordinates!")
-        return(False,False,False)
-    
-    ## proceed
-    lats_rounded     = np.round(lats_in)
-    lats_new         = np.unique(lats_rounded)
-    lons_rounded     = np.round(lons_in)
-
-    if lons_rounded[-1] == 180 and lons_rounded[0] == -180:
-        lons_rounded[lons_rounded==180] = -180  # set 180 to -180 degrees !
-    lons_new         = np.unique(lons_rounded)
-    
-    data_rg = np.zeros(shape=(lats_new.size, lons_new.size))
-    
-    ## loop through
-    for jlat in range(lats_new.size):
-        xlat = np.where(lats_rounded==lats_new[jlat])[0]
-        for jlon in range(lons_new.size):
-            xlon = np.where(lons_rounded==lons_new[jlon])[0]
-            
-            #######################################
-            if xlat.size*xlon.size>nmin_perpixel:
-                pass
-            else:
-                continue
-            #######################################
-            
-            if xlat.size==1 or xlon.size==1: # values at boundaries might be wrong.. (not double-checked)
-                data_rg[jlat,jlon] = np.nanmean(data[xlat,xlon])
-            else: # feeding in xlat, xlon directly results in weird shapes..
-                data_rg[jlat,jlon] = np.nanmean(data[xlat[0]:xlat[-1]+1,xlon[0]:xlon[-1]+1])
-                
-    return(data_rg, lats_new, lons_new)
-    
-def freakshow(pommaskpath):
-    """
-    
-    this function is appropriately called 'freakshow',
-    because it is 
-     - terribly ugly,
-     - has only been checked for two ANYAS ecoregions (NGP, AUS)
-    
-    maskpath: should point to XXXXXXXX_mask.dat produced by particle-o-matic
-    
-    RETURNS:
-        
-        1 x 1° gridded mask as obtained from particle-o-matic,
-        including coordinates
-    """
-
-    ## load mask file
-    mask = np.asarray(pd.read_table(pommaskpath, sep="\s", engine='python', header=None))
-    
-    
-    ## data are on a regular 0.2 x 0.2° grid, [90 .. -90], [0 .. 360] 
-    dy = 180/mask.shape[0] 
-    dx = 360/mask.shape[1]
-    mask = np.flip(mask, axis=0) # flip latitudinal axis already
-    assume_lats = np.arange(-90, 90+dy, dy) 
-    assume_lons = np.arange(  0,   360, dx)
-    ## regrid lons from 0 .. 359 to -180 .. 179
-    mask_bu        = np.copy(mask)
-    assume_lons_bu = np.copy(assume_lons)
-    assume_lons[:int(assume_lons.size/2)] = assume_lons_bu[int(assume_lons.size/2):] - 360
-    assume_lons[int(assume_lons.size/2):] = assume_lons_bu[:int(assume_lons.size/2)]
-    mask[:,:int(assume_lons.size/2)] = mask_bu[:,int(assume_lons.size/2):]
-    mask[:,int(assume_lons.size/2):] = mask_bu[:,:int(assume_lons.size/2)]
-    
-    ## use this crap function for regridding from 0.2 to 1.0°
-    mask1deg, lat1deg, lon1deg = regrid_2Dto1deg(data=mask, lats_in=assume_lats, lons_in=assume_lons, nmin_perpixel=1)
-    
-    ## now ditch some pixels and pray it ends up making sense
-    mask1deg[(mask1deg>0) & (mask1deg<0.5)] = 0
-    mask1deg[(mask1deg>=0.5)]          = 1
-
-    return(mask1deg, lat1deg, lon1deg)
-    
-
-def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats, lons):
+def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):
     """
     quickly adjusted to enable multi-annual support at the cost of reading in
     two entire years, instead of just what is needed.
@@ -847,7 +826,7 @@ def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats,
     with nc4.Dataset(datapath+str(uyears[0])+'.nc', mode='r') as f: 
         reflats   = np.asarray(f['latitude'][:])
         reflons   = np.asarray(f['longitude'][:])
-        reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+        reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
         refdates  = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
         array     = np.asarray(f[var][:,:,:]) # not ideal to load everything..
         units     = f[var].units
@@ -855,7 +834,7 @@ def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats,
     for ii in range(1,uyears.size):
 
         with nc4.Dataset(datapath+str(uyears[ii])+'.nc', mode='r') as f:
-            reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+            reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
             reftime  = np.concatenate((reftime, reftimeY))
             refdates = np.concatenate((refdates, np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftimeY])))
             array    = np.concatenate((array, np.asarray(f[var][:,:,:])), axis=0)
@@ -870,7 +849,10 @@ def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats,
         
     ## mask positive values (E: condensation, H: downward fluxes, P: do NOT mask)
     if maskpos:
-        array[array>0] = np.NaN
+        array[array>0] = 0
+    ## mask negative values (P only!)
+    if maskneg:
+        array[array<0] = 0
             
     ## aggregate to daily
     refudates = np.unique(refdates)
@@ -909,34 +891,6 @@ def eraloader_12hourly(var, datapath, maskpos, uptake_years, uptake_dates, lats,
     
     return daily
     
-def alphascreener(alpha, var):
-    alphasum = np.nansum(alpha, axis=0)
-    plt.figure()
-    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
-    plt.title(var+' :: alphas summed over arrival days -- auto range')
-    plt.show()
-    plt.figure()
-    plt.hist(alphasum.flatten(), bins=np.arange(0.1,2.0,0.01))
-    plt.title(var+' :: same as above, manual plotting range')
-    plt.ylim(0,2e2)
-    plt.show()
-    print("--- this value should not really exceed 1.0 ===>", np.nanmax(alphasum))
-
-def nanweight3Dary(array, weights):
-    """
-    purpose: weight 3-dim array and sum up along spatial dimensions
-                if array does not contain data, corresponding weight is
-                NOT taken into account as to not distort the average
-    input:   3D array (time x lat x lon), weights of same shape
-    output:  weighted averages, 1D (timeseries)
-    """
-    array   = array.reshape(array.shape[0],array.shape[1]*array.shape[2])
-    weights = weights.reshape(array.shape)
-    weightsum = np.zeros(shape=array.shape[0])
-    for ii in range(array.shape[0]):    
-        weightsum[ii] = np.nansum(weights[ii,np.where(~np.isnan(weights[ii,]*array[ii,]))])
-    return( np.nansum(weights*array, axis=1)/weightsum )
-    
 def writefinalnc(ofile,fdate_seq,glon,glat,
                  Had, Had_Hs,
                  E2P, E2P_Es, E2P_Ps, E2P_EPs,strargs,precision):
@@ -969,7 +923,7 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
-    nc_f.description    = "03_biascorrection - " + str(strargs)
+    nc_f.description    = str(strargs)
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
@@ -1016,3 +970,467 @@ def append2csv(filename, listvals):
     with open(filename, 'a+', newline='\n') as write_obj:
         csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
         csv_writer.writerow(listvals)
+
+def preloop(datetime_bgn, uptdatetime_bgn, timestep,
+            ipath, ifile_base, ryyyy,
+            mask, mlat, mlon, maskval,
+            pidlog, tml,
+            verbose):
+
+    ## p1) create required datetime string object
+    predatetime_bgn = uptdatetime_bgn + datetime.timedelta(hours=3)
+    predatetime_end = datetime_bgn
+    predatetime_seq = []
+    idatetime       = predatetime_bgn
+    while idatetime < predatetime_end:
+        predatetime_seq.append(idatetime.strftime('%Y%m%d%H'))
+        idatetime += timestep # timestep was defined above
+    npretime = len(predatetime_seq)
+
+    if verbose:
+        print("\n--------------------------------------------------------------------------------------")
+        print("\n ! performing pre-loop to log advected parcels arriving prior to analysis time")
+        print("\n ! estimating remaining time for pre-loop ...")
+
+    ## p2) loop through files (.. to log in-ABL hits)
+    pretic = timeit.default_timer()
+    for pix in range(npretime):
+        if verbose and pix==1:
+            pretoc = timeit.default_timer()
+            print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
+
+        ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
+        ary = readpom( idate    = predatetime_seq[pix],
+                       ipath    = ipath+"/"+str(ryyyy),
+                       ifile_base = ifile_base,
+                       verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
+
+        nparcel   = ary.shape[1]
+        ntot    = range(nparcel)
+
+        ## p4) now loop through parcels
+        for i in ntot:
+            ## check for arriving parcels
+            alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
+            if not mask[alat_ind,alon_ind]==maskval:
+               continue
+            ## read ONLY parcel and ABL heights
+            hgt, hpbl = readheights(ary[:4,i,:])
+
+            ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
+            if ( hgt[0] < np.max(hpbl[:4]) ):
+                ID = int(ary[0,i,0])
+                pidlog[ID] = pix - tml # NOTE: tml != npretime (double-check?)
+    return( pidlog )
+
+def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
+                       dX, dtemp, dA, dB, c_cc, dAdB):
+    ## NOTE: for heat, dX==dB, but not for evap!
+    is_inpbl    = PBL_check(cpbl_strict, z=hgt, hpbl=hpbl, sethpbl=c_hgt)
+    is_uptk     = dX > dtemp
+    is_uptkcc   = np.abs(dA) < c_cc * dB * dAdB
+    return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
+    
+
+def convert2daily(xar,ftime,fagg="mean"):
+
+    if ftime[0].hour in [0, 6, 12, 18]:
+        ## simple fix, subtract 3 hours
+        ftime   = np.asarray([t - datetime.timedelta(hours=3) for t in ftime])
+        dates   = cal2date(ftime)
+    elif ftime[0].hour in [3, 9, 15, 21]:
+        ## NOTE: this is the new norm! retain "old style" for now, though    
+        dates   = cal2date(ftime)
+        pass
+    dtime   = np.unique(dates)
+
+    xtot = np.zeros(shape=(dtime.size, xar.shape[1], xar.shape[2]))
+
+    ## this isn't fast or elegant, but works for literally anything sub-daily
+    for i in range(dtime.size):
+
+        iud = dtime[i]
+        sel = np.where(dates == iud)[0]
+
+        ## TODO: clean up; there should be a check whether 4 files are present, imo
+        if sel.size != 4:
+            warnings.warn("\n\n----------------- WARNING: this should NEVER OCCUR; daily aggregation IMPROPER (files missing!)\n\n")
+
+        if fagg=="sum":
+            xtot[i,:,:] = np.nansum(xar[sel, :, :], axis=0)
+        if fagg=="mean":
+            xtot[i,:,:] = np.nanmean(xar[sel, :, :], axis=0)
+
+    return(xtot)
+
+def read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E"):
+    # get required months
+    ayears  = np.asarray([ut.year  for ut in uptake_time])
+    amonths = np.asarray([ut.month for ut in uptake_time])
+    uset    = np.unique(np.column_stack((ayears, amonths)), axis=0)
+    uyears, umonths = uset[:,0], uset[:,1]
+
+    # loop over months
+    for jj in range(umonths.size):
+        uyr  = str(uyears[jj])
+        umon = str(umonths[jj])
+        diagfile = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(uyr)+"-"+umon.zfill(2)+".nc"
+        with nc4.Dataset(diagfile, mode="r") as f:
+            if var not in ["grid"]:
+                ix     = f[var][:]
+                timex  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+
+        ## concatenate 'em!
+        if var=="grid":
+            with nc4.Dataset(diagfile, mode="r") as f:
+                lats    = f['lat'][:]
+                lons    = f['lon'][:]
+        else:
+            # concatenate 
+            if umon == str(umonths[0]):
+                x       = np.copy(ix)
+                ftime   = np.copy(timex)
+            else:
+                x       = np.concatenate((x, ix), axis=0)
+                ftime   = np.concatenate((ftime, timex))
+
+    # return
+    if var=="time":
+        return(ftime)
+    if var=="grid":
+        return(lats, lons)
+    if var not in ["grid","time"]:
+        return(x)
+
+def gridcheck(lats,totlats,lons,totlons):
+    if not np.array_equal(lats, totlats) or not np.array_equal(lons, totlons):
+        raise SystemExit("--- ERROR: your grids aren't identical...")
+
+def datecheck(idate,dateseq):
+    if idate not in dateseq: 
+        raise SystemExit("\n !!! ERROR: INPUT DATA MISSING: date "+str(idate)+" not available as output from 01_diagnosis! Aborting here. !!!\n")
+
+def calc_alpha(top,bot):
+    alpha   = np.divide(top,bot)
+    ## NOTE: as of now, there is absolutely no check whatsoever concerning
+    ## the fractions; if e.g. only 3 6-hourly values are used to generate
+    ## daily diagnosis data, this can result in a division by zero above,
+    ## so that scaled data blows up to infinity (this actually happened).
+    ## hence, check if any alpha clearly exceeds 1, and warn the user
+    ## AGAIN that the output cannot be fully trusted (but continue)
+    if np.any(alpha>1.0001) or np.any(np.isinf(alpha)):
+        print(" \n  \t !!! WARNING: scaling fractions exceed 1 !!!")
+        print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
+    return(alpha)
+
+def udays2udate(atime,utime_srt):
+    utime_first = atime[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
+    uptake_time = np.asarray([utime_first+timedelta(days=nday) for nday in range(utime_srt.size-1+atime.size)])
+    return(uptake_time)
+
+def expand4Darray(myarray,atime,utime_srt,veryverbose):
+    utime       = udays2udate(atime,utime_srt)
+    myshape     = myarray.shape
+    myarray_exp = np.empty(shape=(myshape[0],utime.size,myshape[2],myshape[3]))
+    if veryverbose:
+        print(" * Expanding array from "+str(myshape)+" to "+str(myarray_exp.shape))
+    for iat in range(atime.size):
+        myarray_exp[iat,iat:iat+utime_srt.size,:,:] = myarray[iat,:,:,:]
+    return(myarray_exp)
+
+def date2year(mydates):
+    return( np.asarray([it.year for it in mydates]))
+def date2month(mydates):
+    return( np.asarray([it.month for it in mydates]))
+def cal2date(mydates):
+    return( np.asarray([datetime.date(it.year, it.month, it.day) for it in mydates]))
+
+def convert_mm_m3(myarray,areas):
+    # we ALWAYS follow the array dimensions order: (anything(s) x lat x lon) here
+    if len(areas.shape) > 1:
+        # attention: broadcasting with a 2D array in numpy can lead to differences 
+        # 1e-9 (f4) or 1e-17 (f8)
+        carray = np.multiply(areas,myarray/1e3)
+    if len(areas.shape) == 1:
+        ## swap axes to enable numpy broadcasting;
+        ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
+        ldim   = len(myarray.shape)-1  
+        carray = np.swapaxes(areas*np.moveaxis(myarray/1e3, ldim-1, ldim), ldim-1, ldim)
+    return(carray)
+
+def convert_m3_mm(myarray,areas):
+    # we ALWAYS follow the array dimensions order: (anything(s) x lat x lon) here
+    if len(areas.shape) > 1:
+        # attention: broadcasting with a 2D array in numpy can lead to differences 
+        # 1e-9 (f4) or 1e-17 (f8)
+        carray = np.nan_to_num(np.divide(myarray*1e3,areas))
+    if len(areas.shape) == 1:
+        ## swap axes to enable numpy broadcasting;
+        ## (a,b,c,d x b,c,d OK; a,b,c,d x a NOT OK)
+        ldim   = len(myarray.shape)-1 
+        carray = np.swapaxes(np.nan_to_num(np.divide(np.moveaxis(myarray*1e3, ldim-1, ldim), areas)), ldim-1, ldim)
+    return(carray) 
+
+def check_attributedp(pdiag,pattr,veryverbose):
+    printwarning= False
+    returnval   = False
+    pdiag_sum   = -np.nansum(pdiag,axis=(1))
+    pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
+    if round(np.nansum(pdiag_sum),4) != round(np.nansum(pattr_sum),4):
+        print("   --- WARNING: total precipitation from 01_diagnosis and 02_attribution differ")
+        print(" \t --- Absolute difference: {:.2f}".format(np.nansum(pdiag_sum)-np.nansum(pattr_sum))+" m3")
+        printwarning = True
+    if np.any(pdiag_sum-pattr_sum != 0):
+        print("   --- WARNING: daily precipitation from 01_diagnosis and 02_attribution differ")
+        if veryverbose:
+            ndiffs  = len(np.where(pdiag_sum-pattr_sum !=0)[0])
+            print(" \t --- "+str(ndiffs)+" days have different precipitation sums. ")
+            ndiffs  = len(np.where(pdiag_sum>pattr_sum)[0])
+            print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) > P(02_attribution)")
+            ndiffs  = len(np.where(pdiag_sum<pattr_sum)[0])
+            print(" \t --- "+str(ndiffs)+" days have P(01_diagnosis) < P(02_attribution)")
+        printwarning = True
+    if printwarning: 
+        print("   --- ATTENTION: Using 02_attribution data for bias correction for consistency.")
+        returnval   = True
+    #print(pattr_sum)
+    #print(np.nansum(pattr_sum))
+    #print(pdiag_sum)
+    #print(np.nansum(pdiag_sum))
+    #print(pdiag_sum-pattr_sum)
+    #print(np.nan_to_num(100*(pdiag_sum-pattr_sum)/pattr_sum))
+    return(returnval)
+
+def needmonthlyp(pdiag,pref):
+    returnval   = False
+    tocheck     = np.where(pref<0)[0]
+    if np.any(pdiag[tocheck]==0):
+        print("   --- WARNING: daily bias correction of precipitation not possible.")
+        ndiffs  = len(np.where(pdiag[tocheck]==0)[0])
+        print(" \t --- "+str(ndiffs)+" days have no diagnosed but observed precipitation.")
+        print("   --- ATTENTION: Using monthly precipitation for bias correction for consistency.")
+        returnval   = True
+    return(returnval)
+
+
+def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
+    with open(sfile,'w') as ifile:
+        writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["* - PRECIPITATION STATISTICS: "])
+        ndays       = Pref[ibgn:,:,:].shape[0]
+        writer.writerow(["   --- # DAYS EVALUATED:              {:.0f}".format(ndays)])
+        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(-np.nansum(Pref[ibgn:,xla,xlo]))])
+        writer.writerow(["   --- P_E2P_unscaled [m3]:           {:.2f}".format(np.nansum(P_E2P))])
+        writer.writerow(["   --- P_E2P_Escaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Escaled))])
+        writer.writerow(["   --- P_E2P_Pscaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Pscaled))])
+        writer.writerow(["   --- P_E2P_EPscaled [m3]:           {:.2f}".format(np.nansum(P_E2P_EPscaled))])
+        # some contingency table statistics... 
+        writer.writerow([" "])
+        writer.writerow(["* - CONTINGENCY TABLE SCORES "])
+        pref_sum    = -np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
+        pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
+        myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
+        myscores    = calc_ctab_measures(myctab)
+        writer.writerow(["   --- * DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
+        writer.writerow(["   --- * DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
+        writer.writerow(["   --- * DAYS OF HITS:                {:.0f}".format(myctab["a"])])
+        writer.writerow(["   --- * DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
+        writer.writerow(["   --- * SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
+        writer.writerow(["   --- * FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
+        writer.writerow(["   --- * FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
+        writer.writerow(["   --- * PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
+        writer.writerow(["   --- * PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
+        writer.writerow(["   --- * PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
+
+
+def contingency_table(ref,mod,thresh=0):
+    # creates a contingency table based on 1D np.arrays
+    ieventobs   = (np.where(ref>thresh)[0])
+    ineventobs  = (np.where(ref<=thresh)[0])
+    a           = len(np.where(mod[ieventobs]>thresh)[0])     # hits
+    b           = len(np.where(mod[ineventobs]>thresh)[0])    # false alarms
+    c           = len(np.where(mod[ieventobs]<=thresh)[0])    # misses
+    d           = len(np.where(mod[ineventobs]<=thresh)[0])   # correct negatives
+    return({"a":a,"b":b,"c":c,"d":d})
+
+def calc_ctab_measures(cdict):
+    # calculates common contingency table scores
+    # scores following definitions from https://www.cawcr.gov.au/projects/verification/
+    a           = cdict["a"]    # hits
+    b           = cdict["b"]    # false alarms
+    c           = cdict["c"]    # misses
+    d           = cdict["d"]    # correct negatives
+    # calculate scores
+    acc         = (a+d)/(a+b+c+d)   # accuracy
+    far         = b/(a+b)           # false alarm ratio
+    fbias       = (a+b)/(a+c)       # frequency bias
+    pod         = a/(a+c)           # probability of detection (hit rate)
+    pofd        = b/(b+d)           # probability of false detection (false alarm rate)
+    sr          = a/(a+b)           # success ratio
+    ts          = a/(a+c+b)         # threat score (critical success index)
+    a_random    = (a+c)*(a+b)/(a+b+c+d)
+    ets         = (a-a_random)/(a+b+c+a_random) # equitable threat score (gilbert skill score)
+    pss         = pod-pofd          # peirce's skill score (true skill statistic)
+    odr         = a*d/c*b           # odd's ratio      
+    return({"acc":acc,"far":far,"fbias":fbias,"pod":pod,"pofd":pofd,"sr":sr,"pss":pss,"odr":odr})
+
+def writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss):
+    with open(statfile,'w') as sfile:
+        writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["* - PARCEL STATISTICS: "])
+        writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
+        writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
+        if tnnevala!=tneval:
+            writer.writerow(["   --- # PARCELS EVAL. FOR HEAT-ADV:  " , str(tnevalh)+" ({:.2f}".format(100*tnevalh/(tneval-tnnevala))+"%)"])
+        if tnevalh!=0:
+            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalh)+" ({:.2f}".format(100*tnnevalh/(tnevalh))+"%)"])
+        writer.writerow([" "])
+        writer.writerow(["   --- # PARCELS MIDPOINT INSIDE MASK:" , str(tneval-tnnevalm)])
+        if tnnevalm!=tneval:
+            writer.writerow(["   --- # PARCELS EVAL. FOR PRECIP:    " , str(tnevalp)+" ({:.2f}".format(100*tnevalp/(tneval-tnnevalm))+"%)"])
+        if tnevalp!=0:
+            writer.writerow(["   ----- WITHOUT UPTAKES IN THE TRAJ: " , str(tnnevalp)+" ({:.2f}".format(100*tnnevalp/(tnevalp))+"%)"])
+        writer.writerow([" "])
+        if psum!=0:
+            writer.writerow([" * - PRECIPITATION STATISTICS: "])
+            writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
+            writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
+            writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+
+def mask3darray(xarray,xla,xlo):
+    marray  = np.zeros(shape=xarray.shape)
+    marray[:,xla,xlo] = xarray[:,xla,xlo]
+    return(marray)
+
+def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
+                 alpha_E2P,alpha_Had,
+                 strargs,precision):
+   
+    Prefsum     = np.nansum(Pref,axis=(1,2))
+    Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
+    Pattrsum    = np.nansum(Pattr,axis=(1,2))
+    Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
+    Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
+    Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
+    malpha_Had  = np.max(alpha_Had,axis=(1,2,3))
+    malpha_E2P  = np.max(alpha_E2P,axis=(1,2,3))
+    # delete nc file if it is present (avoiding error message)
+    try:
+        os.remove(ofile)
+    except OSError:
+        pass
+
+    # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+
+    ### create dimensions ###
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('uptaketime', len(udate_seq))
+    nc_f.createDimension('lat', glat.size)
+    nc_f.createDimension('lon', glon.size)
+
+    # create variables
+    times               = nc_f.createVariable('time', 'f8', 'time')
+    utimes              = nc_f.createVariable('uptaketime', 'f8', 'uptaketime')
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    # Variables
+    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'))
+    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'))
+    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'))
+    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'))
+    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'))
+    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'))
+    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
+    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
+    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
+    nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
+    nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
+    nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
+    nc_alphap           = nc_f.createVariable('alpha_E2P',precision,('time','uptaketime','lat','lon'))
+    nc_alphah           = nc_f.createVariable('alpha_Had',precision,('time','uptaketime','lat','lon'))
+    nc_malphap          = nc_f.createVariable('max_alpha_E2P',precision,('time'))
+    nc_malphah          = nc_f.createVariable('max_alpha_Had',precision,('time'))
+ 
+    # set attributes
+    nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
+    nc_f.description    = str(strargs)
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    utimes.units        = 'hours since 1900-01-01 00:00:00'
+    utimes.calendar     = 'Standard' # do NOT use gregorian here!
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    nc_pref.units          = 'm3'
+    nc_pref.long_name	   = 'reference precipitation'
+    nc_pdiag.units         = 'm3'
+    nc_pdiag.long_name	   = 'diagnosed precipitation (01_diag)'
+    nc_pattr.units         = 'm3'
+    nc_pattr.long_name	   = 'attributed precipitation (E2P, 02_attr)'
+    nc_prefs.units         = 'm3'
+    nc_prefs.long_name	   = 'sum of reference precipitation'
+    nc_pdiags.units        = 'm3'
+    nc_pdiags.long_name	   = 'sum of diagnosed precipitation (01_diag)'
+    nc_pattrs.units        = 'm3'
+    nc_pattrs.long_name	   = 'sum of attributed precipitation (E2P, 02_attr)'
+    nc_pattrs_es.units     = 'm3'
+    nc_pattrs_es.long_name = 'sum of attributed precipitation (E2P_Escaled, 02_attr)'
+    nc_pattrs_ps.units     = 'm3'
+    nc_pattrs_ps.long_name = 'sum of attributed precipitation (E2P_Pscaled, 02_attr)'
+    nc_pattrs_eps.units    = 'm3'
+    nc_pattrs_eps.long_name= 'sum of attributed precipitation (E2P_EPscaled, 02_attr)'
+    nc_pratio.units        = '-'
+    nc_pratio.long_name	   = 'pratio = pref/pdiag'
+    nc_fescaled.units      = '-'
+    nc_fescaled.long_name  = 'f_Escaled'
+    nc_fremain.units       = '-'
+    nc_fremain.long_name   = 'f_remain'
+    nc_alphap.units        = '-'
+    nc_alphap.long_name    = 'alpha_E2P'
+    nc_alphah.units        = '-'
+    nc_alphah.long_name    = 'alpha_Had'
+    nc_malphap.units       = '-'
+    nc_malphap.long_name   = 'maximum alpha_E2P'
+    nc_malphah.units       = '-'
+    nc_malphah.long_name   = 'maximum alpha_Had'
+
+    # write data
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    utimes[:]           = nc4.date2num(udate_seq, utimes.units, utimes.calendar)
+    latitudes[:]        = glat
+    longitudes[:]       = glon
+    nc_pref[:]          = Pref[:]
+    nc_pdiag[:]         = Pdiag[:]
+    nc_pattr[:]         = Pattr[:]
+    nc_prefs[:]         = Prefsum[:]
+    nc_pdiags[:]        = Pdiagsum[:]
+    nc_pattrs[:]        = Pattrsum[:]
+    nc_pattrs_es[:]     = Pattrsum_Es[:]
+    nc_pattrs_ps[:]     = Pattrsum_Ps[:]
+    nc_pattrs_eps[:]    = Pattrsum_EPs[:]
+    nc_pratio[:]        = Pratio[:]
+    nc_fescaled[:]      = f_Escaled[:]
+    nc_fremain[:]       = f_remain[:]
+    nc_alphap[:]        = alpha_E2P[:]
+    nc_alphah[:]        = alpha_Had[:]
+    nc_malphap[:]       = malpha_E2P[:]
+    nc_malphah[:]       = malpha_Had[:]
+
+    # close file
+    nc_f.close()
+
+    # print info
+    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+
+def maskbymaskval(mask,maskval):
+    mymask  = np.copy(mask)
+    mymask[np.where(mask!=maskval)]=0
+    return(mymask)

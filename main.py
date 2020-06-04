@@ -33,6 +33,7 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 from cartopy.feature import NaturalEarthFeature
 import csv
+import random
 
 ###########################################################################
 ##--- PATHS
@@ -42,17 +43,23 @@ import csv
 wpath = os.getcwd()
 
 ## load input and output paths & input file name base(s)
-with open(wpath+"/paths.txt") as f: 
-    content = imp.load_source('','',f) # load like a python module
-    ipath_REF = content.ipath_REF # input path (01_diagnosis)
-    ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
-    ibase_DGN = content.ibase_DGN # input file name base(s)
-    opath_DGN = content.opath_DGN # output path
-    ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
-    ibase_ATR = content.ibase_ATR 
-    opath_ATR = content.opath_ATR 
-    opath_BIA = content.opath_BIA
-    maskfile  = content.maskfile
+content = imp.load_source('',wpath+"/paths.txt") # load like a python module
+ipath_REF = content.ipath_REF # input path (01_diagnosis)
+ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
+ibase_DGN = content.ibase_DGN # input file name base(s)
+opath_DGN = content.opath_DGN # output path
+ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
+ibase_ATR = content.ibase_ATR
+opath_ATR = content.opath_ATR
+opath_BIA = content.opath_BIA
+maskfile  = content.maskfile
+# create output directories if they do not exist
+if not os.path.exists(opath_DGN):
+        os.makedirs(opath_DGN)
+if not os.path.exists(opath_ATR):
+        os.makedirs(opath_ATR)
+if not os.path.exists(opath_BIA):
+        os.makedirs(opath_BIA)
 
 ###########################################################################
 ##--- MAIN
@@ -80,7 +87,7 @@ verbose = args.verbose
 print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
-if args.steps == 1 or args.steps == 4:
+if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
               ipath=ipath_DGN,
               ifile_base=ibase_DGN, 
@@ -88,6 +95,8 @@ if args.steps == 1 or args.steps == 4:
               ofile_base=args.expid,
               mode=args.mode,
               gres=args.gres,
+              verbose=args.verbose,
+              veryverbose=args.veryverbose,
               tdiagnosis=args.tdiagnosis,
               cheat_dtemp=args.cheat_dtemp,
               cheat_cc=args.cheat_cc,
@@ -108,8 +117,8 @@ if args.steps == 1 or args.steps == 4:
               fvariable_mass=args.variable_mass,
               strargs=printsettings(args,1))
 
-if args.steps == 2 or args.steps == 4:
-    main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, 
+if args.steps == 2:
+    main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
               ipath=ipath_ATR,
               ifile_base=ibase_ATR,
               opath=opath_ATR,
@@ -118,6 +127,8 @@ if args.steps == 2 or args.steps == 4:
               gres=args.gres,
               maskfile=maskfile,
               maskval=args.maskval,
+              verbose=args.verbose,
+              veryverbose=args.veryverbose,
               tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
               cheat_dtemp=args.cheat_dtemp,
@@ -128,6 +139,7 @@ if args.steps == 2 or args.steps == 4:
               cprec_dqv=args.cprec_dqv, 
               cprec_dtemp=args.cprec_dtemp, 
               cprec_rh=args.cprec_rh,
+              cpbl_strict=args.cpbl_strict,
               fjumps=args.fjumps,
               fjumpsfull=args.fjumpsfull,
               cjumps=args.cjumps,
@@ -137,6 +149,8 @@ if args.steps == 2 or args.steps == 4:
               ftimethis=args.timethis, 
               fdry=args.fallingdry,
               fmemento=args.memento,
+              mattribution=args.mattribution,
+              crandomnit=args.randomnit,
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,
@@ -145,18 +159,21 @@ if args.steps == 2 or args.steps == 4:
               fwritestats=args.writestats,
               strargs=printsettings(args,2))
 
-if args.steps == 3 or args.steps == 4:
+if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
                opathA=opath_ATR, 
                opathD=opath_DGN, 
                ipathR=ipath_REF,
                opath=opath_BIA, 
                ofile_base=args.expid, # output
+               mode=args.mode,
                maskfile=maskfile,
                maskval=args.maskval,
-               set_negERA_to0=args.setnegzero,        # (only) makes sense for ERA-I data
                verbose=args.verbose,
+               veryverbose=args.veryverbose,
+               fuseattp=args.useattp,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
+               fwritestats=args.writestats,
                precision=args.precision,
                strargs=printsettings(args,3))
