@@ -370,19 +370,6 @@ def convertunits(ary_val, garea, var):
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
 
-def default_thresholds(cprec_dqv):
-    if cprec_dqv == None:
-        #if verbose:
-        #    print("\n--- INFO: cprec_dqv is calculated based on d(pottemp)-threshold!")
-        dummy_dq = 0.2 # this choice doesn't matter too much...
-        cprec_dqv = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("cprec_dqv = ", 1e3*cprec_dqv, "g/kg")
-    elif cprec_dqv > 0:
-        raise SystemExit("------ FATAL ERROR: cprec_dqv should be negative (and in kg/kg)!")
-    return cprec_dqv
-
-
 def PBL_check(cpbl_strict, z, hpbl, sethpbl):
     """
     INPUT
