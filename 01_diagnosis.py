@@ -109,9 +109,6 @@ def main_diagnosis(
     if fwrite_netcdf:
         writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision)
 
-    # set some default thresholds
-    cprec_dqv    = default_thresholds(cprec_dqv) 
-
     # read in reference distribution of parcels
     if fvariable_mass:
         print(" \n !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet! \n")
