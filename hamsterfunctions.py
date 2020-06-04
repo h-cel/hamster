@@ -1306,6 +1306,7 @@ def mask3darray(xarray,xla,xlo):
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
+                 alpha_E2P,alpha_Had,
                  strargs,precision):
    
     Prefsum     = np.nansum(Pref,axis=(1,2))
@@ -1348,6 +1349,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
     nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
+    nc_alphap           = nc_f.createVariable('alpha_E2P',precision,('time','uptaketime','lat','lon'))
+    nc_alphah           = nc_f.createVariable('alpha_Had',precision,('time','uptaketime','lat','lon'))
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1386,6 +1389,10 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_fescaled.long_name  = 'f_Escaled'
     nc_fremain.units       = '-'
     nc_fremain.long_name   = 'f_remain'
+    nc_alphap.units        = '-'
+    nc_alphap.long_name    = 'alpha_E2P'
+    nc_alphah.units        = '-'
+    nc_alphah.long_name    = 'alpha_Had'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1404,6 +1411,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio[:]        = Pratio[:]
     nc_fescaled[:]      = f_Escaled[:]
     nc_fremain[:]       = f_remain[:]
+    nc_alphap[:]        = alpha_E2P[:]
+    nc_alphah[:]        = alpha_Had[:]
 
     # close file
     nc_f.close()

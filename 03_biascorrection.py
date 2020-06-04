@@ -260,6 +260,7 @@ def main_biascorrection(
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
                 Pratio,np.nan_to_num(f_Escaled),np.nan_to_num(f_remain),
+                np.nan_to_num(alpha_E2P),np.nan_to_num(alpha_Had),
                 strargs,precision)
     
     ##--7. save output ############################################################
