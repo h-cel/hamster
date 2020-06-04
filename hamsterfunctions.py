@@ -1171,7 +1171,7 @@ def convert_m3_mm(myarray,areas):
         carray = np.swapaxes(np.nan_to_num(np.divide(np.moveaxis(myarray*1e3, ldim-1, ldim), areas)), ldim-1, ldim)
     return(carray) 
 
-def checkprec(pdiag,pattr,veryverbose):
+def check_attributedp(pdiag,pattr,veryverbose):
     returnval   = False
     pdiag_sum   = -np.nansum(pdiag,axis=(1))
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))

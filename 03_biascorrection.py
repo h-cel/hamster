@@ -180,7 +180,7 @@ def main_biascorrection(
     ## preliminary checks
     if not fuseattp:
         # re-evaluate precip. data to check if it can be used
-        fuseattp = checkprec(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
+        fuseattp = check_attributedp(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
     
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
