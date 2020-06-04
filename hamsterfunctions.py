@@ -1315,6 +1315,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
     Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
+    malpha_Had  = np.max(alpha_Had,axis=(1,2,3))
+    malpha_E2P  = np.max(alpha_E2P,axis=(1,2,3))
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -1351,6 +1353,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
     nc_alphap           = nc_f.createVariable('alpha_E2P',precision,('time','uptaketime','lat','lon'))
     nc_alphah           = nc_f.createVariable('alpha_Had',precision,('time','uptaketime','lat','lon'))
+    nc_malphap          = nc_f.createVariable('max_alpha_E2P',precision,('time'))
+    nc_malphah          = nc_f.createVariable('max_alpha_Had',precision,('time'))
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1393,6 +1397,10 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphap.long_name    = 'alpha_E2P'
     nc_alphah.units        = '-'
     nc_alphah.long_name    = 'alpha_Had'
+    nc_malphap.units       = '-'
+    nc_malphap.long_name   = 'maximum alpha_E2P'
+    nc_malphah.units       = '-'
+    nc_malphah.long_name   = 'maximum alpha_Had'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1413,6 +1421,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_fremain[:]       = f_remain[:]
     nc_alphap[:]        = alpha_E2P[:]
     nc_alphah[:]        = alpha_Had[:]
+    nc_malphap[:]       = malpha_E2P[:]
+    nc_malphah[:]       = malpha_Had[:]
 
     # close file
     nc_f.close()
