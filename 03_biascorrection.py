@@ -253,7 +253,6 @@ def main_biascorrection(
     E2P_EPscaled = convert_m3_mm(E2P_EPscaled,areas)
     
     ##--6. debugging needed? ######################################################
-    ### plots that help to debug
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,lons,lats,maskbymaskval(mask,maskval),
