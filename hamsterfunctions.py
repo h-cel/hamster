@@ -1157,7 +1157,7 @@ def convert_mm_m3(myarray,areas):
         ldim   = len(myarray.shape)-1  
         carray = np.swapaxes(areas*np.moveaxis(myarray/1e3, ldim-1, ldim), ldim-1, ldim)
     return(carray)
-    #return( np.multiply(areas,myarray/1e3) ) 
+
 def convert_m3_mm(myarray,areas):
     # we ALWAYS follow the array dimensions order: (anything(s) x lat x lon) here
     if len(areas.shape) > 1:
@@ -1298,3 +1298,107 @@ def writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tne
             writer.writerow(["   --- ATTRIBUTED FRACTION:             {:.2f}".format(patt/psum)])
             writer.writerow(["   --- UNATTRIBUTED FRACTION (TRAJEC):  {:.2f}".format(punatt/psum)])
             writer.writerow(["   --- UNATTRIBUTED FRACTION (NO-UPT):  {:.2f}".format(pmiss/psum)])
+
+def mask3darray(xarray,xla,xlo):
+    marray  = np.zeros(shape=xarray.shape)
+    marray[:,xla,xlo] = xarray[:,xla,xlo]
+    return(marray)
+
+def writedebugnc(ofile,fdate_seq,glon,glat,mask,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,
+                 strargs,precision):
+   
+    Prefsum     = np.nansum(Pref,axis=(1,2))
+    Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
+    Pattrsum    = np.nansum(Pattr,axis=(1,2))
+    Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
+    Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
+    Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
+    # delete nc file if it is present (avoiding error message)
+    try:
+        os.remove(ofile)
+    except OSError:
+        pass
+
+    # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+
+    ### create dimensions ###
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('lat', glat.size)
+    nc_f.createDimension('lon', glon.size)
+
+    # create variables
+    times               = nc_f.createVariable('time', 'f8', 'time')
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    # Variables
+    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'))
+    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'))
+    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'))
+    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'))
+    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'))
+    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'))
+    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
+    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
+    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
+    nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
+ 
+    # set attributes
+    nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
+    nc_f.description    = str(strargs)
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.1 ((c) Dominik Schumacher and Jessica Keune)" 
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    nc_pref.units          = 'm3'
+    nc_pref.long_name	   = 'reference precipitation'
+    nc_pdiag.units         = 'm3'
+    nc_pdiag.long_name	   = 'diagnosed precipitation (01_diag)'
+    nc_pattr.units         = 'm3'
+    nc_pattr.long_name	   = 'attributed precipitation (E2P, 02_attr)'
+    nc_prefs.units         = 'm3'
+    nc_prefs.long_name	   = 'sum of reference precipitation'
+    nc_pdiags.units        = 'm3'
+    nc_pdiags.long_name	   = 'sum of diagnosed precipitation (01_diag)'
+    nc_pattrs.units        = 'm3'
+    nc_pattrs.long_name	   = 'sum of attributed precipitation (E2P, 02_attr)'
+    nc_pattrs_es.units     = 'm3'
+    nc_pattrs_es.long_name = 'sum of attributed precipitation (E2P_Escaled, 02_attr)'
+    nc_pattrs_ps.units     = 'm3'
+    nc_pattrs_ps.long_name = 'sum of attributed precipitation (E2P_Pscaled, 02_attr)'
+    nc_pattrs_eps.units    = 'm3'
+    nc_pattrs_eps.long_name= 'sum of attributed precipitation (E2P_EPscaled, 02_attr)'
+    nc_pratio.units        = '-'
+    nc_pratio.long_name	   = 'pratio = pref/pdiag'
+
+    # write data
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    latitudes[:]        = glat
+    longitudes[:]       = glon
+    nc_pref[:]          = Pref[:]
+    nc_pdiag[:]         = Pdiag[:]
+    nc_pattr[:]         = Pattr[:]
+    nc_prefs[:]         = Prefsum[:]
+    nc_pdiags[:]        = Pdiagsum[:]
+    nc_pattrs[:]        = Pattrsum[:]
+    nc_pattrs_es[:]     = Pattrsum_Es[:]
+    nc_pattrs_ps[:]     = Pattrsum_Ps[:]
+    nc_pattrs_eps[:]    = Pattrsum_EPs[:]
+    nc_pratio[:]        = Pratio[:]
+
+    # close file
+    nc_f.close()
+
+    # print info
+    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+
+def maskbymaskval(mask,maskval):
+    mymask  = np.copy(mask)
+    mymask[np.where(mask!=maskval)]=0
+    return(mymask)

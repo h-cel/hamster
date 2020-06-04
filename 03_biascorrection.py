@@ -256,6 +256,12 @@ def main_biascorrection(
     ### plots that help to debug
     if fdebug:
         print("   --- Creating debugging file")
+        writedebugnc(opath+"/debug.nc",arrival_time,lons,lats,maskbymaskval(mask,maskval),
+                -mask3darray(Pref[ibgn:,:,:],xla,xlo),-mask3darray(Ptot[ibgn:,:,:],xla,xlo),
+                convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
+                convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
+                Pratio,
+                strargs,precision)
         # this is where debugging function will be called
     
     ##--7. save output ############################################################
