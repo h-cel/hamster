@@ -1141,12 +1141,18 @@ def needmonthlyp(pdiag,pref):
     return(returnval)
 
 
-def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
+def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,Had,Had_scaled,xla,xlo,ibgn):
     with open(sfile,'w') as ifile:
         writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
-        writer.writerow(["* - PRECIPITATION STATISTICS: "])
+        writer.writerow(["* - STATISTICS: "])
         ndays       = Pref[ibgn:,:,:].shape[0]
         writer.writerow(["   --- # DAYS EVALUATED:              {:.0f}".format(ndays)])
+        writer.writerow([" "])
+        writer.writerow(["* - HEAT ADVECTION STATISTICS: "])
+        writer.writerow(["   --- Had_unscaled [W m-2]:          {:.2f}".format(np.nanmean(np.nansum(Had,axis=(1,2))))])
+        writer.writerow(["   --- Had_Hscaled [W m-2]:           {:.2f}".format(np.nanmean(np.nansum(Had_scaled,axis=(1,2))))])
+        writer.writerow([" "])
+        writer.writerow(["* - PRECIPITATION STATISTICS: "])
         writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(-np.nansum(Pref[ibgn:,xla,xlo]))])
         writer.writerow(["   --- P_E2P_unscaled [m3]:           {:.2f}".format(np.nansum(P_E2P))])
         writer.writerow(["   --- P_E2P_Escaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Escaled))])
@@ -1154,7 +1160,7 @@ def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xl
         writer.writerow(["   --- P_E2P_EPscaled [m3]:           {:.2f}".format(np.nansum(P_E2P_EPscaled))])
         # some contingency table statistics... 
         writer.writerow([" "])
-        writer.writerow(["* - CONTINGENCY TABLE SCORES "])
+        writer.writerow(["* - CONTINGENCY TABLE SCORES (PRECIPITATION):"])
         pref_sum    = -np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
         pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
         myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
