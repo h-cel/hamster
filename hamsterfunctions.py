@@ -187,7 +187,6 @@ def readpom(idate,      # run year
 
     return(dataar)
 
-
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
     if (cpbl == 1):
         #if (ztra < max(np.max(hpbl),maxhgt)).all():
@@ -1160,16 +1159,16 @@ def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xl
         pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
         myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
         myscores    = calc_ctab_measures(myctab)
-        writer.writerow(["   --- * DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
-        writer.writerow(["   --- * DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
-        writer.writerow(["   --- * DAYS OF HITS:                {:.0f}".format(myctab["a"])])
-        writer.writerow(["   --- * DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
-        writer.writerow(["   --- * SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
-        writer.writerow(["   --- * FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
-        writer.writerow(["   --- * FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
-        writer.writerow(["   --- * PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
-        writer.writerow(["   --- * PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
-        writer.writerow(["   --- * PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
+        writer.writerow(["   --- DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
+        writer.writerow(["   --- DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
+        writer.writerow(["   --- DAYS OF HITS:                {:.0f}".format(myctab["a"])])
+        writer.writerow(["   --- DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
+        writer.writerow(["   --- SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
+        writer.writerow(["   --- FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
+        writer.writerow(["   --- FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
+        writer.writerow(["   --- PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
+        writer.writerow(["   --- PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
+        writer.writerow(["   --- PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
 
 
 def contingency_table(ref,mod,thresh=0):
