@@ -1368,3 +1368,17 @@ def maskbymaskval(mask,maskval):
     mymask  = np.copy(mask)
     mymask[np.where(mask!=maskval)]=0
     return(mymask)
+
+def calc_sinkbcf(ref,att,tscale='daily'):
+    if tscale=='daily':
+        tref    = np.nansum(ref,axis=tuple(range(1,ref.ndim)))
+        tatt    = np.nansum(att,axis=tuple(range(1,att.ndim)))
+        alpha   = tref/tatt
+        alpha[alpha==np.inf]    = 0
+        return(alpha)
+    if tscale=='monthly':
+        tref    = np.nansum(ref)
+        tatt    = np.nansum(att)
+        alpha   = np.repeat(tref/tatt,ref.shape[0])
+        alpha[alpha==np.inf]    = 0
+        return(alpha)
