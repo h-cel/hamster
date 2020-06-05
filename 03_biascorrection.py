@@ -19,12 +19,13 @@ def main_biascorrection(
            verbose,
            veryverbose,
            fuseattp,
+           bcscale,
            fdebug,
            fwrite_netcdf,
            fwritestats,
            precision,
            strargs):
-    
+   
     ## SOME PRELIMINARY SETTINGS TO REDUCE OUTPUT
     ## suppressing warnings, such as
     #  invalid value encountered in true_divide
@@ -201,9 +202,9 @@ def main_biascorrection(
         print("   --- Bias correction using sink data...")
     # calculate bias correction factor
     if fuseattp:
-        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='daily')
+        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale=bcscale)
     else:    
-        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale='daily')
+        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale=bcscale)
     # apply bias correction factor
     E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
     
@@ -221,9 +222,9 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source and sink data...")
     # step 1: check how much E2P changed due to source-correction already
-    f_Escaled    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale='daily')
+    f_Escaled    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale=bcscale)
     # step 2: calculate how much more correction is needed to match sink 
-    Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='daily')
+    Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale=bcscale)
     # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 

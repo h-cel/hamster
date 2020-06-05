@@ -169,6 +169,7 @@ if args.steps == 3:
                verbose=args.verbose,
                veryverbose=args.veryverbose,
                fuseattp=args.useattp,
+               bcscale=args.bc_time,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwritestats=args.writestats,
