@@ -224,9 +224,9 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source and sink data...")
-    # step 1: check how much E2P changed due to E-scaling already
+    # step 1: check how much E2P changed due to source-correction already
     f_Escaled    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale='daily')
-    # step 2: calculate how much more scaling is needed to match P too 
+    # step 2: calculate how much more correction is needed to match sink 
     Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled)
     # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
