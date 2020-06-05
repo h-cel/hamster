@@ -179,7 +179,7 @@ def main_biascorrection(
     
     ## preliminary checks
     if not fuseattp:
-        # re-evaluate precip. data to check if it can be used
+        # re-evaluate precip. data to check if it can be used (need daily data here because of upscaling in 02)
         fuseattp = check_attributedp(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
     
     #******************************************************************************
