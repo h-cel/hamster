@@ -212,7 +212,7 @@ def main_biascorrection(
     
     # additionallty (!) perform monthly bias correction of P if necessary
     # attention: still writing out daily data though (days won't match!)
-    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=PrefTS)
+    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
         ndays   = PtotTS.shape[0]
         PtotTS  = -np.repeat(np.nansum(E2P_Pscaled),ndays)
