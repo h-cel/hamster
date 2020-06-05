@@ -199,26 +199,19 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using sink data...")
-    # sum up precpitation (arrival days) over mask only
-    PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
+    # calculate bias correction factor
     if fuseattp:
-        PtotTS  = np.nansum(E2P,axis=(1,2,3))
+        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='daily')
     else:    
-        PtotTS  = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
-    # calculate bias correction fractor
-    Pratio      = PrefTS / PtotTS # make sure this stays positive
-    Pratio[Pratio==np.inf] = 0 # replace inf by 0 (happens if FLEX-P is zero)
+        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale='daily')
+    # apply bias correction factor
     E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
     
     # additionallty (!) perform monthly bias correction of P if necessary
     # attention: still writing out daily data though (days won't match!)
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
-        ndays   = Pratio.shape[0]
-        PtotTS  = np.repeat(np.nansum(E2P_Pscaled),ndays)
-        PrefTS  = np.repeat(np.nansum(Pref[ibgn:,xla,xlo]),ndays)
-        Pratio  = PrefTS / PtotTS
-        Pratio[Pratio==np.inf] = 0
+        Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
         E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
 
     if round(np.nansum(E2P_Pscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
