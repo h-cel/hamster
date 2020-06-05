@@ -245,7 +245,7 @@ def main_biascorrection(
         print(round(np.nansum(-Pref[ibgn:,xla,xlo]),4))
     
     # check if additional monthly bias correction needed 
-    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=PrefTS)
+    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
         ndays           = PtotTS.shape[0]
         f_remain        = np.repeat(np.nansum(-Pref[ibgn:,xla,xlo]) / np.nansum(E2P_EPscaled),ndays)
