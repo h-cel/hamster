@@ -224,13 +224,11 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source and sink data...")
-    ## step 1: check how much E2P changed due to E-scaling already
-    E2P_Escaled_ts  = np.nansum(E2P_Escaled,axis=(1,2,3))
-    E2P_ts          = np.nansum(E2P,axis=(1,2,3))
-    f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
+    # step 1: check how much E2P changed due to E-scaling already
+    f_Escaled    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale='daily')
     # step 2: calculate how much more scaling is needed to match P too 
     Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled)
-    #Prationew = np.nansum(Pref[ibgn:,xla,xlo],axis=1) / np.nansum(E2P_Pscaled,axis=(1,2,3))
+    # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
