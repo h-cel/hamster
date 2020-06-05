@@ -1397,3 +1397,14 @@ def calc_sinkbcf(ref,att,tscale='daily'):
         alpha   = np.repeat(tref/tatt,ref.shape[0])
         alpha[alpha==np.inf]    = 0
         return(alpha)
+
+def checkpsum(ref,att,verbose):
+    if round(np.nansum(ref),4) != round(np.nansum(att),4):
+        ident=False
+        if verbose:
+            print("       !!! Attributed precipitation does not match reference precipitation!")
+            print("           * attributed P: "+str(round(np.nansum(ref),4))+" m3")
+            print("           * reference P:  "+str(round(np.nansum(att),4))+" m3")
+    else:
+        ident=True
+    return(ident)

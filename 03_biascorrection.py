@@ -213,11 +213,7 @@ def main_biascorrection(
     if fusemonthly:
         Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
         E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
-
-    if round(np.nansum(E2P_Pscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
-        print("  --- OOOPS... something must be wrong in the biascorrection of P.")
-        print(round(np.nansum(E2P_Pscaled),4))
-        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
+    checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=verbose)
     
     #******************************************************************************
     ## (iii) BIAS CORRECTING THE SOURCE AND THE SINK (P only)
@@ -231,21 +227,14 @@ def main_biascorrection(
     # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
-    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
-        print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
-        print(round(np.nansum(E2P_EPscaled),4))
-        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
+    checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
     
     # check if additional monthly bias correction needed 
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
         f_remain        = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
         E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
-    
-    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
-        print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
-        print(round(np.nansum(E2P_EPscaled),4))
-        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
+    checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
