@@ -1100,9 +1100,14 @@ def convert_m3_mm(myarray,areas):
     return(carray) 
 
 def check_attributedp(pdiag,pattr,veryverbose):
+    # define all positive
+    if np.all(pdiag<=0):
+        pdiag   = -pdiag
+    if np.all(pattr<=0):
+        pattr   = -pattr
     printwarning= False
     returnval   = False
-    pdiag_sum   = -np.nansum(pdiag,axis=(1))
+    pdiag_sum   = np.nansum(pdiag,axis=(1))
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
     if round(np.nansum(pdiag_sum),4) != round(np.nansum(pattr_sum),4):
         print("   --- WARNING: total precipitation from 01_diagnosis and 02_attribution differ")
@@ -1158,7 +1163,7 @@ def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,Ha
         writer.writerow(["   --- Had_Hscaled [W m-2]:           {:.2f}".format(np.nanmean(np.nansum(Had_scaled,axis=(1,2))))])
         writer.writerow([" "])
         writer.writerow(["* - PRECIPITATION STATISTICS: "])
-        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(-np.nansum(Pref[ibgn:,xla,xlo]))])
+        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(np.nansum(Pref[ibgn:,xla,xlo]))])
         writer.writerow(["   --- P_E2P_unscaled [m3]:           {:.2f}".format(np.nansum(P_E2P))])
         writer.writerow(["   --- P_E2P_Escaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Escaled))])
         writer.writerow(["   --- P_E2P_Pscaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Pscaled))])
@@ -1166,7 +1171,7 @@ def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,Ha
         # some contingency table statistics... 
         writer.writerow([" "])
         writer.writerow(["* - CONTINGENCY TABLE SCORES (PRECIPITATION):"])
-        pref_sum    = -np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
+        pref_sum    = np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
         pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
         myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
         myscores    = calc_ctab_measures(myctab)

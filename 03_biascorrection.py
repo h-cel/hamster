@@ -101,7 +101,7 @@ def main_biascorrection(
     ftime               = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="time")
     fdays               = np.unique(cal2date(ftime))
     E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
-    P                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
+    P                   = -read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
     H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     E                   = convert_mm_m3(E, areas)
@@ -156,7 +156,7 @@ def main_biascorrection(
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     
-    Pref = -eraloader_12hourly(var='tp',
+    Pref = eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
@@ -202,7 +202,7 @@ def main_biascorrection(
     # sum up precpitation (arrival days) over mask only
     PrefTS      = np.nansum(Pref[ibgn:,xla,xlo], axis=1)
     if fuseattp:
-        PtotTS  = -np.nansum(E2P,axis=(1,2,3))
+        PtotTS  = np.nansum(E2P,axis=(1,2,3))
     else:    
         PtotTS  = np.nansum(Ptot[ibgn:,xla,xlo], axis=1)
     # calculate bias correction fractor
@@ -215,16 +215,16 @@ def main_biascorrection(
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
         ndays   = PtotTS.shape[0]
-        PtotTS  = -np.repeat(np.nansum(E2P_Pscaled),ndays)
+        PtotTS  = np.repeat(np.nansum(E2P_Pscaled),ndays)
         PrefTS  = np.repeat(np.nansum(PrefTS),ndays)
         Pratio  = PrefTS / PtotTS
         Pratio[Pratio==np.inf] = 0
         E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
 
-    if round(np.nansum(E2P_Pscaled),4) != round(np.nansum(-Pref[ibgn:,xla,xlo]),4):
+    if round(np.nansum(E2P_Pscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
         print("  --- OOOPS... something must be wrong in the biascorrection of P.")
         print(round(np.nansum(E2P_Pscaled),4))
-        print(round(np.nansum(-Pref[ibgn:,xla,xlo]),4))
+        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
     
     #******************************************************************************
     ## (iii) BIAS CORRECTING THE SOURCE AND THE SINK (P only)
@@ -236,25 +236,25 @@ def main_biascorrection(
     E2P_ts          = np.nansum(E2P,axis=(1,2,3))
     f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
     # step 2: calculate how much more scaling is needed to match P too 
-    Prationew = np.nansum(-Pref[ibgn:,xla,xlo],axis=1) / np.nansum(E2P_Pscaled,axis=(1,2,3))
+    Prationew = np.nansum(Pref[ibgn:,xla,xlo],axis=1) / np.nansum(E2P_Pscaled,axis=(1,2,3))
     f_remain = np.divide(Prationew, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
-    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(-Pref[ibgn:,xla,xlo]),4):
+    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
         print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
         print(round(np.nansum(E2P_EPscaled),4))
-        print(round(np.nansum(-Pref[ibgn:,xla,xlo]),4))
+        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
     
     # check if additional monthly bias correction needed 
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
         ndays           = PtotTS.shape[0]
-        f_remain        = np.repeat(np.nansum(-Pref[ibgn:,xla,xlo]) / np.nansum(E2P_EPscaled),ndays)
+        f_remain        = np.repeat(np.nansum(Pref[ibgn:,xla,xlo]) / np.nansum(E2P_EPscaled),ndays)
         E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
     
-    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(-Pref[ibgn:,xla,xlo]),4):
+    if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
         print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
         print(round(np.nansum(E2P_EPscaled),4))
-        print(round(np.nansum(-Pref[ibgn:,xla,xlo]),4))
+        print(round(np.nansum(Pref[ibgn:,xla,xlo]),4))
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
@@ -278,7 +278,7 @@ def main_biascorrection(
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
-                -mask3darray(Pref[ibgn:,:,:],xla,xlo),-mask3darray(Ptot[ibgn:,:,:],xla,xlo),
+                mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
                 Pratio,np.nan_to_num(f_Escaled),np.nan_to_num(f_remain),
