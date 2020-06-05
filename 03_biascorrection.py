@@ -229,8 +229,9 @@ def main_biascorrection(
     E2P_ts          = np.nansum(E2P,axis=(1,2,3))
     f_Escaled       = np.divide(E2P_Escaled_ts, E2P_ts)
     # step 2: calculate how much more scaling is needed to match P too 
-    Prationew = np.nansum(Pref[ibgn:,xla,xlo],axis=1) / np.nansum(E2P_Pscaled,axis=(1,2,3))
-    f_remain = np.divide(Prationew, f_Escaled)
+    Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled)
+    #Prationew = np.nansum(Pref[ibgn:,xla,xlo],axis=1) / np.nansum(E2P_Pscaled,axis=(1,2,3))
+    f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     if round(np.nansum(E2P_EPscaled),4) != round(np.nansum(Pref[ibgn:,xla,xlo]),4):
         print("  --- OOOPS... something must be wrong in the biascorrection of E or P.")
