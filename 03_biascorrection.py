@@ -214,9 +214,9 @@ def main_biascorrection(
     # attention: still writing out daily data though (days won't match!)
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
-        ndays   = PtotTS.shape[0]
+        ndays   = Pratio.shape[0]
         PtotTS  = np.repeat(np.nansum(E2P_Pscaled),ndays)
-        PrefTS  = np.repeat(np.nansum(PrefTS),ndays)
+        PrefTS  = np.repeat(np.nansum(Pref[ibgn:,xla,xlo]),ndays)
         Pratio  = PrefTS / PtotTS
         Pratio[Pratio==np.inf] = 0
         E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
@@ -247,7 +247,7 @@ def main_biascorrection(
     # check if additional monthly bias correction needed 
     fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
     if fusemonthly:
-        ndays           = PtotTS.shape[0]
+        ndays           = Pratio.shape[0]
         f_remain        = np.repeat(np.nansum(Pref[ibgn:,xla,xlo]) / np.nansum(E2P_EPscaled),ndays)
         E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
     
