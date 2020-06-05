@@ -227,7 +227,7 @@ def main_biascorrection(
     # step 1: check how much E2P changed due to source-correction already
     f_Escaled    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale='daily')
     # step 2: calculate how much more correction is needed to match sink 
-    Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled)
+    Pratio       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='daily')
     # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
