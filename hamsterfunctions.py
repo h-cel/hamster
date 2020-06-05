@@ -1131,7 +1131,12 @@ def check_attributedp(pdiag,pattr,veryverbose):
 
 def needmonthlyp(pdiag,pref):
     returnval   = False
-    tocheck     = np.where(pref<0)[0]
+    # define all positive
+    if np.all(pref<=0):
+        pref    = -pref
+    if np.all(pdiag<=0):
+        pdiag   = -pdiag
+    tocheck     = np.where(pref>0)[0]
     if np.any(pdiag[tocheck]==0):
         print("   --- WARNING: daily bias correction of precipitation not possible.")
         ndiffs  = len(np.where(pdiag[tocheck]==0)[0])
@@ -1370,6 +1375,11 @@ def maskbymaskval(mask,maskval):
     return(mymask)
 
 def calc_sinkbcf(ref,att,tscale='daily'):
+    # define all positive
+    if np.all(ref<=0):
+        ref     = -ref
+    if np.all(att<=0):
+        att     = -att
     if tscale=='daily':
         tref    = np.nansum(ref,axis=tuple(range(1,ref.ndim)))
         tatt    = np.nansum(att,axis=tuple(range(1,att.ndim)))
