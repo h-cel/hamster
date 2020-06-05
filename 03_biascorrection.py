@@ -207,10 +207,10 @@ def main_biascorrection(
     # apply bias correction factor
     E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P, 0, 3), 0, 3) 
     
-    # additionallty (!) perform monthly bias correction of P if necessary
+    # additionally perform monthly bias correction of P if necessary
     # attention: still writing out daily data though (days won't match!)
-    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_Pscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
-    if fusemonthly:
+    if not checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=False):
+        print("        * Additional monthly bias correction needed to match reference precipitation...")
         Pratio  = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
         E2P_Pscaled = np.swapaxes(Pratio * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
     checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=verbose)
@@ -227,11 +227,11 @@ def main_biascorrection(
     # step 3: calculate adjusted bias correction factor
     f_remain = np.divide(Pratio, f_Escaled)
     E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
-    checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
     
-    # check if additional monthly bias correction needed 
-    fusemonthly = needmonthlyp(pdiag=np.nansum(E2P_EPscaled,axis=(1,2,3)),pref=np.nansum(Pref[ibgn:,xla,xlo], axis=1))
-    if fusemonthly:
+    # additionally perform monthly bias correction of P if necessary
+    # attention: still writing out daily data though (days won't match!)
+    if not checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=False):
+        print("        * Additional monthly bias correction needed to match reference precipitation...")
         f_remain        = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
         E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
     checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
