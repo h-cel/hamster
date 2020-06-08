@@ -196,11 +196,8 @@ def main_biascorrection(
     #E2P_Escaled  = np.multiply(alpha_E, Eref)
 
     # alternative version (analogous to sink bc)
-    alpha_H     = calc_sourcebcf(ref=Href, diag=Htot)
-    #print(alpha_H.shape)
-    #print(alpha_H.reshape(alpha_H.shape + (28,)).shape)
-    #print(np.repeat(alpha_H[np.newaxis,:,:,:], 28, axis=0).shape)
-    alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot)
+    alpha_H     = calc_sourcebcf(ref=Href, diag=Htot, tscale=bcscale)
+    alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot, tscale=bcscale)
     Had_Hscaled = np.multiply(alpha_H, Had)
     E2P_Escaled = np.multiply(alpha_E, E2P)
     

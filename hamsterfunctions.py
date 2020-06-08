@@ -1052,10 +1052,22 @@ def calc_alpha(top,bot):
         print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
     return(alpha)
 
-def calc_sourcebcf(ref,diag):
+def calc_sourcebcf(ref,diag,tscale='daily'):
+    # define all positive
+    if np.all(ref<=0):
+        ref     = -ref
+    if np.all(diag<=0):
+        diag    = -diag
     # set 0 to nan to avoid 1e300 values
     diag[diag==0]=np.nan
-    alpha   = np.nan_to_num(np.divide(ref,diag))
+    # calculate bias correction factor
+    if tscale=="daily":
+        alpha   = np.nan_to_num(np.divide(ref,diag))
+    if tscale=="monthly":
+        ref_sum = np.nansum(ref,axis=(0))
+        diag_sum= np.nansum(diag,axis=(0))
+        alpha   = np.nan_to_num(np.divide(ref,diag))
+        #alpha   = np.repeat(alpha_H[np.newaxis,:,:,:], 28, axis=0)
     alpha[alpha==np.inf]    = 0
     return(alpha)
 
