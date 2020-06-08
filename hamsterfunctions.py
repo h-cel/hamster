@@ -1273,20 +1273,14 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  alpha_E,alpha_H,
                  strargs,precision):
     
-    # adjustments for alpha 
-    if len(alpha_E.shape)==3:
-        alpha_E = np.repeat(alpha_E[np.newaxis,:,:,:], len(fdate_seq), axis=0)
-    if len(alpha_H.shape)==3:
-        alpha_H = np.repeat(alpha_H[np.newaxis,:,:,:], len(fdate_seq), axis=0)
-
     Prefsum     = np.nansum(Pref,axis=(1,2))
     Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
     Pattrsum    = np.nansum(Pattr,axis=(1,2))
     Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
     Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
-    malpha_H    = np.max(alpha_H[0,:,:,:],axis=(1,2))
-    malpha_E    = np.max(alpha_E[0,:,:,:],axis=(1,2))
+    malpha_H    = np.max(alpha_H[:,:,:],axis=(1,2))
+    malpha_E    = np.max(alpha_E[:,:,:],axis=(1,2))
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -1321,8 +1315,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
     nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'))
     nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'))
-    nc_alphae           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
-    nc_alphah           = nc_f.createVariable('alpha_H',precision,('time','uptaketime','lat','lon'))
+    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
+    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
     nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
     nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
