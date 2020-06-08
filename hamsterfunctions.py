@@ -1321,9 +1321,9 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio           = nc_f.createVariable('alpha_P',precision,('time'))
     nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
-    nc_alphap           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
+    nc_alphae           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
     nc_alphah           = nc_f.createVariable('alpha_H',precision,('time','uptaketime','lat','lon'))
-    nc_malphap          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
+    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
     nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
     # set attributes
@@ -1363,12 +1363,12 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_fescaled.long_name  = 'f_Escaled'
     nc_fremain.units       = '-'
     nc_fremain.long_name   = 'f_remain'
-    nc_alphap.units        = '-'
-    nc_alphap.long_name    = 'alpha_E'
+    nc_alphae.units        = '-'
+    nc_alphae.long_name    = 'alpha_E'
     nc_alphah.units        = '-'
     nc_alphah.long_name    = 'alpha_H'
-    nc_malphap.units       = '-'
-    nc_malphap.long_name   = 'maximum alpha_E'
+    nc_malphae.units       = '-'
+    nc_malphae.long_name   = 'maximum alpha_E'
     nc_malphah.units       = '-'
     nc_malphah.long_name   = 'maximum alpha_H'
 
@@ -1389,9 +1389,9 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio[:]        = Pratio[:]
     nc_fescaled[:]      = f_Escaled[:]
     nc_fremain[:]       = f_remain[:]
-    nc_alphap[:]        = alpha_E[:]
+    nc_alphae[:]        = alpha_E[:]
     nc_alphah[:]        = alpha_H[:]
-    nc_malphap[:]       = malpha_E[:]
+    nc_malphae[:]       = malpha_E[:]
     nc_malphah[:]       = malpha_H[:]
 
     # close file
