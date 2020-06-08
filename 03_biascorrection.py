@@ -189,11 +189,20 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source data...")
     # calculate source fraction contribution (FLEXPART data only)
-    alpha_Had = calc_alpha(Had, Htot)
-    alpha_E2P = calc_alpha(E2P, Etot)
-    # and use reference data for bias-correcting the totals 
-    Had_Hscaled  = np.multiply(alpha_Had, Href)
-    E2P_Escaled  = np.multiply(alpha_E2P, Eref)
+    #alpha_H = calc_alpha(Had, Htot)
+    #alpha_E = calc_alpha(E2P, Etot)
+    ## and use reference data for bias-correcting the totals 
+    #Had_Hscaled  = np.multiply(alpha_H, Href)
+    #E2P_Escaled  = np.multiply(alpha_E, Eref)
+
+    # alternative version (analogous to sink bc)
+    alpha_H     = calc_sourcebcf(ref=Href, diag=Htot)
+    #print(alpha_H.shape)
+    #print(alpha_H.reshape(alpha_H.shape + (28,)).shape)
+    #print(np.repeat(alpha_H[np.newaxis,:,:,:], 28, axis=0).shape)
+    alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot)
+    Had_Hscaled = np.multiply(alpha_H, Had)
+    E2P_Escaled = np.multiply(alpha_E, E2P)
     
     #******************************************************************************
     ## (ii) BIAS CORRECTING THE SINK (P only)
@@ -263,7 +272,7 @@ def main_biascorrection(
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
                 Pratio,np.nan_to_num(f_Escaled),np.nan_to_num(f_remain),
-                np.nan_to_num(alpha_E2P),np.nan_to_num(alpha_Had),
+                np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
     
     ##--7. save output ############################################################

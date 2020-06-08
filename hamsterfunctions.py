@@ -1052,6 +1052,13 @@ def calc_alpha(top,bot):
         print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
     return(alpha)
 
+def calc_sourcebcf(ref,diag):
+    # set 0 to nan to avoid 1e300 values
+    diag[diag==0]=np.nan
+    alpha   = np.nan_to_num(np.divide(ref,diag))
+    alpha[alpha==np.inf]    = 0
+    return(alpha)
+
 def udays2udate(atime,utime_srt):
     utime_first = atime[0] - timedelta(days=utime_srt.size-1) # utime_srt.size-1 == trajlen (in days)
     uptake_time = np.asarray([utime_first+timedelta(days=nday) for nday in range(utime_srt.size-1+atime.size)])
@@ -1251,17 +1258,23 @@ def mask3darray(xarray,xla,xlo):
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
-                 alpha_E2P,alpha_Had,
+                 alpha_E,alpha_H,
                  strargs,precision):
-   
+    
+    # adjustments for alpha 
+    if len(alpha_E.shape)==3:
+        alpha_E = np.repeat(alpha_E[np.newaxis,:,:,:], len(fdate_seq), axis=0)
+    if len(alpha_H.shape)==3:
+        alpha_H = np.repeat(alpha_H[np.newaxis,:,:,:], len(fdate_seq), axis=0)
+
     Prefsum     = np.nansum(Pref,axis=(1,2))
     Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
     Pattrsum    = np.nansum(Pattr,axis=(1,2))
     Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
     Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
-    malpha_Had  = np.max(alpha_Had,axis=(1,2,3))
-    malpha_E2P  = np.max(alpha_E2P,axis=(1,2,3))
+    malpha_H    = np.max(alpha_H[0,:,:,:],axis=(1,2))
+    malpha_E    = np.max(alpha_E[0,:,:,:],axis=(1,2))
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -1296,10 +1309,10 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
     nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
-    nc_alphap           = nc_f.createVariable('alpha_E2P',precision,('time','uptaketime','lat','lon'))
-    nc_alphah           = nc_f.createVariable('alpha_Had',precision,('time','uptaketime','lat','lon'))
-    nc_malphap          = nc_f.createVariable('max_alpha_E2P',precision,('time'))
-    nc_malphah          = nc_f.createVariable('max_alpha_Had',precision,('time'))
+    nc_alphap           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
+    nc_alphah           = nc_f.createVariable('alpha_H',precision,('time','uptaketime','lat','lon'))
+    nc_malphap          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
+    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1339,13 +1352,13 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_fremain.units       = '-'
     nc_fremain.long_name   = 'f_remain'
     nc_alphap.units        = '-'
-    nc_alphap.long_name    = 'alpha_E2P'
+    nc_alphap.long_name    = 'alpha_E'
     nc_alphah.units        = '-'
-    nc_alphah.long_name    = 'alpha_Had'
+    nc_alphah.long_name    = 'alpha_H'
     nc_malphap.units       = '-'
-    nc_malphap.long_name   = 'maximum alpha_E2P'
+    nc_malphap.long_name   = 'maximum alpha_E'
     nc_malphah.units       = '-'
-    nc_malphah.long_name   = 'maximum alpha_Had'
+    nc_malphah.long_name   = 'maximum alpha_H'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1364,10 +1377,10 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pratio[:]        = Pratio[:]
     nc_fescaled[:]      = f_Escaled[:]
     nc_fremain[:]       = f_remain[:]
-    nc_alphap[:]        = alpha_E2P[:]
-    nc_alphah[:]        = alpha_Had[:]
-    nc_malphap[:]       = malpha_E2P[:]
-    nc_malphah[:]       = malpha_Had[:]
+    nc_alphap[:]        = alpha_E[:]
+    nc_alphah[:]        = alpha_H[:]
+    nc_malphap[:]       = malpha_E[:]
+    nc_malphah[:]       = malpha_H[:]
 
     # close file
     nc_f.close()
