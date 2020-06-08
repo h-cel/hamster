@@ -232,15 +232,15 @@ def main_biascorrection(
     # step 2: calculate how much more correction is needed to match sink 
     alpha_P       = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale=bcscale)
     # step 3: calculate adjusted bias correction factor
-    f_remain = np.divide(alpha_P, alpha_P_Ecor)
-    E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
+    alpha_P_res     = np.divide(alpha_P, alpha_P_Ecor)
+    E2P_EPscaled    = np.swapaxes(alpha_P_res * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
     # attention: still writing out daily data though (days won't match!)
     if not checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=False):
         print("        * Additional monthly bias correction needed to match reference precipitation...")
-        f_remain        = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
-        E2P_EPscaled = np.swapaxes(f_remain * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
+        alpha_P_res        = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
+        E2P_EPscaled = np.swapaxes(alpha_P_res * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
     checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
     
     ##--5. aggregate ##############################################################
@@ -268,7 +268,7 @@ def main_biascorrection(
                 mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
-                alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(f_remain),
+                alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
     
