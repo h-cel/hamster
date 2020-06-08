@@ -1318,7 +1318,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
     nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
     nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
-    nc_pratio           = nc_f.createVariable('alpha_P',precision,('time'))
+    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
     nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
     nc_alphae           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
@@ -1357,8 +1357,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_ps.long_name = 'sum of attributed precipitation (E2P_Pscaled, 02_attr)'
     nc_pattrs_eps.units    = 'm3'
     nc_pattrs_eps.long_name= 'sum of attributed precipitation (E2P_EPscaled, 02_attr)'
-    nc_pratio.units        = '-'
-    nc_pratio.long_name	   = 'alpha_P'
+    nc_alphap.units        = '-'
+    nc_alphap.long_name	   = 'alpha_P'
     nc_fescaled.units      = '-'
     nc_fescaled.long_name  = 'f_Escaled'
     nc_fremain.units       = '-'
@@ -1386,7 +1386,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_es[:]     = Pattrsum_Es[:]
     nc_pattrs_ps[:]     = Pattrsum_Ps[:]
     nc_pattrs_eps[:]    = Pattrsum_EPs[:]
-    nc_pratio[:]        = Pratio[:]
+    nc_alphap[:]        = Pratio[:]
     nc_fescaled[:]      = f_Escaled[:]
     nc_fremain[:]       = f_remain[:]
     nc_alphae[:]        = alpha_E[:]
