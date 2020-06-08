@@ -1269,7 +1269,7 @@ def mask3darray(xarray,xla,xlo):
     return(marray)
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
-                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,alpha_P_Ecorrected,f_remain,
                  alpha_E,alpha_H,
                  strargs,precision):
     
@@ -1319,7 +1319,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
     nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
     nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
-    nc_alphap_ebc       = nc_f.createVariable('f_Escaled',precision,('time'))
+    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'))
     nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
     nc_alphae           = nc_f.createVariable('alpha_E',precision,('time','uptaketime','lat','lon'))
     nc_alphah           = nc_f.createVariable('alpha_H',precision,('time','uptaketime','lat','lon'))
@@ -1360,7 +1360,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphap.units        = '-'
     nc_alphap.long_name	   = 'alpha_P'
     nc_alphap_ebc.units    = '-'
-    nc_alphap_ebc.long_name= 'f_Escaled'
+    nc_alphap_ebc.long_name= 'alpha_P_Ecorrected'
     nc_fremain.units       = '-'
     nc_fremain.long_name   = 'f_remain'
     nc_alphae.units        = '-'
@@ -1387,7 +1387,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_ps[:]     = Pattrsum_Ps[:]
     nc_pattrs_eps[:]    = Pattrsum_EPs[:]
     nc_alphap[:]        = Pratio[:]
-    nc_alphap_ebc[:]    = f_Escaled[:]
+    nc_alphap_ebc[:]    = alpha_P_Ecorrected[:]
     nc_fremain[:]       = f_remain[:]
     nc_alphae[:]        = alpha_E[:]
     nc_alphah[:]        = alpha_H[:]
