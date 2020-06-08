@@ -1269,7 +1269,7 @@ def mask3darray(xarray,xla,xlo):
     return(marray)
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
-                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,alpha_P_Ecorrected,f_remain,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,alpha_P,alpha_P_Ecorrected,f_remain,
                  alpha_E,alpha_H,
                  strargs,precision):
     
@@ -1386,7 +1386,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_es[:]     = Pattrsum_Es[:]
     nc_pattrs_ps[:]     = Pattrsum_Ps[:]
     nc_pattrs_eps[:]    = Pattrsum_EPs[:]
-    nc_alphap[:]        = Pratio[:]
+    nc_alphap[:]        = alpha_P[:]
     nc_alphap_ebc[:]    = alpha_P_Ecorrected[:]
     nc_fremain[:]       = f_remain[:]
     nc_alphae[:]        = alpha_E[:]
