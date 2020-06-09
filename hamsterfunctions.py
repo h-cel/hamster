@@ -1315,6 +1315,7 @@ def mask3darray(xarray,xla,xlo):
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,
                  frac_E2P,
+                 frac_Had,
                  alpha_P,alpha_P_Ecorrected,alpha_P_res,
                  alpha_E,alpha_H,
                  strargs,precision):
@@ -1365,6 +1366,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
     nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
     nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'))
+    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'))
     nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
     nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
@@ -1415,6 +1417,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_malphah.long_name   = 'maximum alpha_H'
     nc_frace2p.units       = '-'
     nc_frace2p.long_name   = 'frac_E2P'
+    nc_frachad.units       = '-'
+    nc_frachad.long_name   = 'frac_Had'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1438,6 +1442,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_malphae[:]       = malpha_E[:]
     nc_malphah[:]       = malpha_H[:]
     nc_frace2p[:]       = frac_E2P[:]
+    nc_frachad[:]       = frac_Had[:]
 
     # close file
     nc_f.close()

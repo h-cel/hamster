@@ -246,6 +246,7 @@ def main_biascorrection(
     # save some data in case debugging is needed
     if fdebug:
         frac_E2P = calc_alpha(E2P,Etot)
+        frac_Had = calc_alpha(Had,Htot)
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
@@ -273,6 +274,7 @@ def main_biascorrection(
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
                 np.nan_to_num(frac_E2P),
+                np.nan_to_num(frac_Had),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
