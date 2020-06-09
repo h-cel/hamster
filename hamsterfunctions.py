@@ -932,11 +932,11 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     evaps.units         = 'mm'
     evaps.long_name     = 'evaporation resulting in precipitation'
     evaps_Es.units      = 'mm'
-    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-scaled'
+    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
     evaps_Ps.units      = 'mm'
-    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-scaled'
+    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
     evaps_EPs.units     = 'mm'
-    evaps_EPs.long_name = 'evaporation resulting in precipitation, E&P-scaled'
+    evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
 
 
     # write data
