@@ -1314,7 +1314,7 @@ def mask3darray(xarray,xla,xlo):
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,
-                 Ediag,
+                 frac_E2P,
                  alpha_P,alpha_P_Ecorrected,alpha_P_res,
                  alpha_E,alpha_H,
                  strargs,precision):
@@ -1327,8 +1327,6 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
     malpha_H    = np.max(alpha_H[:,:,:],axis=(1,2))
     malpha_E    = np.max(alpha_E[:,:,:],axis=(1,2))
-    # additional alphas to see where over-/underestimation contributed
-    #frac_E2P    = calc_alpha(Pattr,Ediag)
 
     # delete nc file if it is present (avoiding error message)
     try:
@@ -1366,6 +1364,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'))
     nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
     nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
+    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'))
     nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
     nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
@@ -1414,6 +1413,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_malphae.long_name   = 'maximum alpha_E'
     nc_malphah.units       = '-'
     nc_malphah.long_name   = 'maximum alpha_H'
+    nc_frace2p.units       = '-'
+    nc_frace2p.long_name   = 'frac_E2P'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1436,6 +1437,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_alphah[:]        = alpha_H[:]
     nc_malphae[:]       = malpha_E[:]
     nc_malphah[:]       = malpha_H[:]
+    nc_frace2p[:]       = frac_E2P[:]
 
     # close file
     nc_f.close()

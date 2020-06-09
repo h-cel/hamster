@@ -242,6 +242,10 @@ def main_biascorrection(
         alpha_P_res = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
         E2P_EPscaled= np.swapaxes(alpha_P_res * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
     checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
+
+    # save some data in case debugging is needed
+    if fdebug:
+        frac_E2P = calc_alpha(E2P,Etot)
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
@@ -268,7 +272,7 @@ def main_biascorrection(
                 mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
-                convert_mm_m3(Etot,areas),
+                np.nan_to_num(frac_E2P),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
