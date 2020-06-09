@@ -172,6 +172,7 @@ if args.steps == 3:
                bcscale=args.bc_time,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
+               fwrite_month=args.write_month,
                fwritestats=args.writestats,
                precision=args.precision,
                strargs=printsettings(args,3))

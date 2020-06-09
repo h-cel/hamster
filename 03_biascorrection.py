@@ -22,6 +22,7 @@ def main_biascorrection(
            bcscale,
            fdebug,
            fwrite_netcdf,
+           fwrite_month,
            fwritestats,
            precision,
            strargs):
@@ -213,6 +214,8 @@ def main_biascorrection(
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
         E2P_Pscaled = np.swapaxes(alpha_P * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
         fwritemonthp= True
+    else:
+        fwritemonthp= False
     checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=verbose)
     
     #******************************************************************************
@@ -285,4 +288,4 @@ def main_biascorrection(
         # write to netcdf
         writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_scaled, 
                  E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=biasdesc, 
-                 precision=precision, fwritemonthly=False, fwritemonthlyp=fwritemonthp)
+                 precision=precision, fwritemonthly=fwrite_month, fwritemonthlyp=fwritemonthp)

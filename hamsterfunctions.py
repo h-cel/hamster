@@ -57,6 +57,7 @@ def read_cmdargs():
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (flag)",                 type = str2bol, default = False,     nargs='?')
     parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
     parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    type = str2bol, default = False,    nargs='?')
@@ -919,7 +920,7 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
     nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
-    if not fwritemonthly or not frwritemonthlyp:
+    if not fwritemonthly or not fwritemonthlyp:
         times.units         = 'hours since 1900-01-01 00:00:00'
         times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
