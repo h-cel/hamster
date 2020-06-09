@@ -189,8 +189,13 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source data...")
+    # quick consistency check
+    consistencycheck(Had, Htot)
+    consistencycheck(E2P, Etot)
+    # calculate bias correction factor
     alpha_H     = calc_sourcebcf(ref=Href, diag=Htot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot, tscale=bcscale)
+    # apply bias correction factor
     Had_Hscaled = np.multiply(alpha_H, Had)
     E2P_Escaled = np.multiply(alpha_E, E2P)
     

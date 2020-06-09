@@ -1517,3 +1517,10 @@ def checkpsum(ref,att,verbose):
     else:
         ident=True
     return(ident)
+
+def consistencycheck(attr,diag):
+    frac = np.divide(attr,diag)
+    if np.any(frac>1.0001) or np.any(np.isinf(frac)):
+        print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
+        print(" \t !!!          ---> CHECK YOUR DATA !!!")
+        print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac)))+"\n")
