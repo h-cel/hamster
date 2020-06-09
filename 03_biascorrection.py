@@ -268,6 +268,7 @@ def main_biascorrection(
                 mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
                 convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
+                convert_mm_m3(Etot,areas),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)

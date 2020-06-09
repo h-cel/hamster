@@ -1269,7 +1269,9 @@ def mask3darray(xarray,xla,xlo):
     return(marray)
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
-                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,alpha_P,alpha_P_Ecorrected,alpha_P_res,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,
+                 Ediag,
+                 alpha_P,alpha_P_Ecorrected,alpha_P_res,
                  alpha_E,alpha_H,
                  strargs,precision):
     
@@ -1281,6 +1283,9 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
     malpha_H    = np.max(alpha_H[:,:,:],axis=(1,2))
     malpha_E    = np.max(alpha_E[:,:,:],axis=(1,2))
+    # additional alphas to see where over-/underestimation contributed
+    #frac_E2P    = calc_alpha(Pattr,Ediag)
+
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
