@@ -178,7 +178,6 @@ def read_partposit(ifile, maxn=3e6, verbose=True):
                 flist.append([idx, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
                 idx     += 1
             except:
-                print("Maximum number of parcels reached.")
                 break
     strm.close()
     return(np.reshape(flist, newshape=(idx-1,13)))
