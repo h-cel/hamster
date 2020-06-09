@@ -188,14 +188,6 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source data...")
-    # calculate source fraction contribution (FLEXPART data only)
-    #alpha_H = calc_alpha(Had, Htot)
-    #alpha_E = calc_alpha(E2P, Etot)
-    ## and use reference data for bias-correcting the totals 
-    #Had_Hscaled  = np.multiply(alpha_H, Href)
-    #E2P_Escaled  = np.multiply(alpha_E, Eref)
-
-    # alternative version (analogous to sink bc)
     alpha_H     = calc_sourcebcf(ref=Href, diag=Htot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot, tscale=bcscale)
     Had_Hscaled = np.multiply(alpha_H, Had)
