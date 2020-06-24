@@ -76,6 +76,10 @@ def read_cmdargs():
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = None)
+    parser.add_argument('--symd',       '-sy',  help = "flex2traj start datetime [yyyymmdd], def: ayyyy+am+ad",         metavar ="", type = int,  default = None)
+    parser.add_argument('--eymd',       '-ey',  help = "flex2traj end datetime [yyyymmdd], def: ayyyy+am+lastdayofam",  metavar ="", type = int,  default = None)
+    parser.add_argument('--fout',       '-fo',  help = "flex2traj output file name base [str], default: f2tdev",        metavar ="", type = str,  default = "f2tdev")
+    parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = bool, default = True)
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -83,6 +87,10 @@ def read_cmdargs():
         args.ryyyy   = args.ayyyy
     if args.refdate is None:
         args.refdate = str(args.ryyyy)+"123118"
+    if args.symd is None:
+        args.symd    = int(str(args.ayyyy)+str(args.am)+str(args.ad))
+    if args.eymd is None:
+        args.eymd    = int(str(args.ayyyy)+str(args.am)+str(calendar.monthrange(args.ayyyy, args.am)[1]))
     return args
 
 def printsettings(args,step):
