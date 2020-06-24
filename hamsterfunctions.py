@@ -1537,3 +1537,209 @@ def consistencycheck(attr,diag):
         print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
         print(" \t !!!          ---> CHECK YOUR DATA !!!")
         print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac)))+"\n")
+
+#################################################################################################
+
+def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
+    """
+    @action: reads binary outputs from FLEXPART
+    @input:  partposit_DATE.gz
+    @output: returns a numpy array of dimension nparcels x 13
+    @author: Jessica Keune 06/2020
+    #modified: Dominik Schumacher, 06/2020 ---> do use pid!
+    """
+    with gzip.open(ifile, 'rb') as strm:
+        _       = strm.read(4) # dummy
+        _       = struct.unpack('i', strm.read(4))[0] # time
+        idx     = 1
+        flist   = []
+        # repeat
+        while idx<=maxn:
+            try:
+                _       = strm.read(8) # dummy
+                pid     = struct.unpack('i', strm.read(4))[0]
+                if pid  == -99999:
+                    #if verbose: print("EOF reached.")
+                    break
+                if verbose: print(str(idx)+" "+str(pid))
+                x       = struct.unpack('f', strm.read(4))[0]
+                y       = struct.unpack('f', strm.read(4))[0]
+                z       = struct.unpack('f', strm.read(4))[0]
+                itramem = struct.unpack('i', strm.read(4))[0]
+                oro     = struct.unpack('f', strm.read(4))[0]
+                pv      = struct.unpack('f', strm.read(4))[0]
+                qq      = struct.unpack('f', strm.read(4))[0]
+                rho     = struct.unpack('f', strm.read(4))[0]
+                hmix    = struct.unpack('f', strm.read(4))[0]
+                tropo   = struct.unpack('f', strm.read(4))[0]
+                temp    = struct.unpack('f', strm.read(4))[0]
+                mass    = struct.unpack('f', strm.read(4))[0]
+                flist.append([pid, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
+                idx     += 1
+            except:
+                print("Maximum number of parcels reached.")
+                break
+    strm.close()
+    return(np.reshape(flist, newshape=(idx-1,13)))
+
+def f2t_maskgrabber(path):
+    with nc4.Dataset(path, mode='r') as f:
+        mask = np.asarray(f['mask'][:])
+        lat = np.asarray(f['lat'][:])
+        lon = np.asarray(f['lon'][:])
+    return(mask, lat, lon)
+
+def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
+    fulltime = []
+    fulltime.append(tbgn - dt.timedelta(days=ntraj_d, hours=dt_h))
+    while fulltime[-1] < tend:
+        fulltime.append(fulltime[-1]+dt.timedelta(hours=dt_h))
+    # convert to strings in matching format for partposit files
+    fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
+    return(fulltime_str)
+
+def f2t_loader(partdir, string, fixlons):
+    dummy = read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
+    ## shift lons already to facilitate gridding later
+    if fixlons:
+        dummy[:,1][dummy[:,1]>179.5] -= 360
+    return(dummy)
+
+def f2t_fixer(IDs, ryyyy, verbose, thresidx=1997000):
+    ## load corresponding ID lookup table
+    lookup = np.asarray(pd.read_csv(os.path.dirname(os.path.abspath(__file__))+'/fixid/'+str(ryyyy)+'.csv'))
+    ## find candidates to replace
+    ihit = np.where(np.isin(IDs[thresidx:], lookup[:,0]))[0] + thresidx
+    if ihit.size==0:
+        if verbose: print("        --> NO duplicates present")
+        return(IDs)
+    else:
+        ## sanity check
+        if not np.isin(IDs[ihit], lookup[:,0]).all():
+            raise IndexError('\n---- ID replacement w/ LOOKUP table FAILED')
+        ## find replacement IDs; cannot assume that all duplicates are present
+        replace = lookup[:,1][np.where(np.isin(lookup[:,0], IDs[ihit]))]
+        ## now do replace IDs
+        IDs[ihit] = replace[:]
+        if verbose: print("        --> "+str(ihit.size)+" duplicate IDs found & replaced")
+        return(IDs)
+
+def f2t_seeker(array2D, mask, val, lat, lon):
+    ## first, we search potential candidates using rectangular box
+    imlat, imlon = np.where(mask==val)
+    lat1 = lat[imlat].min() -0.5
+    lat2 = lat[imlat].max() +0.5
+    lon1 = lon[imlon].min() -0.5
+    lon2 = lon[imlon].max() +0.5
+    ## go for it (this is pretty fast)
+    idx_inbox = np.where( (array2D[:,1] >= lon1) & (array2D[:,1] <= lon2) &
+                          (array2D[:,2] >= lat1) & (array2D[:,2] <= lat2) )[0]
+    ## now check if *really* in mask (slow!)
+    idx = []
+    for ii in range(idx_inbox.size):
+        jdx = idx_inbox[ii]
+        if mask[np.where(lat==np.round(array2D[jdx,2]))[0][0],
+                np.where(lon==np.round(array2D[jdx,1]))[0][0]] == val:
+            idx.append(jdx)
+    ## finally, return parcel IDs
+    pid = array2D[:,0][np.asarray(idx)]
+    return(pid)
+
+def f2t_locator(array2D, pid, tstring):
+    ## figure out where parcels are (lines may shift b/w files)
+    pidx = np.where(np.isin(array2D[:,0], pid, assume_unique=False))[0] # <----- set True ??
+    chosen = -999*np.ones(shape=(len(pid), array2D.shape[1]))
+    if not pidx.size == len(pid):
+        print("---- INFO: not all parcels present in file --> partposit_"+tstring)
+        idx_pidok = np.where(np.isin(pid, array2D[pidx,0], assume_unique=False))[0] # <----- set True ??
+        chosen[idx_pidok,:] = array2D[pidx,:]
+    else:
+        chosen[:,:] = array2D[pidx,:]
+    return(chosen)
+
+def f2t_constructor(array3D, pid, time_str):
+    ## sloppy check
+    if not array3D.shape[0] == len(time_str):
+        raise IndexError('time_str must match time dimension of array3D!')
+    ## prepare large array, loop thru
+    trajs = -999*np.ones(shape=(array3D.shape[0], pid.size, array3D.shape[2]))
+    for ii in range(array3D.shape[0]):
+        ## call locator
+        trajs[ii,:,:] = f2t_locator(array2D=array3D[ii,:,:], pid=pid, tstring=time_str[ii])
+    return(trajs)
+
+def f2t_saver(odata, outdir, fout, tstring):
+    with h5py.File(outdir+'/'+fout+'_'+tstring+'.h5', 'w') as f:
+        f.create_dataset("trajdata", data=odata)
+
+def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
+                    outdir, fout, fixlons, verbose):
+    ##-- 1.) load em files
+    data = -999*np.ones(shape=(len(time_str),2000001,selvars.size)) # LARGE, do this just 1x
+    for ii in range(len(time_str)):
+         if verbose: print("       "+time_str[ii][:-4], end='')
+         dummy = f2t_loader(partdir=partdir, string=time_str[ii],
+                        fixlons=fixlons)[:,selvars] # load
+         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+         data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
+
+    ##-- 2.) find IDs within mask
+    if verbose: print("       searching IDs", end='')
+    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+                            mask=mask, val=maskval, lat=mlat, lon=mlon)
+
+    ##-- 3.) grab data for IDs
+    if verbose: print(" | grabbing data for "+str(pid_inmask.size)+" IDs", end='')
+    trajs = f2t_constructor(array3D=data, pid=pid_inmask, time_str=time_str)
+
+    ##--4.) save
+    if verbose: print(" | writing to file", end='')
+    f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4])
+
+    ##--5.) return data & trajs arrays (needed for next files)
+    return(data, trajs)
+
+def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
+                 mask, maskval, mlat, mlon, outdir, fout, fixlons, verbose):
+    ##-- 1.) move old data & fill current step with new data
+    data[:-1,] = data[1:,]
+    if verbose: print("\n      ", time_str[-1][:-4], end='')
+    dummy = f2t_loader(partdir=partdir, string=time_str[-1],
+                       fixlons=fixlons)[:,selvars] # load
+    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+    data[-1,:dummy.shape[0]] = dummy[:] # fill only where data available
+
+    ##--2.) find all IDs
+    if verbose: print("       searching IDs", end='')
+    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+                            mask=mask, val=maskval, lat=mlat, lon=mlon)
+
+    ##--3.) figure out which ones were there before; SPLIT
+    if verbose: print(" | recycling & grabbing new data for "+str(pid_inmask.size)+" IDs", end='')
+    pid_trajs = trajs[-1,:,0]
+    pid_prv = np.intersect1d(pid_inmask, pid_trajs) # can recycle data
+    pid_new = np.setdiff1d(pid_inmask, pid_prv) # need to grab everything
+
+    ##--4.) recycle data first
+    extend = f2t_locator(array2D=data[-1,:,:],
+                   pid=pid_prv, # <--- !!!
+                   tstring=time_str[-1])
+    lidx = np.where(np.isin(trajs[-1,:,0], pid_prv,assume_unique=False))[0]
+    loaded  = trajs[1:,lidx,:] # 1: crucial! discard file where traj 'begins'
+    recycle = np.concatenate((loaded, extend[np.newaxis,:,:]), axis=0) # concat time
+
+    ##--5.) now take care of new ones
+    novum = f2t_constructor(array3D=data,
+                            pid=pid_new, # <--- !!!
+                            time_str=time_str[:])
+
+    ##--6.) unite arrays and then sort & overwrite trajs var
+    united = np.concatenate((recycle, novum), axis=1) # concat parcels
+    trajs = united[:,np.argsort(united[-1,:,0]),:]
+
+    ##-- 7.) save
+    if verbose: print(" | writing to file", end='')
+    f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4]) # omit mins & secs
+
+    ##--8.) return updated data & trajs arrays
+    return(data, trajs)
