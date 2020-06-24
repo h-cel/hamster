@@ -88,9 +88,9 @@ def read_cmdargs():
     if args.refdate is None:
         args.refdate = str(args.ryyyy)+"123118"
     if args.symd is None:
-        args.symd    = int(str(args.ayyyy)+str(args.am)+str(args.ad))
+        args.symd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2))
     if args.eymd is None:
-        args.eymd    = int(str(args.ayyyy)+str(args.am)+str(calendar.monthrange(args.ayyyy, args.am)[1]))
+        args.eymd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(calendar.monthrange(args.ayyyy, args.am)[1]).zfill(2))
     return args
 
 def printsettings(args,step):
@@ -1591,15 +1591,15 @@ def f2t_maskgrabber(path):
 
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
-    fulltime.append(tbgn - dt.timedelta(days=ntraj_d, hours=dt_h))
+    fulltime.append(tbgn - datetime.timedelta(days=ntraj_d, hours=dt_h))
     while fulltime[-1] < tend:
-        fulltime.append(fulltime[-1]+dt.timedelta(hours=dt_h))
+        fulltime.append(fulltime[-1]+datetime.timedelta(hours=dt_h))
     # convert to strings in matching format for partposit files
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
 def f2t_loader(partdir, string, fixlons):
-    dummy = read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
+    dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
     ## shift lons already to facilitate gridding later
     if fixlons:
         dummy[:,1][dummy[:,1]>179.5] -= 360
@@ -1669,6 +1669,9 @@ def f2t_constructor(array3D, pid, time_str):
     return(trajs)
 
 def f2t_saver(odata, outdir, fout, tstring):
+    ## create dir if not present
+    if not os.path.exists(outdir): # could use isdir too
+        os.makedir(outdir)
     with h5py.File(outdir+'/'+fout+'_'+tstring+'.h5', 'w') as f:
         f.create_dataset("trajdata", data=odata)
 
