@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun 15 15:55:50 2020
-@author: dschumac
+MAIN FUNCTIONS FOR 00_flex2traj
 """
 
 def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval, 
