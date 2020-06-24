@@ -78,6 +78,11 @@ def read_cmdargs():
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = None)
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
+    # handle None cases already
+    if args.ryyyy is None:
+        args.ryyyy   = args.ayyyy
+    if args.refdate is None:
+        args.refdate = str(args.ryyyy)+"123118"
     return args
 
 def printsettings(args,step):
