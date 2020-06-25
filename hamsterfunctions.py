@@ -1582,12 +1582,41 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     strm.close()
     return(np.reshape(flist, newshape=(idx-1,13)))
 
-def f2t_maskgrabber(path):
+def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
+    # load
     with nc4.Dataset(path, mode='r') as f:
-        mask = np.asarray(f['mask'][:])
-        lat = np.asarray(f['lat'][:])
-        lon = np.asarray(f['lon'][:])
+        mask = np.asarray(f[maskvar][:])
+        lat = np.asarray(f[latvar][:])
+        lon = np.asarray(f[lonvar][:])
+    # check if 2dimensional; necessary for ERA-I lsm mask
+    if len(mask.shape) == 3:
+        mask = mask[0,:,:]
+    # lats check (order irrelevant, just must be within [-90,90])
+    if not (lat.min()==-90 or lat.max()==90):
+        return(None)
+    # lons check
+    if lon.min()==-180 and lon.max()==179:
+        pass
+    elif np.array_equal(lon, np.arange(0,360)):
+        mask, lon = f2t_lon360to180(mask, lon, 1)
+    else:
+        # this case is not implemented
+        return(None)
     return(mask, lat, lon)
+
+def f2t_lon360to180(ary, lons, lonaxis=1):
+    # bring lon axis to front to handle any shape of ary
+    ary = np.moveaxis(ary, lonaxis, 0)
+    ary_bu  = np.copy(ary)
+    lons_bu = np.copy(lons)
+    # copy lons & data
+    lons[:int(lons.size/2)] = lons_bu[int(lons.size/2):] - 360
+    lons[int(lons.size/2):] = lons_bu[:int(lons.size/2)]
+    ary[:int(lons.size/2)] = ary_bu[int(lons.size/2):]
+    ary[int(lons.size/2):] = ary_bu[:int(lons.size/2)]
+    # move axis back to where it was
+    ary = np.moveaxis(ary, 0, lonaxis)
+    return(ary, lons)
 
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
