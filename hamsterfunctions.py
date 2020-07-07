@@ -590,6 +590,13 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
         break
   if veryverbose:
       print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
+  # upscaling to 100% if explain==full  
+  if explainp=="full" and maxatt<1:
+      explfr    = abs(dqdt[0])/np.sum(dqdt_random)
+      dqdt_random *= explfr
+      if veryverbose:
+        print(" * Upscaling of contributions required...")
+        print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
   return(dqdt_random/1000)
 
 
