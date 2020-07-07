@@ -537,7 +537,8 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   # qtot = specific humidity
   # iupt = identified uptake locations
   # explainp = none(default)/full analogue to linear discounting & attribution
-  #  - none: 100% is attributed to iupt + initial condition (~not explained)
+  #  - none: maximum is attributed to iupt (can be 100%!)
+  #  - max: maximum is attributed to iupt + initial condition (~not explained); enforcing at least one iteration on init. cond.
   #  - full: 100% is attributed to iupt (if possible!)
   # nmin = tuning parameter; ~minimum iterations 
   #  - the higher this value, the more iterations, the uptake locations are covered
@@ -546,7 +547,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   # append initial condition as artificial uptake
   dqdt  = np.append(dqdt,qtot[-1])
   nt    = len(dqdt)
-  if explainp=="none":
+  if explainp=="max":
     iupt = np.append(iupt,nt-1)
   # indicator for potential uptake locations (1: yes, 0: no)
   pupt  = np.zeros(shape=nt)
@@ -566,8 +567,12 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   expl      = 0
   icount    = 0
   while round(expl,8) < round(abs(prec),8):
-    i    = random.randint(0,nupt-1) # get a random uptake location number
-    ii   = np.where(pupt==1)[0][i]  # uptake location index
+    # enforce attribution to initial cond. if explain==max
+    if icount==0 and explainp=="max":
+        ii   = nt-1
+    else:    
+        i    = random.randint(0,nupt-1) # get a random uptake location number
+        ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
     try:
         imin    = np.argmin(qtot[1:ii])+1
@@ -588,6 +593,10 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
         break
+  # reset for maximum attribution (only needed if veryverbose is set to True)
+  if explainp=="max":
+      dqdt_random[-1]   = 0
+      nupt              -= 1
   if veryverbose:
       print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
   # upscaling to 100% if explain==full  

@@ -75,9 +75,6 @@ def main_attribution(
     ## Resets & consistency checks
     if fwritestats and mattribution=="random":
         print(" ! Option <writestats> not yet available for attribution method random. Continuing anyhow...")
-    if mattribution=="random" and explainp=="max":
-        print(" ! Option <explainp> with value 'max' does not exist. Resetting to 'none'.")
-        explainp = "none"
     if mode=="oper" and precision=="f4":
         precision = "f8"
         print(" ! Single precision should only be used for testing. Reset to double-precision.")
