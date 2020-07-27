@@ -1795,3 +1795,7 @@ def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
 
     ##--8.) return updated data & trajs arrays
     return(data, trajs)
+
+def checknan(x):
+    x[x>=9.9e+36]=np.nan
+    return(x)
