@@ -204,16 +204,25 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using sink data...")
-    # calculate bias correction factor
+    # calculate (daily) bias correction factor
     if fuseattp:
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale=bcscale)
+        # perform monthly bias correction if necessary
+        if np.all( np.nan_to_num(alpha_P) == 0):
+            print("        * Monthly bias correction needed to match reference precipitation...")
+            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
+            fwritemonthp= True
     else:    
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale=bcscale)
+        # perform monthly bias correction if necessary
+        if np.all( np.nan_to_num(alpha_P) == 0):
+            print("        * Monthly bias correction needed to match reference precipitation...")
+            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale='monthly')
+            fwritemonthp= True
     # apply bias correction factor
     E2P_Pscaled     = np.swapaxes(alpha_P * np.swapaxes(E2P, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
-    # attention: still writing out daily data though (days won't match!)
     if not checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=False):
         print("        * Additional monthly bias correction needed to match reference precipitation...")
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
@@ -232,12 +241,16 @@ def main_biascorrection(
     alpha_P_Ecor    = calc_sinkbcf(ref=E2P_Escaled, att=E2P, tscale=bcscale)
     # step 2: calculate how much more correction is needed to match sink 
     alpha_P         = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale=bcscale)
+    # perform monthly bias correction if necessary
+    if np.all( np.nan_to_num(alpha_P) == 0):
+        print("        * Monthly bias correction needed to match reference precipitation...")
+        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
+        fwritemonthp= True
     # step 3: calculate adjusted bias correction factor
     alpha_P_res     = np.divide(alpha_P, alpha_P_Ecor)
     E2P_EPscaled    = np.swapaxes(alpha_P_res * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
-    # attention: still writing out daily data though (days won't match!)
     if not checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=False):
         print("        * Additional monthly bias correction needed to match reference precipitation...")
         alpha_P_res = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
