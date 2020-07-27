@@ -1323,6 +1323,10 @@ def contingency_table(ref,mod,thresh=0):
     d           = len(np.where(mod[ineventobs]<=thresh)[0])   # correct negatives
     return({"a":a,"b":b,"c":c,"d":d})
 
+def try_div(x,y):
+    try: return x/y
+    except ZeroDivisionError: return 0
+
 def calc_ctab_measures(cdict):
     # calculates common contingency table scores
     # scores following definitions from https://www.cawcr.gov.au/projects/verification/
@@ -1331,17 +1335,17 @@ def calc_ctab_measures(cdict):
     c           = cdict["c"]    # misses
     d           = cdict["d"]    # correct negatives
     # calculate scores
-    acc         = (a+d)/(a+b+c+d)   # accuracy
-    far         = b/(a+b)           # false alarm ratio
-    fbias       = (a+b)/(a+c)       # frequency bias
-    pod         = a/(a+c)           # probability of detection (hit rate)
-    pofd        = b/(b+d)           # probability of false detection (false alarm rate)
-    sr          = a/(a+b)           # success ratio
-    ts          = a/(a+c+b)         # threat score (critical success index)
-    a_random    = (a+c)*(a+b)/(a+b+c+d)
-    ets         = (a-a_random)/(a+b+c+a_random) # equitable threat score (gilbert skill score)
-    pss         = pod-pofd          # peirce's skill score (true skill statistic)
-    odr         = a*d/c*b           # odd's ratio      
+    acc         = try_div(a+d,a+b+c+d)          # accuracy
+    far         = try_div(b,a+b)                # false alarm ratio
+    fbias       = try_div(a+b,a+c)              # frequency bias
+    pod         = try_div(a,a+c)                # probability of detection (hit rate)
+    pofd        = try_div(b,b+d)                # probability of false detection (false alarm rate)
+    sr          = try_div(a,a+b)                # success ratio
+    ts          = try_div(a,a+c+b)              # threat score (critical success index)
+    a_random    = try_div((a+c)*(a+b),a+b+c+d)
+    ets         = try_div((a-a_random),(a+b+c+a_random)) # equitable threat score (gilbert skill score)
+    pss         = pod-pofd                      # peirce's skill score (true skill statistic)
+    odr         = try_div(a*d,c*b)              # odd's ratio      
     return({"acc":acc,"far":far,"fbias":fbias,"pod":pod,"pofd":pofd,"sr":sr,"pss":pss,"odr":odr})
 
 def writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss):
