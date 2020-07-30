@@ -266,31 +266,33 @@ def main_biascorrection(
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
+    aHad          = np.nansum(Had, axis=1)
+    aHad_scaled   = np.nansum(Had_Hscaled, axis=1)
+    aE2P          = np.nansum(E2P, axis=1)
+    aE2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
+    aE2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
+    aE2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+    # free up memory if backward time not needed anymore... 
     if faggbwtime:
-        Had          = np.nansum(Had, axis=1)
-        Had_scaled   = np.nansum(Had_Hscaled, axis=1)
-        E2P          = np.nansum(E2P, axis=1)
-        E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
-        E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
-        E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+        del(Had,Had_Hscaled,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled)
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        writestats_03(sfile,Pref,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled,Had,Had_scaled,xla,xlo,ibgn)
+        writestats_03(sfile,Pref,aE2P,aE2P_Escaled,aE2P_Pscaled,aE2P_EPscaled,aHad,aHad_scaled,xla,xlo,ibgn)
 
     # and convert water fluxes back from m3 --> mm
-    E2P          = convert_m3_mm(E2P,areas)
-    E2P_Escaled  = convert_m3_mm(E2P_Escaled,areas)
-    E2P_Pscaled  = convert_m3_mm(E2P_Pscaled,areas)
-    E2P_EPscaled = convert_m3_mm(E2P_EPscaled,areas)
+    aE2P          = convert_m3_mm(aE2P,areas)
+    aE2P_Escaled  = convert_m3_mm(aE2P_Escaled,areas)
+    aE2P_Pscaled  = convert_m3_mm(aE2P_Pscaled,areas)
+    aE2P_EPscaled = convert_m3_mm(aE2P_EPscaled,areas)
     
     ##--6. debugging needed? ######################################################
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
                 mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
-                convert_mm_m3(E2P,areas),convert_mm_m3(E2P_Escaled,areas),
-                convert_mm_m3(E2P_Pscaled,areas),convert_mm_m3(E2P_EPscaled,areas),
+                convert_mm_m3(aE2P,areas),convert_mm_m3(aE2P_Escaled,areas),
+                convert_mm_m3(aE2P_Pscaled,areas),convert_mm_m3(aE2P_EPscaled,areas),
                 np.nan_to_num(frac_E2P),
                 np.nan_to_num(frac_Had),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
@@ -307,6 +309,7 @@ def main_biascorrection(
         biasdesc    = attrdesc.replace("02_attribution","03_biascorrection") 
 
         # write to netcdf
-        writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_scaled, 
-                 E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=biasdesc, 
+        if faggbwtime:
+        writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=aHad, Had_Hs=aHad_scaled, 
+                 E2P=aE2P, E2P_Es=aE2P_Escaled, E2P_Ps=aE2P_Pscaled, E2P_EPs=aE2P_EPscaled, strargs=biasdesc, 
                  precision=precision, fwritemonthly=fwrite_month, fwritemonthlyp=fwritemonthp)
