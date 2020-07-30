@@ -182,6 +182,7 @@ if args.steps == 3:
                veryverbose=args.veryverbose,
                fuseattp=args.useattp,
                bcscale=args.bc_time,
+               faggbwtime=args.aggbwtime,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwrite_month=args.write_month,

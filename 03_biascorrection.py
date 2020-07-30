@@ -20,6 +20,7 @@ def main_biascorrection(
            veryverbose,
            fuseattp,
            bcscale,
+           faggbwtime,
            fdebug,
            fwrite_netcdf,
            fwrite_month,
@@ -265,12 +266,14 @@ def main_biascorrection(
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
-    Had          = np.nansum(Had, axis=1)
-    Had_scaled   = np.nansum(Had_Hscaled, axis=1)
-    E2P          = np.nansum(E2P, axis=1)
-    E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
-    E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
-    E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+    if faggbwtime:
+        Had          = np.nansum(Had, axis=1)
+        Had_scaled   = np.nansum(Had_Hscaled, axis=1)
+        E2P          = np.nansum(E2P, axis=1)
+        E2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
+        E2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
+        E2P_EPscaled = np.nansum(E2P_EPscaled, axis=1)
+
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
         writestats_03(sfile,Pref,E2P,E2P_Escaled,E2P_Pscaled,E2P_EPscaled,Had,Had_scaled,xla,xlo,ibgn)
