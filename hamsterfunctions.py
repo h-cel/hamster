@@ -894,12 +894,22 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
         raise SystemExit("---- aborted: no can do.")
     
     return daily
-    
-def writefinalnc(ofile,fdate_seq,glon,glat,
+   
+def checkdim(var):
+    # check dimension of variables (has to be consistent) and use 2D, 3D or 4D definitions
+    ndims   = len(var.shape)
+    if ndims==4:
+        mydims  = ('time','level','lat','lon')
+    if ndims==3:
+        mydims  = ('time','lat','lon')
+    if ndims==2:
+        mydims  = ('lat','lon')
+    return mydims
+
+def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
                  E2P, E2P_Es, E2P_Ps, E2P_EPs,
-                 strargs,precision,
-                 fwritemonthly,fwritemonthlyp):
+                 strargs,precision):
     
     # delete nc file if it is present (avoiding error message)
     try:
@@ -907,41 +917,28 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     except OSError:
         pass
         
-    if fwritemonthlyp:
-        print(" * Aggregating E2P to monthly sum... (because we performed a monthly bias-correction)") 
-    if fwritemonthly:
-        print(" * Writing monthly aggregated outputs...")
-
     # create netCDF4 instance
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
 
     ### create dimensions ###
-    if not fwritemonthly or not fwritemonthlyp:
-        nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('time', len(fdate_seq))
+    nc_f.createDimension('level', len(udate_seq))
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
 
+    # create grid + time variables
+    times               = nc_f.createVariable('time', 'f8', 'time')
+    utimes              = nc_f.createVariable('level', 'i4', 'level')
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+
     # create variables
-    if not fwritemonthly or not fwritemonthlyp:
-        times               = nc_f.createVariable('time', 'f8', 'time')
-    latitudes               = nc_f.createVariable('lat', 'f8', 'lat')
-    longitudes              = nc_f.createVariable('lon', 'f8', 'lon')
-    if not fwritemonthly:
-        heats               = nc_f.createVariable('Had', precision, ('time','lat','lon'))
-        heats_Hs            = nc_f.createVariable('Had_Hs', precision, ('time','lat','lon'))
-    else: 
-        heats               = nc_f.createVariable('Had', precision, ('lat','lon'))
-        heats_Hs            = nc_f.createVariable('Had_Hs', precision, ('lat','lon'))
-    if not fwritemonthly and not fwritemonthlyp:
-        evaps               = nc_f.createVariable('E2P', precision, ('time','lat','lon'))
-        evaps_Es            = nc_f.createVariable('E2P_Es', precision, ('time','lat','lon'))
-        evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, ('time','lat','lon'))
-        evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, ('time','lat','lon'))
-    else:    
-        evaps               = nc_f.createVariable('E2P', precision, ('lat','lon'))
-        evaps_Es            = nc_f.createVariable('E2P_Es', precision, ('lat','lon'))
-        evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, ('lat','lon'))
-        evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, ('lat','lon'))
+    heats               = nc_f.createVariable('Had', precision, checkdim(Had))
+    heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs))
+    evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P))
+    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es))
+    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps))
+    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs))
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -950,9 +947,10 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
     nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
-    if not fwritemonthly or not fwritemonthlyp:
-        times.units         = 'hours since 1900-01-01 00:00:00'
-        times.calendar      = 'Standard' # do NOT use gregorian here!
+    times.units         = 'hours since 1900-01-01 00:00:00'
+    times.calendar      = 'Standard' # do NOT use gregorian here!
+    utimes.long_name    = 'Difference between uptake and arrival time, in days'
+    utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     heats.units         = 'W m-2'
@@ -968,38 +966,24 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     evaps_EPs.units     = 'mm'
     evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
 
-
     # write data
-    if not fwritemonthly or not fwritemonthlyp:
-        times[:]        = nc4.date2num(fdate_seq, times.units, times.calendar)
+    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
     latitudes[:]        = glat
     longitudes[:]       = glon
    
-    if fwritemonthly:
-        heats[:]        = np.nanmean(Had,axis=0)[:]
-        heats_Hs[:]     = np.nanmean(Had_Hs,axis=0)[:]
-    else:    
-        heats[:]        = Had[:]
-        heats_Hs[:]     = Had_Hs[:]
-    if fwritemonthly or fwritemonthlyp:   
-        evaps[:]        = np.nansum(E2P,axis=0)[:]
-        evaps_Es[:]     = np.nansum(E2P_Es,axis=0)[:]
-        evaps_Ps[:]     = np.nansum(E2P_Ps,axis=0)[:]
-        evaps_EPs[:]    = np.nansum(E2P_EPs,axis=0)[:]
-    else:
-        evaps[:]        = E2P[:]
-        evaps_Es[:]     = E2P_Es[:]
-        evaps_Ps[:]     = E2P_Ps[:]
-        evaps_EPs[:]    = E2P_EPs[:]
+    heats[:]            = Had[:]
+    heats_Hs[:]         = Had_Hs[:]
+    evaps[:]            = E2P[:]
+    evaps_Es[:]         = E2P_Es[:]
+    evaps_Ps[:]         = E2P_Ps[:]
+    evaps_EPs[:]        = E2P_EPs[:]
       
     # close file
     nc_f.close()
     
     # print info
-    if fwritemonthly:
-        print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(glat.size)+","+str(glon.size)+") !\n")
-    else:
-        print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !\n")
+    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !\n")
+
 
 def append2csv(filename, listvals):
     # Open file in append mode

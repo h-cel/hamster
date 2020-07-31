@@ -265,9 +265,10 @@ def main_biascorrection(
         frac_Had = calc_alpha(Had,Htot)
     
     ##--5. aggregate ##############################################################
+    print(E2P.shape)
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
     aHad          = np.nansum(Had, axis=1)
-    aHad_scaled   = np.nansum(Had_Hscaled, axis=1)
+    aHad_Hscaled  = np.nansum(Had_Hscaled, axis=1)
     aE2P          = np.nansum(E2P, axis=1)
     aE2P_Escaled  = np.nansum(E2P_Escaled, axis=1)
     aE2P_Pscaled  = np.nansum(E2P_Pscaled, axis=1)
@@ -278,7 +279,7 @@ def main_biascorrection(
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        writestats_03(sfile,Pref,aE2P,aE2P_Escaled,aE2P_Pscaled,aE2P_EPscaled,aHad,aHad_scaled,xla,xlo,ibgn)
+        writestats_03(sfile,Pref,aE2P,aE2P_Escaled,aE2P_Pscaled,aE2P_EPscaled,aHad,aHad_Hscaled,xla,xlo,ibgn)
 
     # and convert water fluxes back from m3 --> mm
     aE2P          = convert_m3_mm(aE2P,areas)
@@ -310,6 +311,10 @@ def main_biascorrection(
 
         # write to netcdf
         if faggbwtime:
-            writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=aHad, Had_Hs=aHad_scaled, 
+            writefinalnc(ofile=ofile, fdate_seq=arrival_time, udate_seq=uptake_time, glon=lons, glat=lats, Had=aHad, Had_Hs=aHad_Hscaled, 
                         E2P=aE2P, E2P_Es=aE2P_Escaled, E2P_Ps=aE2P_Pscaled, E2P_EPs=aE2P_EPscaled, strargs=biasdesc, 
-                        precision=precision, fwritemonthly=fwrite_month, fwritemonthlyp=fwritemonthp)
+                        precision=precision)
+        if not faggbwtime:
+            writefinalnc(ofile=ofile, fdate_seq=arrival_time, udate_seq=uptake_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_Hscaled, 
+                        E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=biasdesc, 
+                        precision=precision)
