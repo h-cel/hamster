@@ -310,6 +310,6 @@ def main_biascorrection(
 
         # write to netcdf
         if faggbwtime:
-        writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=aHad, Had_Hs=aHad_scaled, 
-                 E2P=aE2P, E2P_Es=aE2P_Escaled, E2P_Ps=aE2P_Pscaled, E2P_EPs=aE2P_EPscaled, strargs=biasdesc, 
-                 precision=precision, fwritemonthly=fwrite_month, fwritemonthlyp=fwritemonthp)
+            writefinalnc(ofile=ofile, fdate_seq=arrival_time, glon=lons, glat=lats, Had=aHad, Had_Hs=aHad_scaled, 
+                        E2P=aE2P, E2P_Es=aE2P_Escaled, E2P_Ps=aE2P_Pscaled, E2P_EPs=aE2P_EPscaled, strargs=biasdesc, 
+                        precision=precision, fwritemonthly=fwrite_month, fwritemonthlyp=fwritemonthp)
