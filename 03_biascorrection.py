@@ -88,6 +88,15 @@ def main_biascorrection(
     # expand uptake dimension to dates (instead of backward days)
     E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
     Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
+    # testing array reduction: srt and test identical?
+    print(utime_srt)
+    print(E2P.shape)
+    print(reduce4Darray(E2P,veryverbose).shape)
+    E2Ptest = reduce4Darray(E2P,veryverbose)
+    print(E2Psrt==E2Ptest)
+    print(np.array_equal(E2Psrt,E2Ptest))
+    print(np.array_equal(E2Psrt[:,:,1:-1,:],E2Ptest[:,:,1:-1,:])) # nans excluded
+    print(np.nansum(E2Ptest-E2Psrt))
     # convert water fluxes from mm-->m3
     E2P = convert_mm_m3(E2P, areas)
 
@@ -315,6 +324,9 @@ def main_biascorrection(
                         E2P=aE2P, E2P_Es=aE2P_Escaled, E2P_Ps=aE2P_Pscaled, E2P_EPs=aE2P_EPscaled, strargs=biasdesc, 
                         precision=precision)
         if not faggbwtime:
-            writefinalnc(ofile=ofile, fdate_seq=arrival_time, udate_seq=uptake_time, glon=lons, glat=lats, Had=Had, Had_Hs=Had_Hscaled, 
-                        E2P=E2P, E2P_Es=E2P_Escaled, E2P_Ps=E2P_Pscaled, E2P_EPs=E2P_EPscaled, strargs=biasdesc, 
+            writefinalnc(ofile=ofile, fdate_seq=arrival_time, udate_seq=utime_srt, glon=lons, glat=lats, 
+                        Had=reduce4Darray(Had,veryverbose), Had_Hs=reduce4Darray(Had_Hscaled,veryverbose), 
+                        E2P=reduce4Darray(E2P,veryverbose), E2P_Es=reduce4Darray(E2P_Escaled,veryverbose), 
+                        E2P_Ps=reduce4Darray(E2P_Pscaled,veryverbose), E2P_EPs=reduce4Darray(E2P_EPscaled,veryverbose), 
+                        strargs=biasdesc, 
                         precision=precision)
