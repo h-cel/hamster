@@ -88,15 +88,6 @@ def main_biascorrection(
     # expand uptake dimension to dates (instead of backward days)
     E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
     Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
-    # testing array reduction: srt and test identical?
-    print(utime_srt)
-    print(E2P.shape)
-    print(reduce4Darray(E2P,veryverbose).shape)
-    E2Ptest = reduce4Darray(E2P,veryverbose)
-    print(E2Psrt==E2Ptest)
-    print(np.array_equal(E2Psrt,E2Ptest))
-    print(np.array_equal(E2Psrt[:,:,1:-1,:],E2Ptest[:,:,1:-1,:])) # nans excluded
-    print(np.nansum(E2Ptest-E2Psrt))
     # convert water fluxes from mm-->m3
     E2P = convert_mm_m3(E2P, areas)
 
