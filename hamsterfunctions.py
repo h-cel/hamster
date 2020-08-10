@@ -1177,6 +1177,18 @@ def expand4Darray(myarray,atime,utime_srt,veryverbose):
         myarray_exp[iat,iat:iat+utime_srt.size,:,:] = myarray[iat,:,:,:]
     return(myarray_exp)
 
+def reduce4Darray(myarray,veryverbose):
+    myshape     = myarray.shape
+    bwtimesteps = myshape[1]-myshape[0]+1
+    myarray_red = np.empty(shape=(myshape[0],bwtimesteps,myshape[2],myshape[3]))
+    if veryverbose:
+        print(" * Reducing array from "+str(myshape)+" to "+str(myarray_red.shape))
+        print(range(myshape[0]))
+    for iat in range(myshape[0]):
+        print("From " + str(iat)+ " to "+str(iat+bwtimesteps))
+        myarray_red[iat,:,:,:]  = myarray[iat,(iat):(iat+bwtimesteps),:,:]
+    return(myarray_red)
+
 def date2year(mydates):
     return( np.asarray([it.year for it in mydates]))
 def date2month(mydates):
