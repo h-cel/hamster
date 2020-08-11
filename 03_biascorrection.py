@@ -280,17 +280,20 @@ def main_biascorrection(
         # write some additional statistics about P-biascorrection before converting back to mm
         writestats_03(sfile,Pref,aE2P,aE2P_Escaled,aE2P_Pscaled,aE2P_EPscaled,aHad,aHad_Hscaled,xla,xlo,ibgn)
 
+    ##--6. unit conversion ##############################################################
     # and convert water fluxes back from m3 --> mm
-    E2P           = convert_m3_mm(E2P,areas)
-    E2P_Escaled   = convert_m3_mm(E2P_Escaled,areas)
-    E2P_Pscaled   = convert_m3_mm(E2P_Pscaled,areas)
-    E2P_EPscaled  = convert_m3_mm(E2P_EPscaled,areas)
-    aE2P          = convert_m3_mm(aE2P,areas)
-    aE2P_Escaled  = convert_m3_mm(aE2P_Escaled,areas)
-    aE2P_Pscaled  = convert_m3_mm(aE2P_Pscaled,areas)
-    aE2P_EPscaled = convert_m3_mm(aE2P_EPscaled,areas)
+    if not faggbwtime:
+        E2P           = convert_m3_mm(E2P,areas)
+        E2P_Escaled   = convert_m3_mm(E2P_Escaled,areas)
+        E2P_Pscaled   = convert_m3_mm(E2P_Pscaled,areas)
+        E2P_EPscaled  = convert_m3_mm(E2P_EPscaled,areas)
+    if fdebug or faggbwtime:    
+        aE2P          = convert_m3_mm(aE2P,areas)
+        aE2P_Escaled  = convert_m3_mm(aE2P_Escaled,areas)
+        aE2P_Pscaled  = convert_m3_mm(aE2P_Pscaled,areas)
+        aE2P_EPscaled = convert_m3_mm(aE2P_EPscaled,areas)
     
-    ##--6. debugging needed? ######################################################
+    ##--7. debugging needed? ######################################################
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
@@ -303,7 +306,7 @@ def main_biascorrection(
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
     
-    ##--7. save output ############################################################
+    ##--8. write final output ############################################################
     if verbose: 
         print(" * Writing final output... ")
         
