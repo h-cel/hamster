@@ -281,6 +281,10 @@ def main_biascorrection(
         writestats_03(sfile,Pref,aE2P,aE2P_Escaled,aE2P_Pscaled,aE2P_EPscaled,aHad,aHad_Hscaled,xla,xlo,ibgn)
 
     # and convert water fluxes back from m3 --> mm
+    E2P           = convert_m3_mm(E2P,areas)
+    E2P_Escaled   = convert_m3_mm(E2P_Escaled,areas)
+    E2P_Pscaled   = convert_m3_mm(E2P_Pscaled,areas)
+    E2P_EPscaled  = convert_m3_mm(E2P_EPscaled,areas)
     aE2P          = convert_m3_mm(aE2P,areas)
     aE2P_Escaled  = convert_m3_mm(aE2P_Escaled,areas)
     aE2P_Pscaled  = convert_m3_mm(aE2P_Pscaled,areas)
