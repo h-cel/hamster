@@ -1183,9 +1183,7 @@ def reduce4Darray(myarray,veryverbose):
     myarray_red = np.empty(shape=(myshape[0],bwtimesteps,myshape[2],myshape[3]))
     if veryverbose:
         print(" * Reducing array from "+str(myshape)+" to "+str(myarray_red.shape))
-        print(range(myshape[0]))
     for iat in range(myshape[0]):
-        print("From " + str(iat)+ " to "+str(iat+bwtimesteps))
         myarray_red[iat,:,:,:]  = myarray[iat,(iat):(iat+bwtimesteps),:,:]
     return(myarray_red)
 

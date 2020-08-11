@@ -265,7 +265,6 @@ def main_biascorrection(
         frac_Had = calc_alpha(Had,Htot)
     
     ##--5. aggregate ##############################################################
-    print(E2P.shape)
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
     aHad          = np.nansum(Had, axis=1)
     aHad_Hscaled  = np.nansum(Had_Hscaled, axis=1)
