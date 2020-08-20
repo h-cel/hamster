@@ -909,7 +909,8 @@ def checkdim(var):
 def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
                  E2P, E2P_Es, E2P_Ps, E2P_EPs,
-                 strargs,precision):
+                 strargs,precision,
+                 fwrite_month):
     
     # delete nc file if it is present (avoiding error message)
     try:
@@ -921,14 +922,19 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
 
     ### create dimensions ###
-    nc_f.createDimension('time', len(fdate_seq))
-    nc_f.createDimension('level', len(udate_seq))
+    if fwrite_month:
+        nc_f.createDimension('time', 1)
+    else:
+        nc_f.createDimension('time', len(fdate_seq))
+    if not np.any(np.isnan(udate_seq)):    
+        nc_f.createDimension('level', len(udate_seq))
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
 
     # create grid + time variables
     times               = nc_f.createVariable('time', 'f8', 'time')
-    utimes              = nc_f.createVariable('level', 'i4', 'level')
+    if not np.any(np.isnan(udate_seq)):    
+        utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
 
@@ -949,8 +955,9 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
-    utimes.long_name    = 'Difference between uptake and arrival time, in days'
-    utimes.units        = 'day'
+    if not np.any(np.isnan(udate_seq)):    
+        utimes.long_name    = 'Difference between uptake and arrival time, in days'
+        utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     heats.units         = 'W m-2'
@@ -967,22 +974,36 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
 
     # write data
-    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    if fwrite_month:
+        times[:]        = nc4.date2num(fdate_seq[0], times.units, times.calendar)
+    else:
+        times[:]        = nc4.date2num(fdate_seq, times.units, times.calendar)
+    if not np.any(np.isnan(udate_seq)):    
+        utimes[:]       = np.arange(-len(udate_seq)+1,1)
     latitudes[:]        = glat
     longitudes[:]       = glon
-   
-    heats[:]            = Had[:]
-    heats_Hs[:]         = Had_Hs[:]
-    evaps[:]            = E2P[:]
-    evaps_Es[:]         = E2P_Es[:]
-    evaps_Ps[:]         = E2P_Ps[:]
-    evaps_EPs[:]        = E2P_EPs[:]
-      
+  
+    if fwrite_month:
+        heats[:]            = np.nanmean(Had,axis=0,keepdims=True)[:]
+        heats_Hs[:]         = np.nanmean(Had_Hs,axis=0,keepdims=True)[:]
+        evaps[:]            = np.nansum(E2P,axis=0,keepdims=True)[:]
+        evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
+        evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
+        evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+    else:
+        heats[:]            = Had[:]
+        heats_Hs[:]         = Had_Hs[:]
+        evaps[:]            = E2P[:]
+        evaps_Es[:]         = E2P_Es[:]
+        evaps_Ps[:]         = E2P_Ps[:]
+        evaps_EPs[:]        = E2P_EPs[:]
+
+    myshape=nc_f['E2P'].shape
     # close file
     nc_f.close()
     
     # print info
-    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !\n")
+    print("\n * Created and wrote to file: "+ofile+" of dimension "+str(myshape)+" !\n")
 
 
 def append2csv(filename, listvals):
