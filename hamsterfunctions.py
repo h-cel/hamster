@@ -1521,7 +1521,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_f.close()
 
     # print info
-    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+    print("\n * Created and wrote to file: "+ofile+" !")
 
 def maskbymaskval(mask,maskval):
     mymask  = np.copy(mask)
