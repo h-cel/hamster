@@ -191,8 +191,8 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source data...")
     # quick consistency check
-    consistencycheck(Had, Htot)
-    consistencycheck(E2P, Etot)
+    consistencycheck(Had, Htot, fdebug)
+    consistencycheck(E2P, Etot, fdebug)
     # calculate bias correction factor
     alpha_H     = calc_sourcebcf(ref=Href, diag=Htot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot, tscale=bcscale)

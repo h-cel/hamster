@@ -1546,12 +1546,19 @@ def checkpsum(ref,att,verbose):
         ident=True
     return(ident)
 
-def consistencycheck(attr,diag):
-    frac = np.divide(attr,diag)
+def consistencycheck(attr,diag,debug):
+    aggattr = np.nansum(attr,axis=0)
+    frac    = np.divide(aggattr,diag)
+    print(frac.shape)
     if np.any(frac>1.0001) or np.any(np.isinf(frac)):
         print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
         print(" \t !!!          ---> CHECK YOUR DATA !!!")
-        print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac)))+"\n")
+        print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac))))
+        print(" \t !!!          ---> Number of exceedances: " + str(len(frac[np.where(frac>1.0001)])+len(frac[np.where(np.isinf(frac))])))
+        if debug:
+            print(" \t !!!          ---> frac > 1.001 at: "+ str(np.where(frac>1.001)))
+            print(" \t !!!          ----------> attr: "+ str(aggattr[np.where(frac>1.001)]))
+            print(" \t !!!          ----------> diag: "+ str((aggattr/frac)[np.where(frac>1.001)]))
 
 #################################################################################################
 
