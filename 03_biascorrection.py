@@ -34,6 +34,8 @@ def main_biascorrection(
     #  invalid value encountered in multiply 
     if not fdebug:
         np.seterr(divide='ignore', invalid='ignore')
+    # default values
+    fwritewarning = False
 
     ## construct precise input and storage paths
     attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
@@ -212,14 +214,14 @@ def main_biascorrection(
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
             alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
-            fwritemonthp= True
+            fwritewarning= True
     else:    
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale=bcscale)
         # perform monthly bias correction if necessary
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
             alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale='monthly')
-            fwritemonthp= True
+            fwritewarning= True
     # apply bias correction factor
     E2P_Pscaled     = np.swapaxes(alpha_P * np.swapaxes(E2P, 0, 3), 0, 3) 
     
@@ -228,9 +230,7 @@ def main_biascorrection(
         print("        * Additional monthly bias correction needed to match reference precipitation...")
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
         E2P_Pscaled = np.swapaxes(alpha_P * np.swapaxes(E2P_Pscaled, 0, 3), 0, 3) 
-        fwritemonthp= True
-    else:
-        fwritemonthp= False
+        fwritewarning= True
     checkpsum(Pref[ibgn:,xla,xlo], E2P_Pscaled, verbose=verbose)
     
     #******************************************************************************
@@ -246,7 +246,7 @@ def main_biascorrection(
     if np.all( np.nan_to_num(alpha_P) == 0):
         print("        * Monthly bias correction needed to match reference precipitation...")
         alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_Pscaled, tscale='monthly')
-        fwritemonthp= True
+        fwritewarning= True
     # step 3: calculate adjusted bias correction factor
     alpha_P_res     = np.divide(alpha_P, alpha_P_Ecor)
     E2P_EPscaled    = np.swapaxes(alpha_P_res * np.swapaxes(E2P_Escaled, 0, 3), 0, 3) 
@@ -256,7 +256,7 @@ def main_biascorrection(
         print("        * Additional monthly bias correction needed to match reference precipitation...")
         alpha_P_res = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_EPscaled, tscale='monthly')
         E2P_EPscaled= np.swapaxes(alpha_P_res * np.swapaxes(E2P_EPscaled, 0, 3), 0, 3)
-        fwritemonthp= True
+        fwritewarning= True
     checkpsum(Pref[ibgn:,xla,xlo], E2P_EPscaled, verbose=verbose)
 
     # save some data in case debugging is needed
@@ -342,3 +342,7 @@ def main_biascorrection(
                         strargs=biasdesc, 
                         precision=precision,
                         fwrite_month=fwrite_month)
+    if fwritewarning:
+        wfile = opath+"/"+str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_WARNING.csv"
+        writewarning(wfile)
+

@@ -1283,6 +1283,12 @@ def needmonthlyp(pdiag,pref):
         returnval   = True
     return(returnval)
 
+def writewarning(wfile):
+    with open(wfile,'w') as ifile:
+        writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',                              quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["WARNING: you're writing out daily data, but (additional) monthly bias correction was performed. Your daily data is thus not representative."])
+    print("\n WARNING! \n See: "+wfile+ " ! \n")
+
 
 def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,Had,Had_scaled,xla,xlo,ibgn):
     with open(sfile,'w') as ifile:
