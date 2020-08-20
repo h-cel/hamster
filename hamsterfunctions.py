@@ -65,6 +65,7 @@ def read_cmdargs():
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         metavar ="", type = str,     default = "linear")
     parser.add_argument('--randomnit',  '-rnit',help = "minimum number of iterations for random attribution",           metavar ="", type = int,     default = 10)
+    parser.add_argument('--ratt_forcall','-rall',help = "enforcing the attribution to all uptake locations (random att.)", metavar ="", type = str2bol, default = False, nargs='?')
     parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               metavar ="", type = str,     default = "none")
     parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        metavar ="", type = str2bol, default = False,    nargs='?')
@@ -531,7 +532,7 @@ def calc_maxatt(qtot, iupt, verbose):
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
 
-def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=False):
+def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,veryverbose=False):
   qtot = qtot*1000
   # This is only coded for precipitation as of now
   # with:
@@ -544,6 +545,7 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   # nmin = tuning parameter; ~minimum iterations 
   #  - the higher this value, the more iterations, the uptake locations are covered
   #  - a value of 10 enforces min. 10 iterations
+  # forc_all = enforce attribution to all uptake locations (but still random)
   dqdt  = qtot[:-1] - qtot[1:]
   # append initial condition as artificial uptake
   dqdt  = np.append(dqdt,qtot[-1])
@@ -569,8 +571,16 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   icount    = 0
   while round(expl,8) < round(abs(prec),8):
     # enforce attribution to initial cond. if explain==max
-    if icount==0 and explainp=="max":
+    if icount==0 and explainp=="max" and not forc_all:
         ii   = nt-1
+    # enfore acttribution to all uptake locations (forc_all==True)    
+    elif icount < nupt and forc_all:
+        if icount==0 and verbose:
+            print("  *** Random attribution with forc_all=True: enforcing at least one attribution to all "+ str(nupt)+ " uptake locations")
+        i    = range(nupt)[icount]
+        ii   = np.where(pupt==1)[0][i]  # uptake location index
+        if veryverbose:
+            print("  *** -- enforcing attribution to uptake location " + str(ii))
     else:    
         i    = random.randint(0,nupt-1) # get a random uptake location number
         ii   = np.where(pupt==1)[0][i]  # uptake location index

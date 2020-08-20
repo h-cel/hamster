@@ -160,6 +160,7 @@ if args.steps == 2:
               fmemento=args.memento,
               mattribution=args.mattribution,
               crandomnit=args.randomnit,
+              randatt_forcall=args.ratt_forcall,
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,
