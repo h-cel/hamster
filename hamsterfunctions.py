@@ -1132,15 +1132,6 @@ def datecheck(idate,dateseq):
 
 def calc_alpha(top,bot):
     alpha   = np.divide(top,bot)
-    ## NOTE: as of now, there is absolutely no check whatsoever concerning
-    ## the fractions; if e.g. only 3 6-hourly values are used to generate
-    ## daily diagnosis data, this can result in a division by zero above,
-    ## so that scaled data blows up to infinity (this actually happened).
-    ## hence, check if any alpha clearly exceeds 1, and warn the user
-    ## AGAIN that the output cannot be fully trusted (but continue)
-    if np.any(alpha>1.0001) or np.any(np.isinf(alpha)):
-        print(" \n  \t !!! WARNING: scaling fractions exceed 1 !!!")
-        print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
     return(alpha)
 
 def calc_sourcebcf(ref,diag,tscale='daily'):
