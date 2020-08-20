@@ -1546,10 +1546,15 @@ def checkpsum(ref,att,verbose):
         ident=True
     return(ident)
 
-def consistencycheck(attr,diag,debug):
-    aggattr = np.nansum(attr,axis=0)
+def consistencycheck(attr,diag,bcscale,debug):
+    if bcscale=="daily":
+        aggattr = np.nansum(attr,axis=0)
+    if bcscale=="monthly":
+        aggattr = np.nansum(attr,axis=(0,1))
+        diag    = np.nansum(diag,axis=(0))
+    # calculate fractions
     frac    = np.divide(aggattr,diag)
-    print(frac.shape)
+    # print warnings
     if np.any(frac>1.0001) or np.any(np.isinf(frac)):
         print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
         print(" \t !!!          ---> CHECK YOUR DATA !!!")
