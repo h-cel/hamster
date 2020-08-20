@@ -1577,7 +1577,7 @@ def consistencycheck(attr,diag,bcscale,debug):
         print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
         print(" \t !!!          ---> CHECK YOUR DATA !!!")
         print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac))))
-        print(" \t !!!          ---> Number of exceedances: " + str(len(frac[np.where(frac>1.0001)])+len(frac[np.where(np.isinf(frac))])))
+        print(" \t !!!          ---> Number of exceedances: " + str(len(frac[np.where(frac>1.0001)])+len(frac[np.where(np.isinf(frac))]))+" \n")
         if debug:
             print(" \t !!!          ---> frac > 1.001 at: "+ str(np.where(frac>1.001)))
             print(" \t !!!          ----------> attr: "+ str(aggattr[np.where(frac>1.001)]))
