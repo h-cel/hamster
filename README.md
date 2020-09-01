@@ -47,6 +47,7 @@ This software is published under the GPLv3 license. This means:
 - - - - 
 ## HAMSTER: modules.
 **HAMSTER** consists of 4 modules, 
+
 0. flex2traj
 1. Diagnosis
 2. Attribution
