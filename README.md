@@ -1,6 +1,6 @@
 # hamster
 
-**HAMSTER - a Heat And MoiSturE Tracking fRamework**
+**HAMSTER - a Heat And MoiSturE Tracking framEwoRk**
 
 **HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. 
 
