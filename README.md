@@ -25,23 +25,6 @@ conda create -n _newenvironment_ --file requirements.txt
 ```
 or install the packages listed in requirements.txt in your local environment. 
 
-### Contact and support
-Dominik Schumacher and Jessica Keune
-
-### License
-Copyright 2019 Dominik Schumacher, Jessica Keune, Diego Miralles. 
-
-This software is published under the GPLv3 license. This means: 
-1. Anyone can copy, modify and distribute this software. 
-2. You have to include the license and copyright notice with each and every distribution.
-3. You can use this software privately.
-4. You can use this software for commercial purposes.
-5. If you dare build your business solely from this code, you risk open-sourcing the whole code base.
-6. If you modify it, you have to indicate changes made to the code.
-7. Any modifications of this code base MUST be distributed with the same license, GPLv3.
-8. This software is provided without warranty.
-9. The software author or license can not be held liable for any damages inflicted by the software.
-
 - - - - 
 ## HAMSTER: modules.
 **HAMSTER** consists of 4 modules, 
@@ -51,10 +34,10 @@ This software is published under the GPLv3 license. This means:
 2. Attribution
 3. Bias-correction
 
-which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. Note, however, that 'flex2traj' is not fully integrated yet. 
+which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
 
 ### 0. flex2traj
-This module of **HAMSTER** reads in the instantaneous binary FLEXPART files, filters for a specific region (using a netcdf mask) and constructs trajectories. It is the replacement for 'particle-o-matic' and provides a bit more flexibility (e.g., accounts for duplicate parcel IDs from the global FLEXPART–ERA-Interim simulations; writes trajectories into a h5 format, ...). Note, however, that 'flex2traj' is under development and not fully integrated yet. All other modules (01_diagnosis and 02_attribution) currently only read data from particle-o-matic (dat-files). 
+This module of **HAMSTER** reads in the instantaneous binary FLEXPART files, filters for a specific region (using a netcdf mask), constructs trajectories and writes them to a file.
 
 ### 1. Diagnosis
 The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using trajectories constructed from FLEXPART binary data. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source–receptor relationships. 
@@ -80,20 +63,23 @@ The file paths.txt is not part of **HAMSTER**. Users have to create the file the
 maskfile  = "./flexpart_data/masks/mask.nc"
 
 # INPUT paths
-ipath_f2t = "./data/flexpart/orig"
-ipath_DGN = "./data/flexpart/era_global/"
-ipath_ATR = "./data/flexpart/era_global/"
+ipath_f2t = "/user/data/gent/gvo000/gvo00090/EXT/data/FLEXPART/era_global/orig_untar" 
+ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t2"
+ipath_ATR = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t62/MON"
+ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 
 # INPUT file name base
 ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
 ibase_ATR = ["pom_ecoreg1_traj10d_AUXTRAJ_"]
 
 # OUTPUT paths
-opath_f2t = "./data/flexpart/era_global/"
+opath_f2t = "./flexpart_data/hamster/00_eraglobal"
 opath_DGN = "./flexpart_data/hamster/01_diagnosis"
 opath_ATR = "./flexpart_data/hamster/02_attribution"
 opath_BIA = "./flexpart_data/hamster/03_biascorrection"
 ```
+
+The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred. 
 
 ### Run and settings.
 To run **HAMSTER**, run
@@ -128,14 +114,38 @@ for more details on setting dates, thresholds and other options. All user-specif
 - ... among others. 
 
 
-#### A few more notes...
+#### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` and `--tdiagnosis` can be replaced with `-dgn`). 
 - Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True) and requires additional data for the previous month in 02_attribution. 
+- The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (DANGER!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
+
+## Miscellaneous notes
+- Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
+- In this context, the bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
+- 'flex2traj' is the python replacement for *particle-o-matic*. Note that 'flex2traj' is currently under development and not fully integrated yet. All other modules (01_diagnosis and 02_attribution) currently only read data from *particle-o-matic* (dat-files). Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`.
 - Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
-- The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (danger!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
+- The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 
 
 ## Epilogue
 Keep in mind that... 
 - **This code is not bug-free.** Please report any bugs through 'Issues' on https://github.ugent.be/jkeune/hamster/issues. 
 - **This code is not intended to cover specific research-related tasks.** This code is intended to serve as a common base for the analysis of (FLEXPART) trajectories. Every user may create their own branch and adjust the code accordingly. Features of broad interest may be merged in future releases. 
+
+### Contact and support
+Dominik Schumacher and Jessica Keune
+
+### License
+Copyright 2019 Dominik Schumacher, Jessica Keune, Diego Miralles. 
+
+This software is published under the GPLv3 license. This means: 
+1. Anyone can copy, modify and distribute this software. 
+2. You have to include the license and copyright notice with each and every distribution.
+3. You can use this software privately.
+4. You can use this software for commercial purposes.
+5. If you dare build your business solely from this code, you risk open-sourcing the whole code base.
+6. If you modify it, you have to indicate changes made to the code.
+7. Any modifications of this code base MUST be distributed with the same license, GPLv3.
+8. This software is provided without warranty.
+9. The software author or license can not be held liable for any damages inflicted by the software.
+
