@@ -1650,7 +1650,7 @@ def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     if not (lat.min()==-90 or lat.max()==90):
         return(None)
     # lons check
-    if lon.min()==-180 and lon.max()==179:
+    if lon.min()==-180 and lon.max()<180:
         pass
     elif np.array_equal(lon, np.arange(0,360)):
         mask, lon = f2t_lon360to180(mask, lon, 1)
