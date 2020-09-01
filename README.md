@@ -1,8 +1,6 @@
-# hamster
+# HAMSTER – a Heat And MoiSture Tracking framEwoRk
 
-**HAMSTER - a Heat And MoiSturE Tracking framEwoRk**
-
-**HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. 
+**HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. It has been developed within the DRY-2-DRY project at the Hydro-Climatic Extremes Laboratory (H-CEL) at Ghent University. 
 
 - - - -
 ## Getting started. 
@@ -76,18 +74,22 @@ To execute the full chain (all 3 modules) of **HAMSTER**, the only prerequisites
 
 The file paths.txt is not part of **HAMSTER**. Users have to create the file themselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
 ```
-# This file contains all required paths to run hamster
+# This file contains all required paths and file names to run hamster; the order doesn't matter and paths can also be empty (if, e.g., not used)
+
+# MASK
+maskfile  = "./flexpart_data/masks/mask.nc"
+
 # INPUT paths
-ipath_f2t = "./data/FLEXPART/orig"
-ipath_DGN = "./data/FLEXPART/era_global/"
-ipath_ATR = "./data/FLEXPART/era_global/"
+ipath_f2t = "./data/flexpart/orig"
+ipath_DGN = "./data/flexpart/era_global/"
+ipath_ATR = "./data/flexpart/era_global/"
 
 # INPUT file name base
 ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
 ibase_ATR = ["pom_ecoreg1_traj10d_AUXTRAJ_"]
 
 # OUTPUT paths
-opath_f2t = "./data/FLEXPART/era_global/"
+opath_f2t = "./data/flexpart/era_global/"
 opath_DGN = "./flexpart_data/hamster/01_diagnosis"
 opath_ATR = "./flexpart_data/hamster/02_attribution"
 opath_BIA = "./flexpart_data/hamster/03_biascorrection"
@@ -104,3 +106,36 @@ Note that — without any flags — main.py is run with default values. Use
 python main.py -h
 ```
 for more details on setting dates, thresholds and other options. All user-specific paths are set in paths.txt. 
+
+
+#### The most important settings are: 
+
+- `--steps` to select the part of hamster that is being executed (e.g., `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
+- `--ayyyy` and `--am` to select the analysis year and month (e.g., `--ayyyy 2002 --am 1`)
+- `--tdiagnosis` to select a diagnosis methodology with (default) criteria (e.g., `--tdiagnosis SOD` for constant thresholds of moisture for evaporation and potential temperature for sensible heat, restricted to the planetary boundary layer (PBL), following Sodemann et al. (2008) and Schumacher et al. (2019); `--tdiagnosis SOD2` to use all moisture uptakes above a threshold to detect and quantify evaporation, following Sodemann (2020); `--tdiagnosis KAS` to select a Clausius-Clapeyron dependent threshold for evaporation and sensible heat fluxes, i.e. define moisture thresholds based on the temperature and temperature-thresholds based on the moisture)
+- `--expid` to name a setting (e.g., `--expid Ghent_SOD`)
+- `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days)
+- `--mattribution` to determine the attribution method for precipitation (e.g., `--mattribution random` uses the random attribution to attribute moisture for precipitation along trajectories – it keeps linear discounting for heat though)
+- `--maskval` to filter for a value other than 1 using the maskfile from `paths.txt`(e.g., `--maskval 5001`)
+
+
+#### Fine-tuning of detection criteria can be done using, e.g., 
+- `--cpbl_strict` to determine the 'strictness' of the PBL criteria (`--cpbl_strict 1` requires both instances to be within the maximum PBL, `--cpbl_strict 2` requires only one instance to be within the maximum PBL; `--cpbl_strict 0` does not filter for the PBL at all)
+- `-–cprec_dqv` and `–-cprec_rh` to adjust the detection of preciptation
+- `--cevap_c` and `--cheat_cc` to adjust the Clausius-Clapeyron criteria for evaporation and sensible heat, respectively
+- `--cevap_hgt`, etc., to filter for specific heights
+- `--fjumps` and `--fjumpsfull` to filter for jumps larger than `--cjumps` at the beginning of the trajectory or along the full trajectory
+- ... among others. 
+
+
+#### A few more notes...
+- Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` and `--tdiagnosis` can be replaced with `-dgn`). 
+- Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True) and requires additional data for the previous month in 02_attribution. 
+- Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
+- The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (danger!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
+
+
+## Epilogue
+Keep in mind that... 
+- **This code is not bug-free.** Please report any bugs through 'Issues' on https://github.ugent.be/jkeune/hamster/issues. 
+- **This code is not intended to cover specific research-related tasks.** This code is intended to serve as a common base for the analysis of (FLEXPART) trajectories. Every user may create their own branch and adjust the code accordingly. Features of broad interest may be merged in future releases. 
