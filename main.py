@@ -29,11 +29,11 @@ from dateutil.relativedelta import relativedelta
 import datetime as datetime
 import imp
 import warnings
-from matplotlib import pyplot as plt
-import cartopy.crs as ccrs
-from cartopy.feature import NaturalEarthFeature
 import csv
 import random
+import struct
+import calendar
+import h5py
 
 ###########################################################################
 ##--- PATHS
@@ -53,6 +53,8 @@ ibase_ATR = content.ibase_ATR
 opath_ATR = content.opath_ATR
 opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
+ipath_f2t = content.ipath_f2t
+opath_f2t = content.opath_f2t
 # create output directories if they do not exist
 if not os.path.exists(opath_DGN):
         os.makedirs(opath_DGN)
@@ -71,6 +73,7 @@ os.chdir(wpath)
 exec(open("disclaimer.py").read())
 exec(open("constants.py").read())
 exec(open("metfunctions.py").read())
+exec(open("00_flex2traj.py").read())
 exec(open("01_diagnosis.py").read())
 exec(open("02_attribution.py").read())
 exec(open("03_biascorrection.py").read())
@@ -79,14 +82,20 @@ exec(open("hamsterfunctions.py").read())
 ## (2) get date, thresholds and flags from command line (job script) 
 #      note: this is where we set the default values now. 
 args    = read_cmdargs()
-if args.ryyyy is None:
-    args.ryyyy   = args.ayyyy
-if args.refdate is None:
-    args.refdate = str(args.ryyyy)+"123118"
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
+if args.steps ==0:
+    main_flex2traj(ryyyy=args.ryyyy, symd=args.symd, eymd=args.eymd,
+                   tml=args.ctraj_len,
+                   fixlons=args.fix,
+                   maskpath=maskfile,
+                   maskval=args.maskval,
+                   idir=ipath_f2t,
+                   odir=opath_f2t,
+                   fout=args.fout)
+
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
               ipath=ipath_DGN,
@@ -151,6 +160,7 @@ if args.steps == 2:
               fmemento=args.memento,
               mattribution=args.mattribution,
               crandomnit=args.randomnit,
+              randatt_forcall=args.ratt_forcall,
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,
@@ -172,8 +182,11 @@ if args.steps == 3:
                verbose=args.verbose,
                veryverbose=args.veryverbose,
                fuseattp=args.useattp,
+               bcscale=args.bc_time,
+               faggbwtime=args.aggbwtime,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
+               fwrite_month=args.write_month,
                fwritestats=args.writestats,
                precision=args.precision,
                strargs=printsettings(args,3))

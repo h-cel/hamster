@@ -33,49 +33,66 @@ def read_cmdargs():
     DEP:    uses argparse
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--steps',      '-st',  help = "steps performed (1: diagnosis, 2: attribution, 3: bias correction)",                type = int,     default = 1)
-    parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          type = int,     default = 2002)
-    parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            type = int,     default = 1)
-    parser.add_argument('--ad',         '-ad',  help = "analysis day (D)",                                              type = int,     default = 1)
-    parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              type = str,     default = "oper")
-    parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      type = str,     default = "FXv")
-    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2)",                              type = str,     default = "KAS")
-    parser.add_argument('--maskval',    '-mv',  help = "use <value> from maskfile for masking",                         type = int,     default = 1)
-    parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       type = int,     default = 10)
-    parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               type = float,   default = 0)
-    parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      type = float,   default = 80)
-    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                type = float,   default = 0)
-    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            type = float,   default = 0.7)
-    parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           type = float,   default = 0)
-    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            type = float,   default = 0.7)
-    parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           type = float,   default = 0)
-    parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         type = float,   default = 0)
-    parser.add_argument('--cpbl_strict','-pbl', help = "1: both within max, 2: one within max, 3: not used",            type = int,     default = 1)
-    parser.add_argument('--fjumps',     '-fj',  help = "filter out jumps (flag)",                                       type = str2bol, default = True,    nargs='?')
-    parser.add_argument('--fjumpsfull', '-fjf', help = "filter out jumps for full trajectory length (flag)",            type = str2bol, default = False,   nargs='?')
-    parser.add_argument('--cjumps',     '-cj',  help = "threshold to filter for jumps [km]",                            type = int,     default = 2000)
-    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           type = str,     default = "f8")
-    parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       type = str2bol, default = True,     nargs='?')
-    parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         type = str,     default = "linear")
-    parser.add_argument('--randomnit',  '-rnit',help = "minimum number of iterations for random attribution",           type = int,     default = 10)
-    parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               type = str,     default = "none")
-    parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--useattp',    '-uatt',help = "use precipitation from attribution for bias-correction",        type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--writestats','-ws',   help = "write additional stats to file (02 only; flag)",                type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              type = float,   default = 1)
-    parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          type = int,     default = None)
-    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   type = str,     default = None)
+    parser.add_argument('--steps',      '-st',  help = "steps performed (1: diagnosis, 2: attribution, 3: bias corr.)", metavar ="", type = int,     default = 1)
+    parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          metavar ="", type = int,     default = 2002)
+    parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            metavar ="", type = int,     default = 1)
+    parser.add_argument('--ad',         '-ad',  help = "analysis day (D)",                                              metavar ="", type = int,     default = 1)
+    parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              metavar ="", type = str,     default = "oper")
+    parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      metavar ="", type = str,     default = "FXv")
+    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD/SOD2)",                              metavar ="", type = str,     default = "KAS")
+    parser.add_argument('--maskval',    '-mv',  help = "use <value> from maskfile for masking",                         metavar ="", type = int,     default = 1)
+    parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       metavar ="", type = int,     default = 10)
+    parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
+    parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
+    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                metavar ="", type = float,   default = 0)
+    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            metavar ="", type = float,   default = 0.7)
+    parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
+    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            metavar ="", type = float,   default = 0.7)
+    parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
+    parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
+    parser.add_argument('--cpbl_strict','-pbl', help = "1: both within max, 2: one within max, 3: not used",            metavar ="", type = int,     default = 1)
+    parser.add_argument('--fjumps',     '-fj',  help = "filter out jumps (flag)",                                       metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--fjumpsfull', '-fjf', help = "filter out jumps for full trajectory length (flag)",            metavar ="", type = str2bol, default = False,   nargs='?')
+    parser.add_argument('--cjumps',     '-cj',  help = "threshold to filter for jumps [km]",                            metavar ="", type = int,     default = 2000)
+    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag)",                              metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (flag)",                 metavar ="", type = str2bol, default = False,     nargs='?')
+    parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           metavar ="", type = str,     default = "f8")
+    parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (flag)",                       metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         metavar ="", type = str,     default = "linear")
+    parser.add_argument('--randomnit',  '-rnit',help = "minimum number of iterations for random attribution",           metavar ="", type = int,     default = 10)
+    parser.add_argument('--ratt_forcall','-rall',help = "enforcing the attribution to all uptake locations (random att.)", metavar ="", type = str2bol, default = False, nargs='?')
+    parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               metavar ="", type = str,     default = "none")
+    parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--useattp',    '-uatt',help = "use precipitation from attribution for bias-correction",        metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--bc_time',    '-bct', help = "time scale for bias-correction (daily/monthly)",                metavar ="", type = str,     default = "daily")
+    parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--writestats', '-ws',  help = "write additional stats to file (02 only; flag)",                metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--aggbwtime',  '-aggbt',help = "aggregate backward time (03 only; flag)",                      metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
+    parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
+    parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
+    parser.add_argument('--symd',       '-sy',  help = "flex2traj start datetime [yyyymmdd], def: ayyyy+am+ad",         metavar ="", type = int,     default = None)
+    parser.add_argument('--eymd',       '-ey',  help = "flex2traj end datetime [yyyymmdd], def: ayyyy+am+lastdayofam",  metavar ="", type = int,     default = None)
+    parser.add_argument('--fout',       '-fo',  help = "flex2traj output file name base [str], default: f2tdev",        metavar ="", type = str,     default = "f2tdev")
+    parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
+    # handle None cases already
+    if args.ryyyy is None:
+        args.ryyyy   = args.ayyyy
+    if args.refdate is None:
+        args.refdate = str(args.ryyyy)+"123118"
+    if args.symd is None:
+        args.symd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2))
+    if args.eymd is None:
+        args.eymd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(calendar.monthrange(args.ayyyy, args.am)[1]).zfill(2))
     return args
 
 def printsettings(args,step):
@@ -138,6 +155,50 @@ def printsettings(args,step):
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
+
+def read_partposit(ifile, maxn=3e6, verbose=True):
+    """
+    @action: reads binary outputs from FLEXPART
+    @input:  partposit_DATE.gz 
+    @output: returns a numpy array of dimension nparcels x 13
+    @author: Jessica Keune 06/2020
+    """
+    with gzip.open(ifile, 'rb') as strm:
+        dummy   = strm.read(4)
+        time    = struct.unpack('i', strm.read(4))[0]
+        idx     = 1
+        flist   = []
+        # repeat
+        while idx<=maxn:
+            try:
+                dummy   = strm.read(8)
+                pid     = struct.unpack('i', strm.read(4))[0]
+                if pid  == -99999:
+                    print("EOF reached.")
+                    break
+                if verbose:
+                    print(str(idx)+" "+str(pid))
+                x       = struct.unpack('f', strm.read(4))[0]
+                y       = struct.unpack('f', strm.read(4))[0]
+                z       = struct.unpack('f', strm.read(4))[0]
+                itramem = struct.unpack('i', strm.read(4))[0]
+                oro     = struct.unpack('f', strm.read(4))[0]
+                pv      = struct.unpack('f', strm.read(4))[0]
+                qq      = struct.unpack('f', strm.read(4))[0]
+                rho     = struct.unpack('f', strm.read(4))[0]
+                hmix    = struct.unpack('f', strm.read(4))[0]
+                tropo   = struct.unpack('f', strm.read(4))[0]
+                temp    = struct.unpack('f', strm.read(4))[0]
+                mass    = struct.unpack('f', strm.read(4))[0]
+                # ATTENTION: pid can occur twice! use idx instead as particle ID
+                flist.append([idx, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
+                idx     += 1
+            except:
+                break
+    strm.close()
+    return(np.reshape(flist, newshape=(idx-1,13)))
+        
+
 def readpom(idate,      # run year
             ipath,      # input data path
             ifile_base, # loop over ifile_base filenames for each date
@@ -186,7 +247,6 @@ def readpom(idate,      # run year
     dataar          = dataar[::-1,:,:]
 
     return(dataar)
-
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
     if (cpbl == 1):
@@ -299,18 +359,6 @@ def glanceparcel(parray):
 
     return ztra, hpbl, temp, qv, dens, pres
 
-def parceldiff(pvals, meval):
-    # difference 
-    if meval in ['diff']:
-        dpval   = pvals[0] - pvals[1]
-    # mean
-    if meval in ['mean']:
-        dpval   = (pvals[0]+pvals[1])/2#np.mean(pvals)
-    # mean
-    if meval in ['max']:
-        dpval   = np.max(pvals)
-    return(dpval)
-
 
 def trajparceldiff(pvals, meval):
     # difference 
@@ -368,19 +416,6 @@ def convertunits(ary_val, garea, var):
         return(PMASS*ary_val/(1e6*garea))
     if var in ['H']:
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
-
-
-def default_thresholds(cprec_dqv):
-    if cprec_dqv == None:
-        #if verbose:
-        #    print("\n--- INFO: cprec_dqv is calculated based on d(pottemp)-threshold!")
-        dummy_dq = 0.2 # this choice doesn't matter too much...
-        cprec_dqv = -(1/(calc_pottemp_e(PREF, (5+dummy_dq)/1e3, TREF+15) - 
-                       calc_pottemp_e(PREF, 5/1e3, TREF+15)))*dummy_dq/1e3
-        #print("cprec_dqv = ", 1e3*cprec_dqv, "g/kg")
-    elif cprec_dqv > 0:
-        raise SystemExit("------ FATAL ERROR: cprec_dqv should be negative (and in kg/kg)!")
-    return cprec_dqv
 
 
 def PBL_check(cpbl_strict, z, hpbl, sethpbl):
@@ -455,29 +490,6 @@ def linear_discounter(v, min_gain):
         dv_disc[idx] = np.prod(frc_vec)*dv[idx]
     return(dv_disc)
 
-def linear_discounter2(qtot):
-    dqdt = qtot[:-1] - qtot[1:]
-    print(str(dqdt[0]))
-    dqdt = dqdt[::-1]
-    qtot = qtot[::-1]
-    nt   = len(dqdt)
-    print(str(dqdt[nt-1]))
-    ## scale all humidity changes with subsequent uptakes and losses (rer= rain en route): 
-    # using a discounting with the relative gain to the moisture content before the loss
-    dqdt_scaled = dqdt
-    rer         = abs(dqdt*((dqdt<0)+0))
-    for ii in range(nt-2):
-        if dqdt[ii]>0:
-            for t in range((ii+1),(nt-1)):
-                dqdt_scaled[ii] = dqdt_scaled[ii] - dqdt_scaled[ii]/qtot[t] * rer[t]
-    dqdt_scaled[np.where(dqdt<=0)] =0 # reset rain en route
-    return(dqdt_scaled[::-1])
-    ## relative weight of scaled uptake to moisture content before final precip. event
-    #fw  = dqdt_scaled / qtot[nt-1]
-    #fw[which(fw<0)]=0
-    #fw[which(is.na(fw))]=0
-    #fw  = fw[::-1]
-    #return(fw)
 
 def linear_attribution_p(qv,iupt,explainp):
     dq_disc     = np.zeros(shape=qv.size)
@@ -520,23 +532,25 @@ def calc_maxatt(qtot, iupt, verbose):
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
 
-def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=False):
+def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,veryverbose=False):
   qtot = qtot*1000
   # This is only coded for precipitation as of now
   # with:
   # qtot = specific humidity
   # iupt = identified uptake locations
   # explainp = none(default)/full analogue to linear discounting & attribution
-  #  - none: 100% is attributed to iupt + initial condition (~not explained)
+  #  - none: maximum is attributed to iupt (can be 100%!)
+  #  - max: maximum is attributed to iupt + initial condition (~not explained); enforcing at least one iteration on init. cond.
   #  - full: 100% is attributed to iupt (if possible!)
   # nmin = tuning parameter; ~minimum iterations 
   #  - the higher this value, the more iterations, the uptake locations are covered
   #  - a value of 10 enforces min. 10 iterations
+  # forc_all = enforce attribution to all uptake locations (but still random)
   dqdt  = qtot[:-1] - qtot[1:]
   # append initial condition as artificial uptake
   dqdt  = np.append(dqdt,qtot[-1])
   nt    = len(dqdt)
-  if explainp=="none":
+  if explainp=="max":
     iupt = np.append(iupt,nt-1)
   # indicator for potential uptake locations (1: yes, 0: no)
   pupt  = np.zeros(shape=nt)
@@ -556,8 +570,20 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
   expl      = 0
   icount    = 0
   while round(expl,8) < round(abs(prec),8):
-    i    = random.randint(0,nupt-1) # get a random uptake location number
-    ii   = np.where(pupt==1)[0][i]  # uptake location index
+    # enforce attribution to initial cond. if explain==max
+    if icount==0 and explainp=="max" and not forc_all:
+        ii   = nt-1
+    # enfore acttribution to all uptake locations (forc_all==True)    
+    elif icount < nupt and forc_all:
+        if icount==0 and verbose:
+            print("  *** Random attribution with forc_all=True: enforcing at least one attribution to all "+ str(nupt)+ " uptake locations")
+        i    = range(nupt)[icount]
+        ii   = np.where(pupt==1)[0][i]  # uptake location index
+        if veryverbose:
+            print("  *** -- enforcing attribution to uptake location " + str(ii))
+    else:    
+        i    = random.randint(0,nupt-1) # get a random uptake location number
+        ii   = np.where(pupt==1)[0][i]  # uptake location index
     # determine maximum attribution for current uptake location and iteration
     try:
         imin    = np.argmin(qtot[1:ii])+1
@@ -578,8 +604,19 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,verbose=True,veryverbose=Fals
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
         break
+  # reset for maximum attribution (only needed if veryverbose is set to True)
+  if explainp=="max":
+      dqdt_random[-1]   = 0
+      nupt              -= 1
   if veryverbose:
       print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
+  # upscaling to 100% if explain==full  
+  if explainp=="full" and maxatt<1:
+      explfr    = abs(dqdt[0])/np.sum(dqdt_random)
+      dqdt_random *= explfr
+      if veryverbose:
+        print(" * Upscaling of contributions required...")
+        print("  *** "+str(icount)+" Iterations for "+str(nupt)+" uptake locations with P={:.4f}".format(dqdt[0])+" g/kg with E2Prandom={:.4f}".format(np.sum(dqdt_random))+ " g/kg (attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(dqdt[0]))+"%).")
   return(dqdt_random/1000)
 
 
@@ -714,29 +751,6 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     # close file
     nc_f.close()
     print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
-
-
-def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
-    if verbose:
-        print(" * Writing to netcdf...")
-
-    nc_f = nc4.Dataset(ofile, 'r+')
-    nc_f['P'][ix,:,:]       = ary_prec
-    nc_f['E'][ix,:,:]       = ary_evap
-    nc_f['H'][ix,:,:]       = ary_heat
-    nc_f['n_part'][ix,:,:]  = ary_npart
-    nc_f['P_n_part'][ix,:,:]  = ary_pnpart
-    nc_f['E_n_part'][ix,:,:]  = ary_enpart
-    nc_f['H_n_part'][ix,:,:]  = ary_hnpart
-    
-    # write data
-    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
-    longitudes[:]       = glon
-    latitudes[:]        = glat
-    # close file
-    nc_f.close()
-    print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
-
 
 def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
     if verbose:
@@ -890,36 +904,57 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
         raise SystemExit("---- aborted: no can do.")
     
     return daily
-    
-def writefinalnc(ofile,fdate_seq,glon,glat,
+   
+def checkdim(var):
+    # check dimension of variables (has to be consistent) and use 2D, 3D or 4D definitions
+    ndims   = len(var.shape)
+    if ndims==4:
+        mydims  = ('time','level','lat','lon')
+    if ndims==3:
+        mydims  = ('time','lat','lon')
+    if ndims==2:
+        mydims  = ('lat','lon')
+    return mydims
+
+def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
-                 E2P, E2P_Es, E2P_Ps, E2P_EPs,strargs,precision):
+                 E2P, E2P_Es, E2P_Ps, E2P_EPs,
+                 strargs,precision,
+                 fwrite_month):
     
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
     except OSError:
         pass
-
+        
     # create netCDF4 instance
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
 
     ### create dimensions ###
-    nc_f.createDimension('time', len(fdate_seq))
+    if fwrite_month:
+        nc_f.createDimension('time', 1)
+    else:
+        nc_f.createDimension('time', len(fdate_seq))
+    if not np.any(np.isnan(udate_seq)):    
+        nc_f.createDimension('level', len(udate_seq))
     nc_f.createDimension('lat', glat.size)
     nc_f.createDimension('lon', glon.size)
 
-    # create variables
+    # create grid + time variables
     times               = nc_f.createVariable('time', 'f8', 'time')
+    if not np.any(np.isnan(udate_seq)):    
+        utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('Had', precision, ('time','lat','lon'))
-    heats_Hs            = nc_f.createVariable('Had_Hs', precision, ('time','lat','lon'))
-    evaps               = nc_f.createVariable('E2P', precision, ('time','lat','lon'))
-    evaps_Es            = nc_f.createVariable('E2P_Es', precision, ('time','lat','lon'))
-    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, ('time','lat','lon'))
-    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, ('time','lat','lon'))
-    
+
+    # create variables
+    heats               = nc_f.createVariable('Had', precision, checkdim(Had))
+    heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs))
+    evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P))
+    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es))
+    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps))
+    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs))
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -930,6 +965,9 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
+    if not np.any(np.isnan(udate_seq)):    
+        utimes.long_name    = 'Difference between uptake and arrival time, in days'
+        utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     heats.units         = 'W m-2'
@@ -939,31 +977,44 @@ def writefinalnc(ofile,fdate_seq,glon,glat,
     evaps.units         = 'mm'
     evaps.long_name     = 'evaporation resulting in precipitation'
     evaps_Es.units      = 'mm'
-    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-scaled'
+    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
     evaps_Ps.units      = 'mm'
-    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-scaled'
+    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
     evaps_EPs.units     = 'mm'
-    evaps_EPs.long_name = 'evaporation resulting in precipitation, E&P-scaled'
-
+    evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
 
     # write data
-    times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
+    if fwrite_month:
+        times[:]        = nc4.date2num(fdate_seq[0], times.units, times.calendar)
+    else:
+        times[:]        = nc4.date2num(fdate_seq, times.units, times.calendar)
+    if not np.any(np.isnan(udate_seq)):    
+        utimes[:]       = np.arange(-len(udate_seq)+1,1)
     latitudes[:]        = glat
     longitudes[:]       = glon
-    
-    heats[:]      = Had[:]
-    heats_Hs[:]   = Had_Hs[:]
-    
-    evaps[:]      = E2P[:]
-    evaps_Es[:]   = E2P_Es[:]
-    evaps_Ps[:]   = E2P_Ps[:]
-    evaps_EPs[:]  = E2P_EPs[:]
-      
+  
+    if fwrite_month:
+        heats[:]            = np.nanmean(Had,axis=0,keepdims=True)[:]
+        heats_Hs[:]         = np.nanmean(Had_Hs,axis=0,keepdims=True)[:]
+        evaps[:]            = np.nansum(E2P,axis=0,keepdims=True)[:]
+        evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
+        evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
+        evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+    else:
+        heats[:]            = Had[:]
+        heats_Hs[:]         = Had_Hs[:]
+        evaps[:]            = E2P[:]
+        evaps_Es[:]         = E2P_Es[:]
+        evaps_Ps[:]         = E2P_Ps[:]
+        evaps_EPs[:]        = E2P_EPs[:]
+
+    myshape=nc_f['E2P'].shape
     # close file
     nc_f.close()
     
     # print info
-    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+    print("\n * Created and wrote to file: "+ofile+" of dimension "+str(myshape)+" !\n")
+
 
 def append2csv(filename, listvals):
     # Open file in append mode
@@ -1112,15 +1163,25 @@ def datecheck(idate,dateseq):
 
 def calc_alpha(top,bot):
     alpha   = np.divide(top,bot)
-    ## NOTE: as of now, there is absolutely no check whatsoever concerning
-    ## the fractions; if e.g. only 3 6-hourly values are used to generate
-    ## daily diagnosis data, this can result in a division by zero above,
-    ## so that scaled data blows up to infinity (this actually happened).
-    ## hence, check if any alpha clearly exceeds 1, and warn the user
-    ## AGAIN that the output cannot be fully trusted (but continue)
-    if np.any(alpha>1.0001) or np.any(np.isinf(alpha)):
-        print(" \n  \t !!! WARNING: scaling fractions exceed 1 !!!")
-        print(" \t Maximum scaling fraction: " + str(np.max(np.nan_to_num(alpha)))+"\n")
+    return(alpha)
+
+def calc_sourcebcf(ref,diag,tscale='daily'):
+    # define all positive
+    if np.all(ref<=0):
+        ref     = -ref
+    if np.all(diag<=0):
+        diag    = -diag
+    # set 0 to nan to avoid 1e300 values
+    diag[diag==0]=np.nan
+    # calculate bias correction factor
+    if tscale=="daily":
+        alpha   = np.nan_to_num(np.divide(ref,diag))
+    if tscale=="monthly":
+        ref_sum = np.nansum(ref,axis=(0))
+        diag_sum= np.nansum(diag,axis=(0))
+        alpha   = np.nan_to_num(np.divide(ref,diag))
+        #alpha   = np.repeat(alpha_H[np.newaxis,:,:,:], 28, axis=0)
+    alpha[alpha==np.inf]    = 0
     return(alpha)
 
 def udays2udate(atime,utime_srt):
@@ -1137,6 +1198,16 @@ def expand4Darray(myarray,atime,utime_srt,veryverbose):
     for iat in range(atime.size):
         myarray_exp[iat,iat:iat+utime_srt.size,:,:] = myarray[iat,:,:,:]
     return(myarray_exp)
+
+def reduce4Darray(myarray,veryverbose):
+    myshape     = myarray.shape
+    bwtimesteps = myshape[1]-myshape[0]+1
+    myarray_red = np.empty(shape=(myshape[0],bwtimesteps,myshape[2],myshape[3]))
+    if veryverbose:
+        print(" * Reducing array from "+str(myshape)+" to "+str(myarray_red.shape))
+    for iat in range(myshape[0]):
+        myarray_red[iat,:,:,:]  = myarray[iat,(iat):(iat+bwtimesteps),:,:]
+    return(myarray_red)
 
 def date2year(mydates):
     return( np.asarray([it.year for it in mydates]))
@@ -1172,9 +1243,14 @@ def convert_m3_mm(myarray,areas):
     return(carray) 
 
 def check_attributedp(pdiag,pattr,veryverbose):
+    # define all positive
+    if np.all(pdiag<=0):
+        pdiag   = -pdiag
+    if np.all(pattr<=0):
+        pattr   = -pattr
     printwarning= False
     returnval   = False
-    pdiag_sum   = -np.nansum(pdiag,axis=(1))
+    pdiag_sum   = np.nansum(pdiag,axis=(1))
     pattr_sum   = np.nansum(pattr[:,:,:,:],axis=(1,2,3))
     if round(np.nansum(pdiag_sum),4) != round(np.nansum(pattr_sum),4):
         print("   --- WARNING: total precipitation from 01_diagnosis and 02_attribution differ")
@@ -1203,7 +1279,12 @@ def check_attributedp(pdiag,pattr,veryverbose):
 
 def needmonthlyp(pdiag,pref):
     returnval   = False
-    tocheck     = np.where(pref<0)[0]
+    # define all positive
+    if np.all(pref<=0):
+        pref    = -pref
+    if np.all(pdiag<=0):
+        pdiag   = -pdiag
+    tocheck     = np.where(pref>0)[0]
     if np.any(pdiag[tocheck]==0):
         print("   --- WARNING: daily bias correction of precipitation not possible.")
         ndiffs  = len(np.where(pdiag[tocheck]==0)[0])
@@ -1212,35 +1293,47 @@ def needmonthlyp(pdiag,pref):
         returnval   = True
     return(returnval)
 
+def writewarning(wfile):
+    with open(wfile,'w') as ifile:
+        writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',                              quoting = csv.QUOTE_NONE, quotechar='',)
+        writer.writerow(["WARNING: you're writing out daily data, but (additional) monthly bias correction was performed. Your daily data is thus not representative."])
+    print("\n WARNING! \n See: "+wfile+ " ! \n")
 
-def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,xla,xlo,ibgn):
+
+def writestats_03(sfile,Pref,P_E2P,P_E2P_Escaled,P_E2P_Pscaled,P_E2P_EPscaled,Had,Had_scaled,xla,xlo,ibgn):
     with open(sfile,'w') as ifile:
         writer  = csv.writer(ifile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
-        writer.writerow(["* - PRECIPITATION STATISTICS: "])
+        writer.writerow(["* - STATISTICS: "])
         ndays       = Pref[ibgn:,:,:].shape[0]
         writer.writerow(["   --- # DAYS EVALUATED:              {:.0f}".format(ndays)])
-        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(-np.nansum(Pref[ibgn:,xla,xlo]))])
+        writer.writerow([" "])
+        writer.writerow(["* - HEAT ADVECTION STATISTICS: "])
+        writer.writerow(["   --- Had_unscaled [W m-2]:          {:.2f}".format(np.nanmean(np.nansum(Had,axis=(1,2))))])
+        writer.writerow(["   --- Had_Hscaled [W m-2]:           {:.2f}".format(np.nanmean(np.nansum(Had_scaled,axis=(1,2))))])
+        writer.writerow([" "])
+        writer.writerow(["* - PRECIPITATION STATISTICS: "])
+        writer.writerow(["   --- P_REFERENCE [m3]:              {:.2f}".format(np.nansum(Pref[ibgn:,xla,xlo]))])
         writer.writerow(["   --- P_E2P_unscaled [m3]:           {:.2f}".format(np.nansum(P_E2P))])
         writer.writerow(["   --- P_E2P_Escaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Escaled))])
         writer.writerow(["   --- P_E2P_Pscaled [m3]:            {:.2f}".format(np.nansum(P_E2P_Pscaled))])
         writer.writerow(["   --- P_E2P_EPscaled [m3]:           {:.2f}".format(np.nansum(P_E2P_EPscaled))])
         # some contingency table statistics... 
         writer.writerow([" "])
-        writer.writerow(["* - CONTINGENCY TABLE SCORES "])
-        pref_sum    = -np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
+        writer.writerow(["* - CONTINGENCY TABLE SCORES (PRECIPITATION):"])
+        pref_sum    = np.nansum(Pref[ibgn:,xla,xlo],axis=(1))
         pdiag_sum   = np.nansum(P_E2P,axis=(1,2))
         myctab      = contingency_table(pref_sum,pdiag_sum,thresh=0)
         myscores    = calc_ctab_measures(myctab)
-        writer.writerow(["   --- * DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
-        writer.writerow(["   --- * DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
-        writer.writerow(["   --- * DAYS OF HITS:                {:.0f}".format(myctab["a"])])
-        writer.writerow(["   --- * DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
-        writer.writerow(["   --- * SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
-        writer.writerow(["   --- * FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
-        writer.writerow(["   --- * FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
-        writer.writerow(["   --- * PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
-        writer.writerow(["   --- * PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
-        writer.writerow(["   --- * PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
+        writer.writerow(["   --- DAYS OF FALSE ALARMS:        {:.0f}".format(myctab["b"])])
+        writer.writerow(["   --- DAYS OF MISSES:              {:.0f}".format(myctab["c"])])
+        writer.writerow(["   --- DAYS OF HITS:                {:.0f}".format(myctab["a"])])
+        writer.writerow(["   --- DAYS OF CORRECT NEGATIVES:   {:.0f}".format(myctab["d"])])
+        writer.writerow(["   --- SUCCESS RATIO:               {:.2f}".format(myscores["sr"])])
+        writer.writerow(["   --- FALSE ALARM RATIO:           {:.2f}".format(myscores["far"])])
+        writer.writerow(["   --- FREQUENCY BIAS:              {:.2f}".format(myscores["fbias"])])
+        writer.writerow(["   --- PROB. OF DETECTION:          {:.2f}".format(myscores["pod"])])
+        writer.writerow(["   --- PROB. OF FALSE DETECTION:    {:.2f}".format(myscores["pofd"])])
+        writer.writerow(["   --- PEIRCE'S SKILL SCORE:        {:.2f}".format(myscores["pss"])])
 
 
 def contingency_table(ref,mod,thresh=0):
@@ -1253,6 +1346,10 @@ def contingency_table(ref,mod,thresh=0):
     d           = len(np.where(mod[ineventobs]<=thresh)[0])   # correct negatives
     return({"a":a,"b":b,"c":c,"d":d})
 
+def try_div(x,y):
+    try: return x/y
+    except ZeroDivisionError: return 0
+
 def calc_ctab_measures(cdict):
     # calculates common contingency table scores
     # scores following definitions from https://www.cawcr.gov.au/projects/verification/
@@ -1261,17 +1358,17 @@ def calc_ctab_measures(cdict):
     c           = cdict["c"]    # misses
     d           = cdict["d"]    # correct negatives
     # calculate scores
-    acc         = (a+d)/(a+b+c+d)   # accuracy
-    far         = b/(a+b)           # false alarm ratio
-    fbias       = (a+b)/(a+c)       # frequency bias
-    pod         = a/(a+c)           # probability of detection (hit rate)
-    pofd        = b/(b+d)           # probability of false detection (false alarm rate)
-    sr          = a/(a+b)           # success ratio
-    ts          = a/(a+c+b)         # threat score (critical success index)
-    a_random    = (a+c)*(a+b)/(a+b+c+d)
-    ets         = (a-a_random)/(a+b+c+a_random) # equitable threat score (gilbert skill score)
-    pss         = pod-pofd          # peirce's skill score (true skill statistic)
-    odr         = a*d/c*b           # odd's ratio      
+    acc         = try_div(a+d,a+b+c+d)          # accuracy
+    far         = try_div(b,a+b)                # false alarm ratio
+    fbias       = try_div(a+b,a+c)              # frequency bias
+    pod         = try_div(a,a+c)                # probability of detection (hit rate)
+    pofd        = try_div(b,b+d)                # probability of false detection (false alarm rate)
+    sr          = try_div(a,a+b)                # success ratio
+    ts          = try_div(a,a+c+b)              # threat score (critical success index)
+    a_random    = try_div((a+c)*(a+b),a+b+c+d)
+    ets         = try_div((a-a_random),(a+b+c+a_random)) # equitable threat score (gilbert skill score)
+    pss         = pod-pofd                      # peirce's skill score (true skill statistic)
+    odr         = try_div(a*d,c*b)              # odd's ratio      
     return({"acc":acc,"far":far,"fbias":fbias,"pod":pod,"pofd":pofd,"sr":sr,"pss":pss,"odr":odr})
 
 def writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss):
@@ -1305,18 +1402,22 @@ def mask3darray(xarray,xla,xlo):
     return(marray)
 
 def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
-                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,Pratio,f_Escaled,f_remain,
-                 alpha_E2P,alpha_Had,
+                 Pref,Pdiag,Pattr,Pattr_Es,Pattr_Ps,Pattr_EPs,
+                 frac_E2P,
+                 frac_Had,
+                 alpha_P,alpha_P_Ecorrected,alpha_P_res,
+                 alpha_E,alpha_H,
                  strargs,precision):
-   
+    
     Prefsum     = np.nansum(Pref,axis=(1,2))
     Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
     Pattrsum    = np.nansum(Pattr,axis=(1,2))
     Pattrsum_Es = np.nansum(Pattr_Es,axis=(1,2))
     Pattrsum_Ps = np.nansum(Pattr_Ps,axis=(1,2))
     Pattrsum_EPs= np.nansum(Pattr_EPs,axis=(1,2))
-    malpha_Had  = np.max(alpha_Had,axis=(1,2,3))
-    malpha_E2P  = np.max(alpha_E2P,axis=(1,2,3))
+    malpha_H    = np.max(alpha_H[:,:,:],axis=(1,2))
+    malpha_E    = np.max(alpha_E[:,:,:],axis=(1,2))
+
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -1348,13 +1449,15 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
     nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
     nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
-    nc_pratio           = nc_f.createVariable('Pratio',precision,('time'))
-    nc_fescaled         = nc_f.createVariable('f_Escaled',precision,('time'))
-    nc_fremain          = nc_f.createVariable('f_remain',precision,('time'))
-    nc_alphap           = nc_f.createVariable('alpha_E2P',precision,('time','uptaketime','lat','lon'))
-    nc_alphah           = nc_f.createVariable('alpha_Had',precision,('time','uptaketime','lat','lon'))
-    nc_malphap          = nc_f.createVariable('max_alpha_E2P',precision,('time'))
-    nc_malphah          = nc_f.createVariable('max_alpha_Had',precision,('time'))
+    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
+    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'))
+    nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'))
+    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
+    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
+    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'))
+    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'))
+    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
+    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1387,20 +1490,24 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_ps.long_name = 'sum of attributed precipitation (E2P_Pscaled, 02_attr)'
     nc_pattrs_eps.units    = 'm3'
     nc_pattrs_eps.long_name= 'sum of attributed precipitation (E2P_EPscaled, 02_attr)'
-    nc_pratio.units        = '-'
-    nc_pratio.long_name	   = 'pratio = pref/pdiag'
-    nc_fescaled.units      = '-'
-    nc_fescaled.long_name  = 'f_Escaled'
-    nc_fremain.units       = '-'
-    nc_fremain.long_name   = 'f_remain'
     nc_alphap.units        = '-'
-    nc_alphap.long_name    = 'alpha_E2P'
+    nc_alphap.long_name	   = 'alpha_P'
+    nc_alphap_ebc.units    = '-'
+    nc_alphap_ebc.long_name= 'alpha_P_Ecorrected'
+    nc_alphap_res.units    = '-'
+    nc_alphap_res.long_name= 'alpha_P_res'
+    nc_alphae.units        = '-'
+    nc_alphae.long_name    = 'alpha_E'
     nc_alphah.units        = '-'
-    nc_alphah.long_name    = 'alpha_Had'
-    nc_malphap.units       = '-'
-    nc_malphap.long_name   = 'maximum alpha_E2P'
+    nc_alphah.long_name    = 'alpha_H'
+    nc_malphae.units       = '-'
+    nc_malphae.long_name   = 'maximum alpha_E'
     nc_malphah.units       = '-'
-    nc_malphah.long_name   = 'maximum alpha_Had'
+    nc_malphah.long_name   = 'maximum alpha_H'
+    nc_frace2p.units       = '-'
+    nc_frace2p.long_name   = 'frac_E2P'
+    nc_frachad.units       = '-'
+    nc_frachad.long_name   = 'frac_Had'
 
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1416,21 +1523,314 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     nc_pattrs_es[:]     = Pattrsum_Es[:]
     nc_pattrs_ps[:]     = Pattrsum_Ps[:]
     nc_pattrs_eps[:]    = Pattrsum_EPs[:]
-    nc_pratio[:]        = Pratio[:]
-    nc_fescaled[:]      = f_Escaled[:]
-    nc_fremain[:]       = f_remain[:]
-    nc_alphap[:]        = alpha_E2P[:]
-    nc_alphah[:]        = alpha_Had[:]
-    nc_malphap[:]       = malpha_E2P[:]
-    nc_malphah[:]       = malpha_Had[:]
+    nc_alphap[:]        = alpha_P[:]
+    nc_alphap_ebc[:]    = alpha_P_Ecorrected[:]
+    nc_alphap_res[:]    = alpha_P_res[:]
+    nc_alphae[:]        = alpha_E[:]
+    nc_alphah[:]        = alpha_H[:]
+    nc_malphae[:]       = malpha_E[:]
+    nc_malphah[:]       = malpha_H[:]
+    nc_frace2p[:]       = frac_E2P[:]
+    nc_frachad[:]       = frac_Had[:]
 
     # close file
     nc_f.close()
 
     # print info
-    print("\n * Created and wrote to file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
+    print("\n * Created and wrote to file: "+ofile+" !")
 
 def maskbymaskval(mask,maskval):
     mymask  = np.copy(mask)
     mymask[np.where(mask!=maskval)]=0
     return(mymask)
+
+def calc_sinkbcf(ref,att,tscale='daily'):
+    # define all positive
+    if np.all(ref<=0):
+        ref     = -ref
+    if np.all(att<=0):
+        att     = -att
+    if tscale=='daily':
+        tref    = np.nansum(ref,axis=tuple(range(1,ref.ndim)))
+        tatt    = np.nansum(att,axis=tuple(range(1,att.ndim)))
+        alpha   = tref/tatt
+        alpha[alpha==np.inf]    = 0
+        return(alpha)
+    if tscale=='monthly':
+        tref    = np.nansum(ref)
+        tatt    = np.nansum(att)
+        alpha   = np.repeat(tref/tatt,ref.shape[0])
+        alpha[alpha==np.inf]    = 0
+        return(alpha)
+
+def checkpsum(ref,att,verbose):
+    if round(np.nansum(ref),4) != round(np.nansum(att),4):
+        ident=False
+        if verbose:
+            print("       !!! Attributed precipitation does not match reference precipitation!")
+            print("           * attributed P: "+str(round(np.nansum(ref),4))+" m3")
+            print("           * reference P:  "+str(round(np.nansum(att),4))+" m3")
+    else:
+        ident=True
+    return(ident)
+
+def consistencycheck(attr,diag,bcscale,debug):
+    if bcscale=="daily":
+        aggattr = np.nansum(attr,axis=0)
+    if bcscale=="monthly":
+        aggattr = np.nansum(attr,axis=(0,1))
+        diag    = np.nansum(diag,axis=(0))
+    # calculate fractions
+    frac    = np.divide(aggattr,diag)
+    # print warnings
+    if np.any(frac>1.0001) or np.any(np.isinf(frac)):
+        print(" \n  \t !!! WARNING: attribution exceeds diagnosis !!!")
+        print(" \t !!!          ---> CHECK YOUR DATA !!!")
+        print(" \t !!!          ---> Maximum fraction: " + str(np.max(np.nan_to_num(frac))))
+        print(" \t !!!          ---> Number of exceedances: " + str(len(frac[np.where(frac>1.0001)])+len(frac[np.where(np.isinf(frac))]))+" \n")
+        if debug:
+            print(" \t !!!          ---> frac > 1.001 at: "+ str(np.where(frac>1.001)))
+            print(" \t !!!          ----------> attr: "+ str(aggattr[np.where(frac>1.001)]))
+            print(" \t !!!          ----------> diag: "+ str((aggattr/frac)[np.where(frac>1.001)]))
+
+#################################################################################################
+
+def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
+    """
+    @action: reads binary outputs from FLEXPART
+    @input:  partposit_DATE.gz
+    @output: returns a numpy array of dimension nparcels x 13
+    @author: Jessica Keune 06/2020
+    #modified: Dominik Schumacher, 06/2020 ---> do use pid!
+    """
+    with gzip.open(ifile, 'rb') as strm:
+        _       = strm.read(4) # dummy
+        _       = struct.unpack('i', strm.read(4))[0] # time
+        idx     = 1
+        flist   = []
+        # repeat
+        while idx<=maxn:
+            try:
+                _       = strm.read(8) # dummy
+                pid     = struct.unpack('i', strm.read(4))[0]
+                if pid  == -99999:
+                    #if verbose: print("EOF reached.")
+                    break
+                if verbose: print(str(idx)+" "+str(pid))
+                x       = struct.unpack('f', strm.read(4))[0]
+                y       = struct.unpack('f', strm.read(4))[0]
+                z       = struct.unpack('f', strm.read(4))[0]
+                itramem = struct.unpack('i', strm.read(4))[0]
+                oro     = struct.unpack('f', strm.read(4))[0]
+                pv      = struct.unpack('f', strm.read(4))[0]
+                qq      = struct.unpack('f', strm.read(4))[0]
+                rho     = struct.unpack('f', strm.read(4))[0]
+                hmix    = struct.unpack('f', strm.read(4))[0]
+                tropo   = struct.unpack('f', strm.read(4))[0]
+                temp    = struct.unpack('f', strm.read(4))[0]
+                mass    = struct.unpack('f', strm.read(4))[0]
+                flist.append([pid, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
+                idx     += 1
+            except:
+                print("Maximum number of parcels reached.")
+                break
+    strm.close()
+    return(np.reshape(flist, newshape=(idx-1,13)))
+
+def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
+    # load
+    with nc4.Dataset(path, mode='r') as f:
+        mask = np.asarray(f[maskvar][:])
+        lat = np.asarray(f[latvar][:])
+        lon = np.asarray(f[lonvar][:])
+    # check if 2dimensional; necessary for ERA-I lsm mask
+    if len(mask.shape) == 3:
+        mask = mask[0,:,:]
+    # lats check (order irrelevant, just must be within [-90,90])
+    if not (lat.min()==-90 or lat.max()==90):
+        return(None)
+    # lons check
+    if lon.min()==-180 and lon.max()<180:
+        pass
+    elif np.array_equal(lon, np.arange(0,360)):
+        mask, lon = f2t_lon360to180(mask, lon, 1)
+    else:
+        # this case is not implemented
+        return(None)
+    return(mask, lat, lon)
+
+def f2t_lon360to180(ary, lons, lonaxis=1):
+    # bring lon axis to front to handle any shape of ary
+    ary = np.moveaxis(ary, lonaxis, 0)
+    ary_bu  = np.copy(ary)
+    lons_bu = np.copy(lons)
+    # copy lons & data
+    lons[:int(lons.size/2)] = lons_bu[int(lons.size/2):] - 360
+    lons[int(lons.size/2):] = lons_bu[:int(lons.size/2)]
+    ary[:int(lons.size/2)] = ary_bu[int(lons.size/2):]
+    ary[int(lons.size/2):] = ary_bu[:int(lons.size/2)]
+    # move axis back to where it was
+    ary = np.moveaxis(ary, 0, lonaxis)
+    return(ary, lons)
+
+def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
+    fulltime = []
+    fulltime.append(tbgn - datetime.timedelta(days=ntraj_d, hours=dt_h))
+    while fulltime[-1] < tend:
+        fulltime.append(fulltime[-1]+datetime.timedelta(hours=dt_h))
+    # convert to strings in matching format for partposit files
+    fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
+    return(fulltime_str)
+
+def f2t_loader(partdir, string, fixlons):
+    dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
+    ## shift lons already to facilitate gridding later
+    if fixlons:
+        dummy[:,1][dummy[:,1]>179.5] -= 360
+    return(dummy)
+
+def f2t_fixer(IDs, ryyyy, verbose, thresidx=1997000):
+    ## load corresponding ID lookup table
+    lookup = np.asarray(pd.read_csv(os.path.dirname(os.path.abspath(__file__))+'/fixid/'+str(ryyyy)+'.csv'))
+    ## find candidates to replace
+    ihit = np.where(np.isin(IDs[thresidx:], lookup[:,0]))[0] + thresidx
+    if ihit.size==0:
+        if verbose: print("        --> NO duplicates present")
+        return(IDs)
+    else:
+        ## sanity check
+        if not np.isin(IDs[ihit], lookup[:,0]).all():
+            raise IndexError('\n---- ID replacement w/ LOOKUP table FAILED')
+        ## find replacement IDs; cannot assume that all duplicates are present
+        replace = lookup[:,1][np.where(np.isin(lookup[:,0], IDs[ihit]))]
+        ## now do replace IDs
+        IDs[ihit] = replace[:]
+        if verbose: print("        --> "+str(ihit.size)+" duplicate IDs found & replaced")
+        return(IDs)
+
+def f2t_seeker(array2D, mask, val, lat, lon):
+    ## first, we search potential candidates using rectangular box
+    imlat, imlon = np.where(mask==val)
+    lat1 = lat[imlat].min() -0.5
+    lat2 = lat[imlat].max() +0.5
+    lon1 = lon[imlon].min() -0.5
+    lon2 = lon[imlon].max() +0.5
+    ## go for it (this is pretty fast)
+    idx_inbox = np.where( (array2D[:,1] >= lon1) & (array2D[:,1] <= lon2) &
+                          (array2D[:,2] >= lat1) & (array2D[:,2] <= lat2) )[0]
+    ## now check if *really* in mask (slow!)
+    idx = []
+    for ii in range(idx_inbox.size):
+        jdx = idx_inbox[ii]
+        if mask[np.where(lat==np.round(array2D[jdx,2]))[0][0],
+                np.where(lon==np.round(array2D[jdx,1]))[0][0]] == val:
+            idx.append(jdx)
+    ## finally, return parcel IDs
+    pid = array2D[:,0][np.asarray(idx)]
+    return(pid)
+
+def f2t_locator(array2D, pid, tstring):
+    ## figure out where parcels are (lines may shift b/w files)
+    pidx = np.where(np.isin(array2D[:,0], pid, assume_unique=False))[0] # <----- set True ??
+    chosen = -999*np.ones(shape=(len(pid), array2D.shape[1]))
+    if not pidx.size == len(pid):
+        print("---- INFO: not all parcels present in file --> partposit_"+tstring)
+        idx_pidok = np.where(np.isin(pid, array2D[pidx,0], assume_unique=False))[0] # <----- set True ??
+        chosen[idx_pidok,:] = array2D[pidx,:]
+    else:
+        chosen[:,:] = array2D[pidx,:]
+    return(chosen)
+
+def f2t_constructor(array3D, pid, time_str):
+    ## sloppy check
+    if not array3D.shape[0] == len(time_str):
+        raise IndexError('time_str must match time dimension of array3D!')
+    ## prepare large array, loop thru
+    trajs = -999*np.ones(shape=(array3D.shape[0], pid.size, array3D.shape[2]))
+    for ii in range(array3D.shape[0]):
+        ## call locator
+        trajs[ii,:,:] = f2t_locator(array2D=array3D[ii,:,:], pid=pid, tstring=time_str[ii])
+    return(trajs)
+
+def f2t_saver(odata, outdir, fout, tstring):
+    ## create dir if not present
+    if not os.path.exists(outdir): # could use isdir too
+        os.mkdir(outdir)
+    with h5py.File(outdir+'/'+fout+'_'+tstring+'.h5', 'w') as f:
+        f.create_dataset("trajdata", data=odata)
+
+def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
+                    outdir, fout, fixlons, verbose):
+    ##-- 1.) load em files
+    data = -999*np.ones(shape=(len(time_str),2000001,selvars.size)) # LARGE, do this just 1x
+    for ii in range(len(time_str)):
+         if verbose: print("       "+time_str[ii][:-4], end='')
+         dummy = f2t_loader(partdir=partdir, string=time_str[ii],
+                        fixlons=fixlons)[:,selvars] # load
+         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+         data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
+
+    ##-- 2.) find IDs within mask
+    if verbose: print("       searching IDs", end='')
+    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+                            mask=mask, val=maskval, lat=mlat, lon=mlon)
+
+    ##-- 3.) grab data for IDs
+    if verbose: print(" | grabbing data for "+str(pid_inmask.size)+" IDs", end='')
+    trajs = f2t_constructor(array3D=data, pid=pid_inmask, time_str=time_str)
+
+    ##--4.) save
+    if verbose: print(" | writing to file", end='')
+    f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4])
+
+    ##--5.) return data & trajs arrays (needed for next files)
+    return(data, trajs)
+
+def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
+                 mask, maskval, mlat, mlon, outdir, fout, fixlons, verbose):
+    ##-- 1.) move old data & fill current step with new data
+    data[:-1,] = data[1:,]
+    if verbose: print("\n      ", time_str[-1][:-4], end='')
+    dummy = f2t_loader(partdir=partdir, string=time_str[-1],
+                       fixlons=fixlons)[:,selvars] # load
+    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+    data[-1,:dummy.shape[0]] = dummy[:] # fill only where data available
+
+    ##--2.) find all IDs
+    if verbose: print("       searching IDs", end='')
+    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+                            mask=mask, val=maskval, lat=mlat, lon=mlon)
+
+    ##--3.) figure out which ones were there before; SPLIT
+    if verbose: print(" | recycling & grabbing new data for "+str(pid_inmask.size)+" IDs", end='')
+    pid_trajs = trajs[-1,:,0]
+    pid_prv = np.intersect1d(pid_inmask, pid_trajs) # can recycle data
+    pid_new = np.setdiff1d(pid_inmask, pid_prv) # need to grab everything
+
+    ##--4.) recycle data first
+    extend = f2t_locator(array2D=data[-1,:,:],
+                   pid=pid_prv, # <--- !!!
+                   tstring=time_str[-1])
+    lidx = np.where(np.isin(trajs[-1,:,0], pid_prv,assume_unique=False))[0]
+    loaded  = trajs[1:,lidx,:] # 1: crucial! discard file where traj 'begins'
+    recycle = np.concatenate((loaded, extend[np.newaxis,:,:]), axis=0) # concat time
+
+    ##--5.) now take care of new ones
+    novum = f2t_constructor(array3D=data,
+                            pid=pid_new, # <--- !!!
+                            time_str=time_str[:])
+
+    ##--6.) unite arrays and then sort & overwrite trajs var
+    united = np.concatenate((recycle, novum), axis=1) # concat parcels
+    trajs = united[:,np.argsort(united[-1,:,0]),:]
+
+    ##-- 7.) save
+    if verbose: print(" | writing to file", end='')
+    f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4]) # omit mins & secs
+
+    ##--8.) return updated data & trajs arrays
+    return(data, trajs)
+
+def checknan(x):
+    x[x>=9.9e+36]=np.nan
+    return(x)

@@ -109,9 +109,6 @@ def main_diagnosis(
     if fwrite_netcdf:
         writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision)
 
-    # set some default thresholds
-    cprec_dqv    = default_thresholds(cprec_dqv) 
-
     # read in reference distribution of parcels
     if fvariable_mass:
         print(" \n !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet! \n")
@@ -174,9 +171,9 @@ def main_diagnosis(
 
             ## read only necessary parcel information
             qv, temp, hgt, hpbl    = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
-            dq                      = parceldiff(qv, 'diff') 
+            dq                      = trajparceldiff(qv, 'diff') 
             pottemp                 = readpottemp(ary[:2,i,:])
-            dTH                     = parceldiff(pottemp, 'diff')
+            dTH                     = trajparceldiff(pottemp, 'diff')
 
             ##  KAS: KEUNE AND SCHUMACHER
             if tdiagnosis == 'KAS':
@@ -197,7 +194,7 @@ def main_diagnosis(
                         if ( dTH > 0 and checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt)):
                             dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
                             if fcc_advanced:
-                                dT = parceldiff(temp, 'diff')
+                                dT = trajparceldiff(temp, 'diff')
                                 if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
                                     ary_heat[lat_ind,lon_ind] += dTH
                                     ary_hnpart[lat_ind,lon_ind] += int(1)
@@ -209,10 +206,10 @@ def main_diagnosis(
                         # evaporation
                         if ( dq > 0 and checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt)):
                             epottemp        = readepottemp(ary[:,i,:])
-                            dTHe            = parceldiff(epottemp, 'diff')
+                            dTHe            = trajparceldiff(epottemp, 'diff')
                             dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
                             if fcc_advanced:
-                                dT = parceldiff(temp, 'diff')
+                                dT = trajparceldiff(temp, 'diff')
                                 if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
                                     ary_evap[lat_ind,lon_ind] += dq
                                     ary_enpart[lat_ind,lon_ind] += int(1)
@@ -227,7 +224,7 @@ def main_diagnosis(
                 # note: not optimized wrt runtime
                 pres            = readpres(ary[:,i,:])
                 pottemp         = readpottemp(ary[:,i,:])
-                dTH             = parceldiff(pottemp, 'diff')
+                dTH             = trajparceldiff(pottemp, 'diff')
 
                 ## precipitation
                 if (dq < 0 and 
@@ -253,7 +250,7 @@ def main_diagnosis(
                 # note: not optimized wrt runtime
                 pres            = readpres(ary[:,i,:])
                 pottemp         = readpottemp(ary[:,i,:])
-                dTH             = parceldiff(pottemp, 'diff')
+                dTH             = trajparceldiff(pottemp, 'diff')
 
                 ## precipitation
                 if (dq < 0 and 
