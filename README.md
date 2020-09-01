@@ -111,21 +111,49 @@ for more details on setting dates, thresholds and other options. All user-specif
 - `--cevap_c` and `--cheat_cc` to adjust the Clausius-Clapeyron criteria for evaporation and sensible heat, respectively
 - `--cevap_hgt`, etc., to filter for specific heights
 - `--fjumps` and `--fjumpsfull` to filter for jumps larger than `--cjumps` at the beginning of the trajectory or along the full trajectory
-- ... among others. 
+- ... among a lot of other options. 
 
 
 #### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` and `--tdiagnosis` can be replaced with `-dgn`). 
 - Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True) and requires additional data for the previous month in 02_attribution. 
 - The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (DANGER!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
+- There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
+- If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
+- There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
+
+#### A very basic example. 
+1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
+2. Adjust the maskfile in `paths.txt`. 
+3. Construct trajectories arriving at the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month; and to repeat this task for the previous month if you're interested in heat advection), either (i) using particle-o-matic or (ii) using flex2traj, e.g., 
+  ```
+  python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 15 --maskval 1 
+  ```
+4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria, e.g.,  
+  ```
+  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis SOD --cprec_rh 70 --expid "SOD_prh-70"
+  ...
+  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --expid "KAS_prh70_cpbl2_cevapcc0.9"
+  ```
+5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g., 
+  ```
+  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9"
+  ```
+6. Bias-correct the established source and aggregate the results over the backward time dimension
+  ```
+  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --aggbwtime True
+  ```
+  The final netcdf file, `KAS_prh70_cpbl2_cevapcc0.9_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
+
 
 ## Miscellaneous notes
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - In this context, the bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
+- Everything is coded for a **backward** analysis (Where does the heat come from? What is the source region of precipitation?). Adjustments for a forward analysis can be easily made, but require code changes.
 - 'flex2traj' is the python replacement for *particle-o-matic*. Note that 'flex2traj' is currently under development and not fully integrated yet. All other modules (01_diagnosis and 02_attribution) currently only read data from *particle-o-matic* (dat-files). Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`.
 - Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
-
+- An additional file `*_warning.tx` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
 
 ## Epilogue
 Keep in mind that... 
@@ -136,7 +164,7 @@ Keep in mind that...
 Dominik Schumacher and Jessica Keune
 
 ### License
-Copyright 2019 Dominik Schumacher, Jessica Keune, Diego Miralles. 
+Copyright 2019 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
 
 This software is published under the GPLv3 license. This means: 
 1. Anyone can copy, modify and distribute this software. 
