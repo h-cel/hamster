@@ -1754,13 +1754,14 @@ def f2t_saver(odata, outdir, fout, tstring):
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
                     outdir, fout, fixlons, verbose):
     ##-- 1.) load em files
-    data = -999*np.ones(shape=(len(time_str),2000001,selvars.size)) # LARGE, do this just 1x
+    data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          dummy = f2t_loader(partdir=partdir, string=time_str[ii],
                             fixlons=fixlons)[:,selvars] # load
          dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
+         data[ii,dummy.shape[0]:] = np.NaN
 
     ##-- 2.) find IDs within mask
     if verbose: print("       searching IDs", end='')
