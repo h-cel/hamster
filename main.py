@@ -55,6 +55,7 @@ opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
 ipath_f2t = content.ipath_f2t
 opath_f2t = content.opath_f2t
+wpath_f2t = content.wpath_f2t
 # create output directories if they do not exist
 if not os.path.exists(opath_DGN):
         os.makedirs(opath_DGN)
@@ -94,7 +95,9 @@ if args.steps ==0:
                    maskval=args.maskval,
                    idir=ipath_f2t,
                    odir=opath_f2t,
-                   fout=args.fout)
+                   fout=args.fout,
+                   workdir=wpath_f2t,
+                   lowmem=args.lowmem)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
