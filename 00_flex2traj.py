@@ -5,7 +5,7 @@ MAIN FUNCTIONS FOR 00_flex2traj
 """
 
 def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval, 
-                   idir, odir, fout):
+                   idir, odir, fout, workdir, lowmem):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -59,8 +59,17 @@ def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval,
     ###############################################################################
     ###--- MAIN ---################################################################
     
-    ##---0.) be nice and stuff
+    ##---0.) be nice and stuff, pepare workdir
     if verbose: print(logo)
+    if workdir is None:
+        # generate random string to avoid complications when running many jobs
+        import string, random
+        randstring = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6))
+        workdir = os.path.join(os.getcwd(),'tmp_'+str(args.symd)+'_'+randstring)
+    # create workdir
+    if not os.path.exists(workdir):
+        os.mkdir(workdir)
+
     
     ##---1.) load netCDF mask
     mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
@@ -75,18 +84,30 @@ def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                 verbose=verbose)
+                                 verbose=verbose, workdir=workdir, lowmem=lowmem)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
     for ii in range(1, len(fulltime_str)-ntraj+1): # CAUTION: INDEXING from 1!
-        data, trajs = f2t_ascender(data=data, trajs=trajs, partdir=idir+'/'+str(ryyyy), selvars=selvars, 
+        data, trajs = f2t_ascender(old=data, partdir=idir+'/'+str(ryyyy), selvars=selvars, 
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                   verbose=verbose)
-    
-    ##---5.) done
+                                   verbose=verbose, workdir=workdir, lowmem=lowmem)
+   
+    ##---5.) clean up
+    for f in os.listdir(workdir):
+        try:
+            os.remove(os.path.join(workdir, f))
+        except OSError: # skip NFS files
+            pass
+    try:
+        os.rmdir(workdir)
+    except OSError:
+        print("\n     NOTE: workdir could not be removed (likely due to NFS placeholders being present)!\n")
+
+ 
+    ##---6.) done
     if verbose: 
         print("\n\n---- Done! \n     Files with base '"+fout+"' written to:\n    ",odir+'/'+str(ryyyy))
         print("     Dimensions: nstep x nparcel x nvar\n     Var order: ", end='')
