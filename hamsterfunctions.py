@@ -82,6 +82,7 @@ def read_cmdargs():
     parser.add_argument('--eymd',       '-ey',  help = "flex2traj end datetime [yyyymmdd], def: ayyyy+am+lastdayofam",  metavar ="", type = int,     default = None)
     parser.add_argument('--fout',       '-fo',  help = "flex2traj output file name base [str], default: f2tdev",        metavar ="", type = str,     default = "f2tdev")
     parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
+    parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: True",                metavar ="", type = str2bol, default = True)
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -1724,7 +1725,7 @@ def f2t_seeker(array2D, mask, val, lat, lon):
 def f2t_locator(array2D, pid, tstring):
     ## figure out where parcels are (lines may shift b/w files)
     pidx = np.where(np.isin(array2D[:,0], pid, assume_unique=False))[0] # <----- set True ??
-    chosen = -999*np.ones(shape=(len(pid), array2D.shape[1]))
+    chosen = np.NaN*np.ones(shape=(len(pid), array2D.shape[1]))
     if not pidx.size == len(pid):
         print("---- INFO: not all parcels present in file --> partposit_"+tstring)
         idx_pidok = np.where(np.isin(pid, array2D[pidx,0], assume_unique=False))[0] # <----- set True ??
@@ -1738,7 +1739,7 @@ def f2t_constructor(array3D, pid, time_str):
     if not array3D.shape[0] == len(time_str):
         raise IndexError('time_str must match time dimension of array3D!')
     ## prepare large array, loop thru
-    trajs = -999*np.ones(shape=(array3D.shape[0], pid.size, array3D.shape[2]))
+    trajs = np.empty(shape=(array3D.shape[0], pid.size, array3D.shape[2]))
     for ii in range(array3D.shape[0]):
         ## call locator
         trajs[ii,:,:] = f2t_locator(array2D=array3D[ii,:,:], pid=pid, tstring=time_str[ii])
@@ -1752,9 +1753,13 @@ def f2t_saver(odata, outdir, fout, tstring):
         f.create_dataset("trajdata", data=odata)
 
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
-                    outdir, fout, fixlons, verbose):
+                    outdir, fout, fixlons, verbose, workdir, lowmem):
     ##-- 1.) load em files
-    data = np.empty(shape=(len(time_str),2000001,selvars.size))
+    if lowmem: 
+        data = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
+                         shape=(len(time_str),2000001,selvars.size))
+    else:
+        data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          dummy = f2t_loader(partdir=partdir, string=time_str[ii],
@@ -1779,57 +1784,65 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     ##--5.) return data & trajs arrays (needed for next files)
     return(data, trajs)
 
-def f2t_ascender(old, trajs, partdir, selvars, ryyyy, time_str,
-                 mask, maskval, mlat, mlon, outdir, fout, fixlons, verbose):
+def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
+    """
+    this could be integrated in ascender, but has been used as such already
+    and is thus tested; np.copy not needed here!
+    """
+    # must make a new memmap; data[:-1] = data[1:] results in growing array
+    old = np.memmap(workdir+'/'+time_str[-2]+'.dat', mode='r', dtype='float64',
+                     shape=(len(time_str),2000001,selvars.size))
+    new = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
+                     shape=(len(time_str),2000001,selvars.size))
+    new[:-1] = old[1:]
+    # load new data | rely on dummy variable
+    dummy = f2t_loader(partdir=partdir, string=time_str[-1],fixlons=fixlons)[:,selvars]
+    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+    # insert data, use Nan for rest
+    new[-1,:dummy.shape[0]] = dummy[:]
+    new[-1,dummy.shape[0]:] = np.NaN
+    # remove old array (file)
+    os.remove(workdir+'/'+time_str[-2]+'.dat')
+    return(new)
+
+def f2t_ascender(old, partdir, selvars, ryyyy, time_str, mask, maskval, 
+                 mlat, mlon, outdir, fout, fixlons, verbose, workdir, lowmem):
 
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
-    # initialize,
-    data = np.empty(shape=(len(time_str),2000001,selvars.size))
-    # fill with old data (copy for 'safety' reasons, but not RAM-efficient)
-    data[:-1] = np.copy(old[1:])
-    # load new data | rely on dummy variable
-    dummy = f2t_loader(partdir=partdir, string=time_str[-1],
-                       fixlons=fixlons)[:,selvars]
-    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-    # insert new data, use NaN for rest
-    data[-1,:dummy.shape[0]] = np.copy(dummy[:]) # use copy here too to make sure
-    data[-1,dummy.shape[0]:] = np.NaN
+    if lowmem:
+        data = f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose)
+    else:
+        # initialize,
+        data = np.empty(shape=(len(time_str),2000001,selvars.size))
+        # fill with old data (copy for 'safety' reasons, but not RAM-efficient)
+        data[:-1] = np.copy(old[1:])
+        # load new data | rely on dummy variable
+        dummy = f2t_loader(partdir=partdir, string=time_str[-1],
+                           fixlons=fixlons)[:,selvars]
+        dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+        # insert new data, use NaN for rest
+        data[-1,:dummy.shape[0]] = np.copy(dummy[:]) # use copy here too to make sure
+        data[-1,dummy.shape[0]:] = np.NaN
 
     ##--2.) find all IDs
     if verbose: print("       searching IDs", end='')
     pid_inmask = f2t_seeker(array2D=data[-1,:,:],
                             mask=mask, val=maskval, lat=mlat, lon=mlon)
 
-    ##--3.) figure out which ones were there before; SPLIT
-    if verbose: print(" | recycling & grabbing new data for "+str(pid_inmask.size)+" IDs", end='')
-    pid_trajs = trajs[-1,:,0]
-    pid_prv = np.intersect1d(pid_inmask, pid_trajs) # can recycle data
-    pid_new = np.setdiff1d(pid_inmask, pid_prv) # need to grab everything
+    ##--3.) construct new trajectories (trajs recycling option has been removed)
+    if verbose: print(" | constructing trajs for "+str(pid_inmask.size)+" IDs from scratch", end='')
+    trajs = f2t_constructor(array3D=data, pid=pid_inmask, time_str=time_str[:])
 
-    ##--4.) recycle data first
-    extend = f2t_locator(array2D=data[-1,:,:],
-                         pid=pid_prv, # <--- !!!
-                         tstring=time_str[-1])
-    lidx = np.where(np.isin(trajs[-1,:,0], pid_prv,assume_unique=False))[0]
-    loaded  = trajs[1:,lidx,:] # 1: crucial! discard file where traj 'begins'
-    recycle = np.concatenate((loaded, extend[np.newaxis,:,:]), axis=0) # concat time
-
-    ##--5.) now take care of new ones
-    novum = f2t_constructor(array3D=data,
-                            pid=pid_new, # <--- !!!
-                            time_str=time_str[:])
-
-    ##--6.) unite arrays and then sort & overwrite trajs var
-    united = np.concatenate((recycle, novum), axis=1) # concat parcels
-    trajs = united[:,np.argsort(united[-1,:,0]),:]
-
-    ##-- 7.) save
+    ##--4.) save
     if verbose: print(" | writing to file", end='')
     f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4]) # omit mins & secs
 
-    ##--8.) return updated data & trajs arrays
-    return(data, trajs)
+    ##--5.) return updated data & trajs arrays
+    if lowmem:
+        return(None, trajs)
+    else:
+        return(data, trajs)
 
 def checknan(x):
     x[x>=9.9e+36]=np.nan
