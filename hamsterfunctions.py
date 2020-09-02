@@ -1778,15 +1778,22 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     ##--5.) return data & trajs arrays (needed for next files)
     return(data, trajs)
 
-def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
+def f2t_ascender(old, trajs, partdir, selvars, ryyyy, time_str,
                  mask, maskval, mlat, mlon, outdir, fout, fixlons, verbose):
-    ##-- 1.) move old data & fill current step with new data
-    data[:-1,] = data[1:,]
+
+    ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
+    # initialize,
+    data = np.empty(shape=(len(time_str),2000001,selvars.size))
+    # fill with old data (copy for 'safety' reasons, but not RAM-efficient)
+    data[:-1] = np.copy(old[1:])
+    # load new data | rely on dummy variable
     dummy = f2t_loader(partdir=partdir, string=time_str[-1],
-                       fixlons=fixlons)[:,selvars] # load
+                       fixlons=fixlons)[:,selvars]
     dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-    data[-1,:dummy.shape[0]] = dummy[:] # fill only where data available
+    # insert new data, use NaN for rest
+    data[-1,:dummy.shape[0]] = np.copy(dummy[:]) # use copy here too to make sure
+    data[-1,dummy.shape[0]:] = np.NaN
 
     ##--2.) find all IDs
     if verbose: print("       searching IDs", end='')
@@ -1801,8 +1808,8 @@ def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
 
     ##--4.) recycle data first
     extend = f2t_locator(array2D=data[-1,:,:],
-                   pid=pid_prv, # <--- !!!
-                   tstring=time_str[-1])
+                         pid=pid_prv, # <--- !!!
+                         tstring=time_str[-1])
     lidx = np.where(np.isin(trajs[-1,:,0], pid_prv,assume_unique=False))[0]
     loaded  = trajs[1:,lidx,:] # 1: crucial! discard file where traj 'begins'
     recycle = np.concatenate((loaded, extend[np.newaxis,:,:]), axis=0) # concat time
