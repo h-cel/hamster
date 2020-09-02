@@ -50,12 +50,12 @@ The last module of **HAMSTER** uses information from the former two modules to b
 
 ## Running HAMSTER.
 ### Prerequisites
-To execute the full chain (all 3 modules) of **HAMSTER**, the only prerequisites are: 
+To execute the full chain (all 4 modules) of **HAMSTER**, the only prerequisites are: 
 * Output from a Lagrangian model that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
 * Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
 * A file paths.txt which lists the paths where the above data is found and where output will be stored.
 
-The file paths.txt is not part of **HAMSTER**. Users have to create the file themselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
+The file paths.txt is not part of **HAMSTER**. Users have to create the file theirselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
 ```
 # This file contains all required paths and file names to run hamster; the order doesn't matter and paths can also be empty (if, e.g., not used)
 
@@ -79,7 +79,7 @@ opath_ATR = "./flexpart_data/hamster/02_attribution"
 opath_BIA = "./flexpart_data/hamster/03_biascorrection"
 ```
 
-The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred. 
+The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive. 
 
 ### Run and settings.
 To run **HAMSTER**, run
@@ -129,15 +129,15 @@ for more details on setting dates, thresholds and other options. All user-specif
   ```python
   python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 15 --maskval 1 
   ```
-4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria, e.g.,  
+4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria (using the already available global data set on the VO), e.g.,  
   ```python
   python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis SOD --cprec_rh 70 --expid "SOD_prh-70"
   ...
   python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --expid "KAS_prh70_cpbl2_cevapcc0.9"
   ```
-5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g., 
+5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days (using the h5 data created with flex2traj and hence using `--iformat h5`), e.g., 
   ```python
-  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9"
+  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9" --iformat h5
   ```
 6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
@@ -150,7 +150,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Everything is coded for a **backward** analysis (Where does the heat come from? What is the source region of precipitation?). Adjustments for a forward analysis can be easily made, but require code changes.
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
-- 'flex2traj' is the python replacement for *particle-o-matic*. Note that 'flex2traj' is currently under development and not fully integrated yet. All other modules (01_diagnosis and 02_attribution) currently only read data from *particle-o-matic* (dat-files). Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`.
+- 'flex2traj' is the python replacement for *particle-o-matic*. 'flex2traj' is currently under development and may not fully work yet. You can still use outputs from particle-o-matic using `--iformat dat.gz` (in fact, this is the default), or use output from flex2traj (produced with `--steps 0`) using `--iformat h5`. Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`.
 - Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
