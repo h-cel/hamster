@@ -83,6 +83,7 @@ def read_cmdargs():
     parser.add_argument('--fout',       '-fo',  help = "flex2traj output file name base [str], default: f2tdev",        metavar ="", type = str,     default = "f2tdev")
     parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
     parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: True",                metavar ="", type = str2bol, default = True)
+    parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -203,12 +204,14 @@ def read_partposit(ifile, maxn=3e6, verbose=True):
 def readpom(idate,      # run year
             ipath,      # input data path
             ifile_base, # loop over ifile_base filenames for each date
+            ifile_format,# file format (dat.gz or h5)
             verbose=True): # NOTE: temporary solution
     """
     INPUT
         - idate :       date as string [YYYYMMDDHH]
         - ipath :       path where input files are located
         - ifile_base :  base filename(s); loop over filenames possible
+        - ifile_format: dat.gz (pom) or .h5 (f2t)
     ACTION
         reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
         flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
@@ -223,8 +226,8 @@ def readpom(idate,      # run year
     dataar  = None
     # loop over ifile_base, concatenating files for the same date 
     for iifile_base in ifile_base:
-        # Check if file exists
-        ifile   = str(ipath+"/"+iifile_base+idate+".dat.gz")
+        # Check if file exists /file format
+        ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
         if not os.path.isfile(ifile):
             print(ifile + " does not exist!")
             break
@@ -232,22 +235,32 @@ def readpom(idate,      # run year
             # Read file
             if verbose:
                 print(" Reading " + ifile)
-            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-            nparticle   = int(ary_dim[0])
-            ntrajstep   = int(ary_dim[1])
-            nvars       = int(ary_dim[2])
-            if verbose:
-                print("\t nparticle = ",nparticle, " |  ntrajstep = ",ntrajstep,"  | nvars = ",nvars)
-            ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
-            datav       = (np.asarray(ary_dat).flatten('C'))
-            if dataar is None:
-                dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
-            else:
-                dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
-            # flip time axis    (TODO: flip axis depending on forward/backward flag)
+            if ifile_format=="dat.gz":
+                ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
+                nparticle   = int(ary_dim[0])
+                ntrajstep   = int(ary_dim[1])
+                nvars       = int(ary_dim[2])
+                if verbose:
+                    print("\t nparticle = ",nparticle, " |  ntrajstep = ",ntrajstep,"  | nvars = ",nvars)
+                ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
+                datav       = (np.asarray(ary_dat).flatten('C'))
+                if dataar is None:
+                    dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
+                else:
+                    dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
+            if ifile_format=="h5":
+                if dataar is None:
+                    with h5py.File(ifile, "r") as f:
+                        dataar      = np.array(f['trajdata'])
+                else:
+                    with h5py.File(ifile, "r") as f:
+                        dataar      = np.append(dataar, np.array(f['trajdata']), axis=1)
+
+    # flip time axis    (TODO: flip axis depending on forward/backward flag)
     dataar          = dataar[::-1,:,:]
 
     return(dataar)
+
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
     if (cpbl == 1):
@@ -394,7 +407,7 @@ def get_refnpart(refdate, ryyyy, glon, glat):
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readpom( idate    = refdate,
                            ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
-                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
+                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"], ifile_format="dat.gz")
     nparticle   = ary.shape[1]
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
@@ -1024,7 +1037,8 @@ def append2csv(filename, listvals):
         csv_writer.writerow(listvals)
 
 def preloop(datetime_bgn, uptdatetime_bgn, timestep,
-            ipath, ifile_base, ryyyy,
+            ipath, ifile_base, ifile_format,
+            ryyyy,
             mask, mlat, mlon, maskval,
             pidlog, tml,
             verbose):
@@ -1055,6 +1069,7 @@ def preloop(datetime_bgn, uptdatetime_bgn, timestep,
         ary = readpom( idate    = predatetime_seq[pix],
                        ipath    = ipath+"/"+str(ryyyy),
                        ifile_base = ifile_base,
+                       ifile_format = ifile_format,
                        verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
 
         nparcel   = ary.shape[1]

@@ -9,7 +9,7 @@ MAIN FUNCTIONS FOR 02_attribution
 
 def main_attribution(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, 
+           ipath, ifile_base, ifile_format,
            opath, ofile_base,
            mode,
            gres,
@@ -172,7 +172,8 @@ def main_attribution(
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
             pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
-                         ipath, ifile_base, ryyyy,
+                         ipath, ifile_base, ifile_format,
+                         ryyyy,
                          mask, mlat, mlon, maskval,
                          pidlog, tml,
                          verbose)
@@ -200,7 +201,9 @@ def main_attribution(
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readpom( idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
-                       ifile_base = ifile_base, verbose=verbose)
+                       ifile_base = ifile_base, 
+                       ifile_format = ifile_format,
+                       verbose=verbose)
 
         nparcel   = ary.shape[1]
         ntrajleng   = ary.shape[0]
