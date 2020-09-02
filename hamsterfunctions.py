@@ -1689,24 +1689,16 @@ def f2t_loader(partdir, string, fixlons):
         dummy[:,1][dummy[:,1]>179.5] -= 360
     return(dummy)
 
-def f2t_fixer(IDs, ryyyy, verbose, thresidx=1997000):
-    ## load corresponding ID lookup table
-    lookup = np.asarray(pd.read_csv(os.path.dirname(os.path.abspath(__file__))+'/fixid/'+str(ryyyy)+'.csv'))
-    ## find candidates to replace
-    ihit = np.where(np.isin(IDs[thresidx:], lookup[:,0]))[0] + thresidx
-    if ihit.size==0:
-        if verbose: print("        --> NO duplicates present")
-        return(IDs)
-    else:
-        ## sanity check
-        if not np.isin(IDs[ihit], lookup[:,0]).all():
-            raise IndexError('\n---- ID replacement w/ LOOKUP table FAILED')
-        ## find replacement IDs; cannot assume that all duplicates are present
-        replace = lookup[:,1][np.where(np.isin(lookup[:,0], IDs[ihit]))]
-        ## now do replace IDs
-        IDs[ihit] = replace[:]
-        if verbose: print("        --> "+str(ihit.size)+" duplicate IDs found & replaced")
-        return(IDs)
+def f2t_fixer(IDs, verbose, thresidx=1997000 ):
+    ## simply shift to indices > 2e6
+    IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
+    if verbose:
+        ndupl = np.where(IDs>2e6)[0].size
+        if ndupl == 0:
+            print("        --> NO duplicates present")
+        else:
+            print("        --> "+str(ndupl)+" duplicate IDs shifted")
+    return(IDs)
 
 def f2t_seeker(array2D, mask, val, lat, lon):
     ## first, we search potential candidates using rectangular box
@@ -1766,8 +1758,8 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          dummy = f2t_loader(partdir=partdir, string=time_str[ii],
-                        fixlons=fixlons)[:,selvars] # load
-         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+                            fixlons=fixlons)[:,selvars] # load
+         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
 
     ##-- 2.) find IDs within mask
@@ -1793,7 +1785,7 @@ def f2t_ascender(data, trajs, partdir, selvars, ryyyy, time_str,
     if verbose: print("\n      ", time_str[-1][:-4], end='')
     dummy = f2t_loader(partdir=partdir, string=time_str[-1],
                        fixlons=fixlons)[:,selvars] # load
-    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], ryyyy=ryyyy, verbose=verbose) # fix IDs
+    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
     data[-1,:dummy.shape[0]] = dummy[:] # fill only where data available
 
     ##--2.) find all IDs
