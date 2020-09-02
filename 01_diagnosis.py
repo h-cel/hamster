@@ -134,7 +134,7 @@ def main_diagnosis(
             print("Processing "+str(fdate_seq[ix]))
 
         ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary         = readpom( idate        = date_seq[ix], 
+        ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
                                ifile_format = ifile_format,

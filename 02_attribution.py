@@ -199,7 +199,7 @@ def main_attribution(
             continue
 
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
-        ary = readpom( idate    = datetime_seq[ix], 
+        ary = readtraj(idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
                        ifile_base = ifile_base, 
                        ifile_format = ifile_format,

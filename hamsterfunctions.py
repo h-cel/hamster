@@ -201,7 +201,7 @@ def read_partposit(ifile, maxn=3e6, verbose=True):
     return(np.reshape(flist, newshape=(idx-1,13)))
         
 
-def readpom(idate,      # run year
+def readtraj(idate,      # run year
             ipath,      # input data path
             ifile_base, # loop over ifile_base filenames for each date
             ifile_format,# file format (dat.gz or h5)
@@ -396,7 +396,7 @@ def get_refnpart(refdate, ryyyy, glon, glat):
         - calculates the reference distribution of parcels using the midpoint of parcels at refdate
         - NOTE that this is run specific and needs to be adjusted if FLEXPART runs are setup differently
     DEPEND
-        - uses numpy and functions readpom, gridder
+        - uses numpy and functions readtraj, gridder
     RETURN
         - npart (nlat x nlon) at refdate
     """
@@ -405,7 +405,7 @@ def get_refnpart(refdate, ryyyy, glon, glat):
         print(" * Getting reference distribution...")
 
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
-    ary         = readpom( idate    = refdate,
+    ary         = readtraj(idate    = refdate,
                            ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
                            ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"], ifile_format="dat.gz")
     nparticle   = ary.shape[1]
@@ -1066,7 +1066,7 @@ def preloop(datetime_bgn, uptdatetime_bgn, timestep,
             print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
 
         ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
-        ary = readpom( idate    = predatetime_seq[pix],
+        ary = readtraj( idate    = predatetime_seq[pix],
                        ipath    = ipath+"/"+str(ryyyy),
                        ifile_base = ifile_base,
                        ifile_format = ifile_format,
