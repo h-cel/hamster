@@ -613,6 +613,12 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,v
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
         break
+    # safety check
+    if np.any(dqdt_random<0):
+        print("\n !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(" ABORT: negative values in random attribution... ")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+        sys.exit()
   # reset for maximum attribution (only needed if veryverbose is set to True)
   if explainp=="max":
       dqdt_random[-1]   = 0
