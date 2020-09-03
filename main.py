@@ -186,7 +186,7 @@ if args.steps == 3:
                maskval=args.maskval,
                verbose=args.verbose,
                veryverbose=args.veryverbose,
-               fuseattp=args.useattp,
+               fuseattp=args.bc_useattp,
                bcscale=args.bc_time,
                faggbwtime=args.aggbwtime,
                fdebug=args.debug,

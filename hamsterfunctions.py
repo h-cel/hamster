@@ -69,7 +69,7 @@ def read_cmdargs():
     parser.add_argument('--explainp',   '-exp', help = "trajectory-based upscaling of E2P contributions",               metavar ="", type = str,     default = "none")
     parser.add_argument('--dupscale',   '-dups',help = "daily upscaling of E2P contributions",                          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--mupscale',   '-mups',help = "monthly upscaling of E2P contributions",                        metavar ="", type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--useattp',    '-uatt',help = "use precipitation from attribution for bias-correction",        metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--bc_useattp', '-uatt',help = "03: use precipitation from attribution for bias-correction",    metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--bc_time',    '-bct', help = "time scale for bias-correction (daily/monthly)",                metavar ="", type = str,     default = "daily")
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--writestats', '-ws',  help = "write additional stats to file (02 only; flag)",                metavar ="", type = str2bol, default = False,    nargs='?')
