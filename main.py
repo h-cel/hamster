@@ -55,7 +55,7 @@ opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
 ipath_f2t = content.ipath_f2t
 opath_f2t = content.opath_f2t
-wpath_f2t = content.wpath_f2t
+wpath_f2t = wpath
 # create output directories if they do not exist
 if not os.path.exists(opath_DGN):
         os.makedirs(opath_DGN)
