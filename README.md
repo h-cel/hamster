@@ -69,8 +69,9 @@ ipath_ATR = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle
 ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 
 # INPUT file name base
+ibase_f2t = "bahamas"
 ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
-ibase_ATR = ["pom_ecoreg1_traj10d_AUXTRAJ_"]
+ibase_ATR = ["bahamas_"]
 
 # OUTPUT paths
 opath_f2t = "./flexpart_data/hamster/00_eraglobal"
@@ -79,7 +80,7 @@ opath_ATR = "./flexpart_data/hamster/02_attribution"
 opath_BIA = "./flexpart_data/hamster/03_biascorrection"
 ```
 
-The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive. 
+The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive.
 
 ### Run and settings.
 To run **HAMSTER**, run
@@ -141,7 +142,7 @@ for more details on setting dates, thresholds and other options. All user-specif
   ```
 6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
-  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --aggbwtime True
+  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --bc_aggbwtime True
   ```
   The final netcdf file, `KAS_prh70_cpbl2_cevapcc0.9_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
 
@@ -151,6 +152,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
 - 'flex2traj' is the python replacement for *particle-o-matic*. 'flex2traj' is currently under development and may not fully work yet. You can still use outputs from particle-o-matic using `--iformat dat.gz` (in fact, this is the default), or use output from flex2traj (produced with `--steps 0`) using `--iformat h5`. Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`.
+- In paths.txt, we are using lists for `ibase_DGN` and `ibase_ATR` - if these contain more than one entry, a loop over those filenames is performed. `ibase_f2t` only contains one string as we assume that you're only filtering for *one* region with flex2traj though (once particle-o-matic is replaced, we may adjust all this... `ibase_f2t` is then identical to `ibase_ATR` etc.)
 - Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
