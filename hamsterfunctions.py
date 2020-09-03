@@ -589,7 +589,9 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,v
         imin    = np.argmin(qtot[1:ii])+1
     except:
         imin    = 1
-    iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
+    iatt        = qtot[imin]-np.sum(dqdt_random[imin:])
+    if iatt<0:  # quick fix: this can happen due to precision issues...
+        iatt    = 0
     idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
     # get random value
     rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
