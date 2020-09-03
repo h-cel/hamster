@@ -53,6 +53,7 @@ ibase_ATR = content.ibase_ATR
 opath_ATR = content.opath_ATR
 opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
+ibase_f2t = content.ibase_f2t
 ipath_f2t = content.ipath_f2t
 opath_f2t = content.opath_f2t
 wpath_f2t = wpath
@@ -95,7 +96,7 @@ if args.steps ==0:
                    maskval=args.maskval,
                    idir=ipath_f2t,
                    odir=opath_f2t,
-                   fout=args.fout,
+                   fout=ibase_f2t,
                    workdir=wpath_f2t,
                    lowmem=args.lowmem)
 
