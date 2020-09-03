@@ -82,7 +82,7 @@ def read_cmdargs():
     parser.add_argument('--eymd',       '-ey',  help = "flex2traj end datetime [yyyymmdd], def: ayyyy+am+lastdayofam",  metavar ="", type = int,     default = None)
     parser.add_argument('--fout',       '-fo',  help = "flex2traj output file name base [str], default: f2tdev",        metavar ="", type = str,     default = "f2tdev")
     parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
-    parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: True",                metavar ="", type = str2bol, default = True)
+    parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: False",                metavar ="", type = str2bol, default = False)
     parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
