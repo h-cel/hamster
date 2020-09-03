@@ -63,7 +63,7 @@ The file paths.txt is not part of **HAMSTER**. Users have to create the file the
 maskfile  = "./flexpart_data/masks/mask.nc"
 
 # INPUT paths
-ipath_f2t = "/user/data/gent/gvo000/gvo00090/EXT/data/FLEXPART/era_global/orig_untar" 
+ipath_f2t = "./flexpart_data/orig"
 ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t2"
 ipath_ATR = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t62/MON"
 ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
@@ -71,7 +71,7 @@ ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 # INPUT file name base
 ibase_f2t = "bahamas"
 ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
-ibase_ATR = ["bahamas_"]
+ibase_ATR = ["bahamas_AUXTRAJ"]
 
 # OUTPUT paths
 opath_f2t = "./flexpart_data/hamster/00_eraglobal"
