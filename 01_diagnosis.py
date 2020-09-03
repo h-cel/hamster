@@ -10,7 +10,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 
 def main_diagnosis(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, 
+           ipath, ifile_base, ifile_format,
            opath, ofile_base,
            mode,
            gres,
@@ -134,9 +134,10 @@ def main_diagnosis(
             print("Processing "+str(fdate_seq[ix]))
 
         ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary         = readpom( idate        = date_seq[ix], 
+        ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
+                               ifile_format = ifile_format,
                                verbose      = verbose)
         nparticle   = ary.shape[1]
         if verbose:
