@@ -589,7 +589,9 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,v
         imin    = np.argmin(qtot[1:ii])+1
     except:
         imin    = 1
-    iatt        = qtot[imin]-round(np.sum(dqdt_random[imin:]),8)
+    iatt        = qtot[imin]-np.sum(dqdt_random[imin:])
+    if iatt<0:  # quick fix: this can happen due to precision issues...
+        iatt    = 0
     idqdt_max   = min(iatt,dqdt[ii]-dqdt_random[ii])
     # get random value
     rvalue  = random.uniform(0, min(idqdt_max, abs(prec)/nmin))
@@ -604,6 +606,12 @@ def random_attribution_p(qtot,iupt,explainp,nmin=1,forc_all=False,verbose=True,v
     if (icount >= 10000*nmin):
         print(" * Stopping at "+str(icount)+" iterations; attributed {:.2f}".format(100*np.sum(dqdt_random)/abs(prec))+"%.")
         break
+    # safety check
+    if np.any(dqdt_random<0):
+        print("\n !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        print(" ABORT: negative values in random attribution... ")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+        sys.exit()
   # reset for maximum attribution (only needed if veryverbose is set to True)
   if explainp=="max":
       dqdt_random[-1]   = 0
