@@ -164,7 +164,7 @@ if args.steps == 2:
               fdry=args.fallingdry,
               fmemento=args.memento,
               mattribution=args.mattribution,
-              crandomnit=args.randomnit,
+              crandomnit=args.ratt_nit,
               randatt_forcall=args.ratt_forcall,
               explainp=args.explainp,
               fdupscale=args.dupscale,
