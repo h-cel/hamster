@@ -78,8 +78,6 @@ def read_cmdargs():
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
-    parser.add_argument('--symd',       '-sy',  help = "flex2traj start datetime [yyyymmdd], def: ayyyy+am+ad",         metavar ="", type = int,     default = None)
-    parser.add_argument('--eymd',       '-ey',  help = "flex2traj end datetime [yyyymmdd], def: ayyyy+am+lastdayofam",  metavar ="", type = int,     default = None)
     parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
     parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: True",               metavar ="", type = str2bol, default = True)
     parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
@@ -90,10 +88,6 @@ def read_cmdargs():
         args.ryyyy   = args.ayyyy
     if args.refdate is None:
         args.refdate = str(args.ryyyy)+"123118"
-    if args.symd is None:
-        args.symd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2))
-    if args.eymd is None:
-        args.eymd    = int(str(args.ayyyy)+str(args.am).zfill(2)+str(calendar.monthrange(args.ayyyy, args.am)[1]).zfill(2))
     return args
 
 def printsettings(args,step):

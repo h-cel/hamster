@@ -4,7 +4,7 @@
 MAIN FUNCTIONS FOR 00_flex2traj
 """
 
-def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval, 
+def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval, 
                    idir, odir, fout, workdir, lowmem):
 
     ###--- MISC ---################################################################
@@ -45,6 +45,8 @@ def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval,
     #******************************************************************************
     
     # do this just so it looks less ugly below
+    symd            = int(str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2))
+    eymd            = int(str(args.ayyyy)+str(args.am).zfill(2)+str(calendar.monthrange(args.ayyyy, args.am)[1]).zfill(2))
     yyyy1, mm1, dd1 = int(str(symd)[:4]), int(str(symd)[4:6]), int(str(symd)[6:])
     yyyy2, mm2, dd2 = int(str(eymd)[:4]), int(str(eymd)[4:6]), int(str(eymd)[6:])
     

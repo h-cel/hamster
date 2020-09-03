@@ -89,7 +89,7 @@ print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
 if args.steps ==0:
-    main_flex2traj(ryyyy=args.ryyyy, symd=args.symd, eymd=args.eymd,
+    main_flex2traj(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
                    tml=args.ctraj_len,
                    fixlons=args.fix,
                    maskpath=maskfile,
