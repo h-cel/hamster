@@ -1813,24 +1813,22 @@ def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
     os.remove(workdir+'/'+time_str[-2]+'.dat')
     return(new)
 
-def f2t_ascender(old, partdir, selvars, ryyyy, time_str, mask, maskval, 
+def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
                  mlat, mlon, outdir, fout, fixlons, verbose, workdir, lowmem):
-
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
     if lowmem:
         data = f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose)
     else:
-        # initialize,
-        data = np.empty(shape=(len(time_str),2000001,selvars.size))
-        # fill with old data (copy for 'safety' reasons, but not RAM-efficient)
-        data[:-1] = np.copy(old[1:])
+        # use loop to avoid RAM spike here
+        for ii in range(len(time_str)-1):
+            data[ii,:,:] = data[ii+1,:,:]
         # load new data | rely on dummy variable
         dummy = f2t_loader(partdir=partdir, string=time_str[-1],
                            fixlons=fixlons)[:,selvars]
         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
         # insert new data, use NaN for rest
-        data[-1,:dummy.shape[0]] = np.copy(dummy[:]) # use copy here too to make sure
+        data[-1,:dummy.shape[0]] = dummy[:]
         data[-1,dummy.shape[0]:] = np.NaN
 
     ##--2.) find all IDs

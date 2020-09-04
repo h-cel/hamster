@@ -91,7 +91,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
     for ii in range(1, len(fulltime_str)-ntraj+1): # CAUTION: INDEXING from 1!
-        data, trajs = f2t_ascender(old=data, partdir=idir+'/'+str(ryyyy), selvars=selvars, 
+        data, trajs = f2t_ascender(data=data, partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
