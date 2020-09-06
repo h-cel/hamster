@@ -34,6 +34,7 @@ import random
 import struct
 import calendar
 import h5py
+import re
 
 ###########################################################################
 ##--- PATHS

@@ -92,7 +92,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
    
     ##---5.) clean up
     for f in os.listdir(tmpworkdir):
-        if re.search("*.dat", f):
+        pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
+        if re.search(pattern, f):
             os.remove(os.path.join(tmpworkdir, f))
  
     ##---6.) done
