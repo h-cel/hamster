@@ -44,17 +44,14 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
                           "qv","rho","hmix","tropo","temp","mass"])
     #******************************************************************************
     
-    # do this just so it looks less ugly below
-    symd            = int(str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2))
-    eymd            = int(str(args.ayyyy)+str(args.am).zfill(2)+str(calendar.monthrange(args.ayyyy, args.am)[1]).zfill(2))
-    yyyy1, mm1, dd1 = int(str(symd)[:4]), int(str(symd)[4:6]), int(str(symd)[6:])
-    yyyy2, mm2, dd2 = int(str(eymd)[:4]), int(str(eymd)[4:6]), int(str(eymd)[6:])
-    
+    # last day of month
+    ed   = int(calendar.monthrange(args.ayyyy, args.am)[1])
+
     ## use parsed args to set up datetime objects etc.
     dt_h = 6 # hardcoded, as further edits would be necessary if this was changed!
-    time_bgn = datetime.datetime(year=yyyy1, month=mm1, day=dd1, hour=6)
+    time_bgn = datetime.datetime(year=ayyyy, month=am, day=ad, hour=6)
     # add 6 hours to handle end of month in same way as any other period
-    time_end = datetime.datetime(year=yyyy2, month=mm2, day=dd2, hour=18) + datetime.timedelta(hours=dt_h)
+    time_end = datetime.datetime(year=ayyyy, month=am, day=ed, hour=18) + datetime.timedelta(hours=dt_h)
     # convert trajectory length from day to dt_h (!=6); +2 needed ;)
     ntraj = tml*(24//dt_h) + 2 
     
@@ -67,7 +64,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
         # generate random string to avoid complications when running many jobs
         import string, random
         randstring = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        workdir = os.path.join(os.getcwd(),'tmp_'+str(args.symd)+'_'+randstring)
+        workdir = os.path.join(os.getcwd(),'tmp_'+str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2)+'_'+randstring)
     # create workdir
     if not os.path.exists(workdir):
         os.mkdir(workdir)
