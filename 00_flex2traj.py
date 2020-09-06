@@ -98,15 +98,15 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
                                    verbose=verbose, workdir=workdir, lowmem=lowmem)
    
     ##---5.) clean up
-    for f in os.listdir(workdir):
-        try:
-            os.remove(os.path.join(workdir, f))
-        except OSError: # skip NFS files
-            pass
-    try:
-        os.rmdir(workdir)
-    except OSError:
-        print("\n     NOTE: workdir could not be removed (likely due to NFS placeholders being present)!\n")
+    #for f in os.listdir(workdir):
+    #    try:
+    #        os.remove(os.path.join(workdir, f))
+    #    except OSError: # skip NFS files
+    #        pass
+    #try:
+    #    os.rmdir(workdir)
+    #except OSError:
+    #    print("\n     NOTE: workdir could not be removed (likely due to NFS placeholders being present)!\n")
 
  
     ##---6.) done
