@@ -58,16 +58,12 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
     ###############################################################################
     ###--- MAIN ---################################################################
     
-    ##---0.) be nice and stuff, pepare workdir
     if verbose: print(logo)
-    if workdir is None:
-        # generate random string to avoid complications when running many jobs
-        import string, random
-        randstring = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        workdir = os.path.join(os.getcwd(),'tmp_'+str(args.ayyyy)+str(args.am).zfill(2)+str(args.ad).zfill(2)+'_'+randstring)
-    # create workdir
-    if not os.path.exists(workdir):
-        os.mkdir(workdir)
+
+    ##---0.) pepare workdir
+    tmpworkdir = workdir+"/tmp"
+    if not os.path.exists(tmpworkdir):
+        os.mkdir(tmpworkdir)
 
     
     ##---1.) load netCDF mask
@@ -83,7 +79,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                 verbose=verbose, workdir=workdir, lowmem=lowmem)
+                                 verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
@@ -92,18 +88,19 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                   verbose=verbose, workdir=workdir, lowmem=lowmem)
+                                   verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
    
     ##---5.) clean up
-    #for f in os.listdir(workdir):
-    #    try:
-    #        os.remove(os.path.join(workdir, f))
-    #    except OSError: # skip NFS files
-    #        pass
-    #try:
-    #    os.rmdir(workdir)
-    #except OSError:
-    #    print("\n     NOTE: workdir could not be removed (likely due to NFS placeholders being present)!\n")
+    for f in os.listdir(tmpworkdir):
+        try:
+            os.remove(os.path.join(tmpworkdir, f))
+        except OSError: # skip NFS files
+            pass
+    try:
+        os.rmdir(tmpworkdir)
+    except OSError:
+        print("\n     NOTE: tmpworkdir could not be removed (likely due to NFS placeholders being present)!")
+        print("     tmpworkdir: "+str(tmpworkdir))
 
  
     ##---6.) done
