@@ -10,6 +10,7 @@
 # Copy of mainpy to work-dir
 work/
 paths.txt
+tmp/
 
 # profiling output
 profile_output*
