@@ -92,16 +92,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
    
     ##---5.) clean up
     for f in os.listdir(tmpworkdir):
-        try:
+        if re.search("*.dat", f):
             os.remove(os.path.join(tmpworkdir, f))
-        except OSError: # skip NFS files
-            pass
-    try:
-        os.rmdir(tmpworkdir)
-    except OSError:
-        print("\n     NOTE: tmpworkdir could not be removed (likely due to NFS placeholders being present)!")
-        print("     tmpworkdir: "+str(tmpworkdir))
-
  
     ##---6.) done
     if verbose: 
