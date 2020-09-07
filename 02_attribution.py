@@ -171,7 +171,7 @@ def main_attribution(
     ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
     ## NOTE: must fill array with negative number whose abs exceeds max traj len  
     if fmemento: 
-        pidlog = -999*np.ones(shape=2000001).astype(int) 
+        pidlog = -999*np.ones(shape=2100000).astype(int) 
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
             pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
