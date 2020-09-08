@@ -122,7 +122,6 @@ for more details on setting dates, thresholds and other options. All user-specif
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
-- If you use particle-o-matic output instead of flex2traj to construct trajectories for 02_attribution, make sure you dump only the following 6 variables (in addition to the default: parcel id, longitude, latitude): `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti` as the order, in which hamster reads in variables is fixed. 
 
 #### A very basic example. 
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
@@ -157,6 +156,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
+- If you use particle-o-matic output instead of flex2traj to construct trajectories for 02_attribution, make sure you dump **only** the following 6 variables (in addition to the default: parcel id, longitude, latitude): `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti` - this needs to be considered as the order, in which hamster reads in variables, is fixed. 
 
 ## Epilogue
 Keep in mind that... 
