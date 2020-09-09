@@ -139,6 +139,7 @@ if args.steps == 2:
               ipath=ipath_ATR,
               ifile_base=ibase_ATR,
               ifile_format=args.iformat,
+              ipath_f2t=ipath_f2t,
               opath=opath_ATR,
               ofile_base=args.expid,
               mode=args.mode,
