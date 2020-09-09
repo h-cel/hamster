@@ -1861,3 +1861,147 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
 def checknan(x):
     x[x>=9.9e+36]=np.nan
     return(x)
+
+def whereinmask(mask, maskval, masklat, masklon, trajlat, trajlon):
+    ## first, we search potential candidates using rectangular box
+    imlat, imlon = np.where(mask==maskval)
+    lat1 = masklat[imlat].min() -0.5
+    lat2 = masklat[imlat].max() +0.5
+    lon1 = masklon[imlon].min() -0.5
+    lon2 = masklon[imlon].max() +0.5
+    ## go for it (this is pretty fast)
+    idx_inbox = np.where( (trajlon >= lon1) & (trajlon <= lon2) &
+                          (trajlat >= lat1) & (trajlat <= lat2) )[0]
+    ## now check if *really* in mask (slow!)
+    idx = []
+    for ii in range(idx_inbox.size):
+        jdx = idx_inbox[ii]
+        if mask[np.where(masklat==np.round(trajlat[jdx]))[0][0],
+                np.where(masklon==np.round(trajlon[jdx]))[0][0]] == maskval:
+            idx.append(jdx)
+    ## finally, return indices for which traj in mask
+    return(np.asarray(idx))
+
+def maxlastn(series, n=4):
+    maxy = np.zeros(shape=(n,series.size))
+    maxy[0,:]   = series[:]
+    for ii in range(1,n):
+        maxy[ii,:-ii] = series[ii:]
+    return(np.max(maxy, axis=0))
+
+def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1997000):
+    """
+    @action: reads binary outputs from FLEXPART
+    @input:  partposit_DATE.gz
+    @output: returns a numpy array of dimension nparcels x 13
+    @author: Jessica Keune 06/2020
+    @modified: by DSc
+    """
+    with gzip.open(ifile, 'rb') as strm:
+        _       = strm.read(4) # dummy
+        _       = struct.unpack('i', strm.read(4))[0] # time
+        idx     = 0
+        flist   = []
+        # repeat
+        while idx<maxn:
+            try:
+                _       = strm.read(8) # dummy
+                pid     = struct.unpack('i', strm.read(4))[0]
+                if pid  == -99999:
+                    if verbose: print("EOF reached.")
+                    break
+
+                if verbose: print(str(idx)+" "+str(pid))
+                #x       = struct.unpack('f', strm.read(4))[0]
+                #y       = struct.unpack('f', strm.read(4))[0]
+                #z       = struct.unpack('f', strm.read(4))[0]
+                #itramem = struct.unpack('i', strm.read(4))[0]
+                #oro     = struct.unpack('f', strm.read(4))[0]
+                #pv      = struct.unpack('f', strm.read(4))[0]
+                #qq      = struct.unpack('f', strm.read(4))[0]
+                #rho     = struct.unpack('f', strm.read(4))[0]
+                _ = strm.read(32)
+                hmix    = struct.unpack('f', strm.read(4))[0]
+                #tropo   = struct.unpack('f', strm.read(4))[0]
+                #temp    = struct.unpack('f', strm.read(4))[0]
+                #mass    = struct.unpack('f', strm.read(4))[0]
+                _ = strm.read(12)
+                flist.append([pid, hmix])
+                idx     += 1
+
+            except:
+                print("Maximum number of parcels reached.")
+                break
+    strm.close()
+    # reshape
+    sel = np.reshape(flist, newshape=(idx,2))
+    # shift duplicate IDs
+    if shiftIDs:
+        IDs   = sel[:,0]
+        # no need to change sel, IDs is nothing but a view ;)
+        IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
+    return(sel)
+
+def readtrajdim(idate,      # run year
+                ipath,      # input data path
+                ifile_base, # loop over ifile_base filenames for each date
+                ifile_format,# file format (dat.gz or h5)
+                verbose=True): # NOTE: temporary solution
+    """
+    INPUT
+        - idate :       date as string [YYYYMMDDHH]
+        - ipath :       path where input files are located
+        - ifile_base :  base filename(s); ONLY FIRST ENTRY USED HERE
+        - ifile_format: dat.gz (pom) or .h5 (f2t)
+    ACTION
+        determines dimensions of 3D array: ntrajlength x nparticles x nvars
+    RETURNS
+        - ntrajlength,  nparticles,  nvars
+    """
+    # skip any other ifile_base entries
+    iifile_base = ifile_base[0]
+    # Check if file exists /file format
+    ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
+    if not os.path.isfile(ifile):
+        print(ifile + " does not exist!")
+    elif os.path.isfile(ifile):
+        # Read file
+        if verbose:
+            print(" Reading " + ifile)
+        if ifile_format=="dat.gz":
+            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
+            nparticle   = int(ary_dim[0])
+            ntrajstep   = int(ary_dim[1])
+            nvars       = int(ary_dim[2])
+        if ifile_format=="h5":
+            with h5py.File(ifile, "r") as f:
+                ntrajstep, nparticle, nvars = np.array(f['trajdata']).shape
+
+    return(ntrajstep, nparticle, nvars)
+
+def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
+    ppospath = os.path.join(ipath_f2t,str(ryyyy))
+    extendarchive = []
+
+    if verbose:
+        print("\n--------------------------------------------------------------------------------------")
+        print("\n ! performing pre-loop to extend trajectory data & achieve advection month-2-month consistency")
+        print("\n ! estimating remaining time for pre-loop ...")
+        pretic = timeit.default_timer()
+
+    for qq in range(tml+5):
+        if verbose and qq==1:
+            pretoc = timeit.default_timer()
+            mins   = round((tml+5)*(pretoc-pretic)/60, 2)
+            if mins < 1.0:
+                print("  ---> "+str(mins*60)+" seconds to go, how about some stretching in the meantime?")
+            else:
+                print("  ---> "+str(mins)+" minutes to go, might want to grab a coffee...")
+
+        # go back from first timestep..
+        timestr = (fdatetime_beg - datetime.timedelta(hours=qq*6+6)).strftime('%Y%m%d%H')+'0000'
+
+        # append data with shifted duplicate IDs to list
+        extendarchive.append(readhpbl_partposit(ppospath+'/partposit_'+timestr+'.gz'))
+
+    return(extendarchive)
