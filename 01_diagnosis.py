@@ -161,7 +161,7 @@ def main_diagnosis(
         for i in ntot:
 
             ## check for jumps 
-            if fjumps and ifile_format=='dat.gz':
+            if fjumps and ifile_format=='dat.gz' and ary[0,i,0] < 3000:
                 jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1]) #lat1,lon1,lat2,lon2
                 if jump > cjumps:
                     njumps += int(1)
