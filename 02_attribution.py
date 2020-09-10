@@ -189,7 +189,7 @@ def main_attribution(
                                           ifile_format = ifile_format,
                                           verbose=False)
 
-            if ntrajstep == tml+2:
+            if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'
                 extendarchive = grabmesomehpbl(pposbasepath=ipath_f2t, ryyyy=ryyyy,
                                                fdatetime_beg=fdatetime_seq[0], tml=tml,
@@ -265,7 +265,7 @@ def main_attribution(
             IDs[thresidx:][IDs[thresidx:]<3000] += 2e6
 
             # extract what is needed from extendarchive if trajs 'too short'
-            if ary.shape[0] == tml+2 and ix < ctraj_len*4:
+            if ary.shape[0] < tml+2+4 and ix < ctraj_len*4:
                 extendtrajs = np.empty(shape=(4, nparcel, 2))
                 for pp in range(4):
                     allIDs     = extendarchive[-(4-pp+ix)][:,0]
@@ -313,7 +313,7 @@ def main_attribution(
 
                         # check if parcel was 'in PBL'
                         hgt = ary[:(tml+2),i,3] # consistent with max traj len
-                        if ary.shape[0] == tml+2:
+                        if ary.shape[0] < tml+2+4:
                             longhpbl = np.concatenate((ary[:(tml+2),i,7], extendtrajs[:,i,1]))
                         else:
                             longhpbl = ary[:(tml+2+4),i,7]
