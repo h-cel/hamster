@@ -194,7 +194,8 @@ def main_attribution(
                 extendarchive = grabmesomehpbl(pposbasepath=ipath_f2t, ryyyy=ryyyy,
                                                fdatetime_beg=fdatetime_seq[0], tml=tml,
                                                verbose=verbose)
-
+            else:
+                if verbose: print("\n=== \t INFO: no pre-loop needed, trajectories are long enough")
 
     ###--- MAIN LOOP
 
@@ -251,10 +252,10 @@ def main_attribution(
         if fmemento:
             # NOTE: pom data can come with duplicate IDs; remove to avoid (some) trouble
             if not np.unique(ary[0,:,0]).size == ary[0,:,0].size:
-                print("duplicates detected, original pom array shape=",ary.shape)
+                print("\t INFO: duplicates detected, original pom array shape=",ary.shape)
                 _, ikeep = np.unique(ary[0,:,0], return_index=True)
                 ary = ary[:,ikeep,:]
-                print("duplicates eliminated, new pom array shape=",ary.shape)
+                print("\t INFO: duplicates eliminated, new pom array shape=",ary.shape)
                 nparcel   = ary.shape[1]   # update
                 ntot      = range(nparcel)
             # NOTE: yet another ******* pom fix ... to be removed!
