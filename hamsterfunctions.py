@@ -1480,6 +1480,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     utimes.calendar     = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
+    nc_mask.units          = '-'
     nc_pref.units          = 'm3'
     nc_pref.long_name	   = 'reference precipitation'
     nc_pdiag.units         = 'm3'
@@ -1523,6 +1524,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     latitudes[:]        = glat
     longitudes[:]       = glon
     nc_pref[:]          = Pref[:]
+    nc_mask[:]          = mask[:]
     nc_pdiag[:]         = Pdiag[:]
     nc_pattr[:]         = Pattr[:]
     nc_prefs[:]         = Prefsum[:]
