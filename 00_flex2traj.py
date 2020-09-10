@@ -4,8 +4,8 @@
 MAIN FUNCTIONS FOR 00_flex2traj
 """
 
-def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval, 
-                   idir, odir, fout):
+def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval, 
+                   idir, odir, fout, workdir, lowmem):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -44,23 +44,27 @@ def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval,
                           "qv","rho","hmix","tropo","temp","mass"])
     #******************************************************************************
     
-    # do this just so it looks less ugly below
-    yyyy1, mm1, dd1 = int(str(symd)[:4]), int(str(symd)[4:6]), int(str(symd)[6:])
-    yyyy2, mm2, dd2 = int(str(eymd)[:4]), int(str(eymd)[4:6]), int(str(eymd)[6:])
-    
+    # last day of month
+    ed   = int(calendar.monthrange(args.ayyyy, args.am)[1])
+
     ## use parsed args to set up datetime objects etc.
     dt_h = 6 # hardcoded, as further edits would be necessary if this was changed!
-    time_bgn = datetime.datetime(year=yyyy1, month=mm1, day=dd1, hour=6)
+    time_bgn = datetime.datetime(year=ayyyy, month=am, day=ad, hour=6)
     # add 6 hours to handle end of month in same way as any other period
-    time_end = datetime.datetime(year=yyyy2, month=mm2, day=dd2, hour=18) + datetime.timedelta(hours=dt_h)
+    time_end = datetime.datetime(year=ayyyy, month=am, day=ed, hour=18) + datetime.timedelta(hours=dt_h)
     # convert trajectory length from day to dt_h (!=6); +2 needed ;)
     ntraj = tml*(24//dt_h) + 2 
     
     ###############################################################################
     ###--- MAIN ---################################################################
     
-    ##---0.) be nice and stuff
     if verbose: print(logo)
+
+    ##---0.) pepare workdir
+    tmpworkdir = workdir+"/tmp"
+    if not os.path.exists(tmpworkdir):
+        os.mkdir(tmpworkdir)
+
     
     ##---1.) load netCDF mask
     mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
@@ -75,18 +79,24 @@ def main_flex2traj(ryyyy, symd, eymd, tml, fixlons, maskpath, maskval,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                 verbose=verbose)
+                                 verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
     for ii in range(1, len(fulltime_str)-ntraj+1): # CAUTION: INDEXING from 1!
-        data, trajs = f2t_ascender(data=data, trajs=trajs, partdir=idir+'/'+str(ryyyy), selvars=selvars, 
+        data, trajs = f2t_ascender(data=data, partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                   verbose=verbose)
-    
-    ##---5.) done
+                                   verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
+   
+    ##---5.) clean up
+    for f in os.listdir(tmpworkdir):
+        pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
+        if re.search(pattern, f):
+            os.remove(os.path.join(tmpworkdir, f))
+ 
+    ##---6.) done
     if verbose: 
         print("\n\n---- Done! \n     Files with base '"+fout+"' written to:\n    ",odir+'/'+str(ryyyy))
         print("     Dimensions: nstep x nparcel x nvar\n     Var order: ", end='')

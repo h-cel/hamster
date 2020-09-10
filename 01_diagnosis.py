@@ -10,7 +10,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 
 def main_diagnosis(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, 
+           ipath, ifile_base, ifile_format,
            opath, ofile_base,
            mode,
            gres,
@@ -85,7 +85,10 @@ def main_diagnosis(
 
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2), "%Y-%m-%d")
-    date_end        = date_bgn + relativedelta(months=1)
+    # get end date (always 00 UTC of the 1st of the next month)
+    nayyyy          = (datetime_bgn + relativedelta(months=1)).strftime('%Y')
+    nam             = (datetime_bgn + relativedelta(months=1)).strftime('%m')
+    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
     timestep        = datetime.timedelta(hours=6)
     date_seq        = []
     fdate_seq       = []
@@ -134,9 +137,10 @@ def main_diagnosis(
             print("Processing "+str(fdate_seq[ix]))
 
         ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
-        ary         = readpom( idate        = date_seq[ix], 
+        ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
+                               ifile_format = ifile_format,
                                verbose      = verbose)
         nparticle   = ary.shape[1]
         if verbose:

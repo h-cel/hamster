@@ -34,6 +34,7 @@ import random
 import struct
 import calendar
 import h5py
+import re
 
 ###########################################################################
 ##--- PATHS
@@ -53,9 +54,13 @@ ibase_ATR = content.ibase_ATR
 opath_ATR = content.opath_ATR
 opath_BIA = content.opath_BIA
 maskfile  = content.maskfile
+ibase_f2t = content.ibase_f2t
 ipath_f2t = content.ipath_f2t
 opath_f2t = content.opath_f2t
+wpath_f2t = wpath
 # create output directories if they do not exist
+if not os.path.exists(opath_f2t):
+        os.makedirs(opath_f2t)
 if not os.path.exists(opath_DGN):
         os.makedirs(opath_DGN)
 if not os.path.exists(opath_ATR):
@@ -87,19 +92,22 @@ print(printsettings(args,args.steps))
 
 ## (3) RUN main scripts with arguments
 if args.steps ==0:
-    main_flex2traj(ryyyy=args.ryyyy, symd=args.symd, eymd=args.eymd,
+    main_flex2traj(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
                    tml=args.ctraj_len,
                    fixlons=args.fix,
                    maskpath=maskfile,
                    maskval=args.maskval,
                    idir=ipath_f2t,
                    odir=opath_f2t,
-                   fout=args.fout)
+                   fout=ibase_f2t,
+                   workdir=wpath_f2t,
+                   lowmem=args.lowmem)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
               ipath=ipath_DGN,
               ifile_base=ibase_DGN, 
+              ifile_format=args.iformat,
               opath=opath_DGN,
               ofile_base=args.expid,
               mode=args.mode,
@@ -130,6 +138,8 @@ if args.steps == 2:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
               ipath=ipath_ATR,
               ifile_base=ibase_ATR,
+              ifile_format=args.iformat,
+              ipath_f2t=ipath_f2t,
               opath=opath_ATR,
               ofile_base=args.expid,
               mode=args.mode,
@@ -159,7 +169,7 @@ if args.steps == 2:
               fdry=args.fallingdry,
               fmemento=args.memento,
               mattribution=args.mattribution,
-              crandomnit=args.randomnit,
+              crandomnit=args.ratt_nit,
               randatt_forcall=args.ratt_forcall,
               explainp=args.explainp,
               fdupscale=args.dupscale,
@@ -181,9 +191,9 @@ if args.steps == 3:
                maskval=args.maskval,
                verbose=args.verbose,
                veryverbose=args.veryverbose,
-               fuseattp=args.useattp,
+               fuseattp=args.bc_useattp,
                bcscale=args.bc_time,
-               faggbwtime=args.aggbwtime,
+               faggbwtime=args.bc_aggbwtime,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwrite_month=args.write_month,

@@ -9,7 +9,7 @@ MAIN FUNCTIONS FOR 02_attribution
 
 def main_attribution(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, 
+           ipath, ifile_base, ifile_format, ipath_f2t,
            opath, ofile_base,
            mode,
            gres,
@@ -113,14 +113,17 @@ def main_attribution(
     ## -- DATES
     # NOTE: we begin at 06 UTC...
     datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-06", "%Y-%m-%d-%H") 
-    datetime_end    = datetime_bgn + relativedelta(months=1)
+    # get end date (always 00 UTC of the 1st of the next month)
+    nayyyy          = (datetime_bgn + relativedelta(months=1)).strftime('%Y')
+    nam             = (datetime_bgn + relativedelta(months=1)).strftime('%m')
+    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
     timestep        = datetime.timedelta(hours=6)
     datetime_seq    = []
     fdatetime_seq   = []
     idatetime       = datetime_bgn
 
     # create arrival datetime string & datetime object
-    while idatetime < datetime_end:
+    while idatetime <= datetime_end:
         datetime_seq.append(idatetime.strftime('%Y%m%d%H'))
         fdatetime_seq.append(idatetime)
         idatetime += timestep
@@ -159,7 +162,7 @@ def main_attribution(
         writeemptync4D(ofile,fdate_seq,np.arange(-ctraj_len,1),glat,glon,strargs,precision)
 
     # traj max len, expressed in input data (6-hourly) steps
-    tml = 4*ctraj_len # hardcoded for 6-hourly input
+    tml = int(4*ctraj_len) # hardcoded for 6-hourly input
     # compact form of max traj len in days (used for array filling w/ shortened uptake dim)
     ctl = ctraj_len
 
@@ -168,15 +171,31 @@ def main_attribution(
     ## NOTE: we only need to know if some parcel makes it to the ABL, that's it!
     ## NOTE: must fill array with negative number whose abs exceeds max traj len  
     if fmemento: 
-        pidlog = -999*np.ones(shape=2000001).astype(int) 
+        pidlog = -999*np.ones(shape=2100000).astype(int) 
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
-            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
-                         ipath, ifile_base, ryyyy,
-                         mask, mlat, mlon, maskval,
-                         pidlog, tml,
-                         verbose)
-    
+#            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
+#                         ipath, ifile_base, ifile_format,
+#                         ryyyy,
+#                         mask, mlat, mlon, maskval,
+#                         pidlog, tml,
+#                         verbose)
+            ###--- PRELOOP v2
+            # NOTE: code further below this function call here could also be moved to
+            #       first main loop iteration, so that no dim checking necessary
+            ntrajstep, _, _ = readtrajdim(idate    = datetime_seq[0],
+                                          ipath    = ipath+"/"+str(ryyyy),
+                                          ifile_base = ifile_base,
+                                          ifile_format = ifile_format,
+                                          verbose=False)
+
+            if ntrajstep == tml+2:
+                # only do this if data really isn't already 'there'
+                extendarchive = grabmesomehpbl(pposbasepath=ipath_f2t, ryyyy=ryyyy,
+                                               fdatetime_beg=fdatetime_seq[0], tml=tml,
+                                               verbose=verbose)
+
+
     ###--- MAIN LOOP
 
     ## prepare STATS
@@ -198,11 +217,13 @@ def main_attribution(
             continue
 
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
-        ary = readpom( idate    = datetime_seq[ix], 
+        ary = readtraj(idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
-                       ifile_base = ifile_base, verbose=verbose)
+                       ifile_base = ifile_base, 
+                       ifile_format = ifile_format,
+                       verbose=verbose)
 
-        nparcel   = ary.shape[1]
+        nparcel     = ary.shape[1]
         ntrajleng   = ary.shape[0]
         if verbose:
             print(" TOTAL: " + str(datetime_seq[ix]) + " has " + str(nparcel) + " parcels")
@@ -226,11 +247,36 @@ def main_attribution(
         # STATS: number of parcels per file
         neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
+        # grab extended trajectory data
+        if fmemento:
+            # NOTE: pom data can come with duplicate IDs; remove to avoid (some) trouble
+            if not np.unique(ary[0,:,0]).size == ary[0,:,0].size:
+                print("duplicates detected, original pom array shape=",ary.shape)
+                _, ikeep = np.unique(ary[0,:,0], return_index=True)
+                ary = ary[:,ikeep,:]
+                print("duplicates eliminated, new pom array shape=",ary.shape)
+                nparcel   = ary.shape[1]   # update
+                ntot      = range(nparcel)
+            # NOTE: yet another ******* pom fix ... to be removed!
+            #       (flex2traj output is not affected by this)
+            IDs   = ary[0,:,0]
+            thresidx=int((9/10)*ary.shape[1]) # this should do the trick
+            # simply shift to indices > 2e6
+            IDs[thresidx:][IDs[thresidx:]<3000] += 2e6
+
+            # extract what is needed from extendarchive if trajs 'too short'
+            if ary.shape[0] == tml+2 and ix < ctraj_len*4:
+                extendtrajs = np.empty(shape=(4, nparcel, 2))
+                for pp in range(4):
+                    allIDs     = extendarchive[-(4-pp+ix)][:,0]
+                    extendtrajs[pp,:,0] = extendarchive[-(4-pp+ix)][:,0][np.where(np.isin(allIDs, ary[0,:,0]))] # ID
+                    extendtrajs[pp,:,1] = extendarchive[-(4-pp+ix)][:,1][np.where(np.isin(allIDs, ary[0,:,0]))] # hpbl
+
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
            
             ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
-            if fjumps:
+            if fjumps and ifile_format=='dat.gz':
                 if fjumpsfull:
                     # checking for the full trajectory length
                     jumps = np.array([])
@@ -257,12 +303,44 @@ def main_attribution(
             else:
 
                 ## - 2.1) check how far back trajectory should be evaluated
-                # NOTE: this could be moved elsewhere...
-                # for advection (not needed for E2P):
-                if fmemento:
-                    ID = int(ary[0,i,0])   
-                    istep = pidlog[ID]
-                    ihf_H = min((ix-istep+1), tml + 2) 
+                ID = int(ary[0,i,0])
+                if fmemento and ary[0,i,3] < np.max(ary[:4,i,7]):
+                    if ix < ctraj_len*4: # rely on (extended) traj data
+
+                        # check if parcel has been inside before
+                        is_inmask = whereinmask(mask=mask, maskval=maskval, masklat=mlat, masklon=mlon,
+                                                trajlat=ary[:(tml+2),i,2], trajlon=ary[:(tml+2),i,1])
+
+                        # check if parcel was 'in PBL'
+                        hgt = ary[:(tml+2),i,3] # consistent with max traj len
+                        if ary.shape[0] == tml+2:
+                            longhpbl = np.concatenate((ary[:(tml+2),i,7], extendtrajs[:,i,1]))
+                        else:
+                            longhpbl = ary[:(tml+2+4),i,7]
+                        is_inpbl = np.where(hgt < maxlastn(longhpbl, n=4)[:-4])[0] # omit last 4
+
+                        # check where parcel inside and 'in PBL'
+                        is_arrv  = np.intersect1d(is_inmask, is_inpbl)
+
+                        # now determine ihf_H
+                        if is_arrv.size > 1:
+                            ihf_H = is_arrv[is_arrv>0].min() + 1
+                        elif is_arrv == 0:
+                            ihf_H = tml + 2 # use max traj len
+                        else:
+                            raise RuntimeError('--- FATAL ERROR: Schrödingers cat situation; is parcel inside and in PBL, or not?')
+
+#                        ## checking mode
+#                        ihf_H_orig = min((ix-pidlog[ID]+1), tml + 2)
+#                        if not ihf_H == ihf_H_orig:
+#                            print("DISCREPANCIES DETECTED!!!!!!! if ID < 3'000 and using pom data, this is to be expected..")
+#                            print("ihf_H, ihf_H_orig=", ihf_H, ihf_H_orig)
+#                            print("ID=",ID)
+#                            _ = input("proceed?")
+
+                    else: # fully rely on log from now
+                        istep = pidlog[ID]
+                        ihf_H = min((ix-istep+1), tml + 2)
                 else:
                     ihf_H = tml + 2
                 
