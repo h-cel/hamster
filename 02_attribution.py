@@ -297,7 +297,7 @@ def main_attribution(
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-            if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+            if not mask[alat_ind,alon_ind]==maskval:
                 nnevalm     += 1
                 nnevala     += 1
                 continue
