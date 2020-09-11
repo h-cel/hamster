@@ -4,7 +4,7 @@
 MAIN FUNCTIONS FOR 00_flex2traj
 """
 
-def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval, 
+def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskpath, maskval,
                    idir, odir, fout, workdir, lowmem):
 
     ###--- MISC ---################################################################
@@ -78,7 +78,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
     data, trajs = f2t_establisher(partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                 outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
+                                 outdir=odir+'/'+str(ryyyy), fout=fout,
                                  verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
     
     ##---4.) continue with next steps
@@ -87,7 +87,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
         data, trajs = f2t_ascender(data=data, partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                   outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
+                                   outdir=odir+'/'+str(ryyyy), fout=fout,
                                    verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
    
     ##---5.) clean up

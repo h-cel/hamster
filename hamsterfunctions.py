@@ -78,7 +78,6 @@ def read_cmdargs():
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
-    parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
     parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: False",               metavar ="", type = str2bol, default = False)
     parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
     #print(parser.format_help())
@@ -1701,11 +1700,10 @@ def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
-def f2t_loader(partdir, string, fixlons):
+def f2t_loader(partdir, string):
     dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
     ## shift lons already to facilitate gridding later
-    if fixlons:
-        dummy[:,1][dummy[:,1]>=179.5] -= 360
+    dummy[:,1][dummy[:,1]>=179.5] -= 360
     return(dummy)
 
 def f2t_fixer(IDs, verbose, thresidx=1997000 ):
@@ -1771,7 +1769,7 @@ def f2t_saver(odata, outdir, fout, tstring):
         f.create_dataset("trajdata", data=odata)
 
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
-                    outdir, fout, fixlons, verbose, workdir, lowmem):
+                    outdir, fout, verbose, workdir, lowmem):
     ##-- 1.) load em files
     if lowmem: 
         data = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
@@ -1780,8 +1778,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
         data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
-         dummy = f2t_loader(partdir=partdir, string=time_str[ii],
-                            fixlons=fixlons)[:,selvars] # load
+         dummy = f2t_loader(partdir=partdir, string=time_str[ii])[:,selvars] # load
          dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
          data[ii,dummy.shape[0]:] = np.NaN
@@ -1802,7 +1799,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     ##--5.) return data & trajs arrays (needed for next files)
     return(data, trajs)
 
-def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
+def f2t_recycler(workdir, partdir, selvars, time_str, ryyyy, verbose):
     """
     this could be integrated in ascender, but has been used as such already
     and is thus tested; np.copy not needed here!
@@ -1814,7 +1811,7 @@ def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
                      shape=(len(time_str),2000001,selvars.size))
     new[:-1] = old[1:]
     # load new data | rely on dummy variable
-    dummy = f2t_loader(partdir=partdir, string=time_str[-1],fixlons=fixlons)[:,selvars]
+    dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
     dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
     # insert data, use Nan for rest
     new[-1,:dummy.shape[0]] = dummy[:]
@@ -1824,18 +1821,17 @@ def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
     return(new)
 
 def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
-                 mlat, mlon, outdir, fout, fixlons, verbose, workdir, lowmem):
+                 mlat, mlon, outdir, fout, verbose, workdir, lowmem):
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
     if lowmem:
-        data = f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose)
+        data = f2t_recycler(workdir, partdir, selvars, time_str, ryyyy, verbose)
     else:
         # use loop to avoid RAM spike here
         for ii in range(len(time_str)-1):
             data[ii,:,:] = data[ii+1,:,:]
         # load new data | rely on dummy variable
-        dummy = f2t_loader(partdir=partdir, string=time_str[-1],
-                           fixlons=fixlons)[:,selvars]
+        dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
         # insert new data, use NaN for rest
         data[-1,:dummy.shape[0]] = dummy[:]
