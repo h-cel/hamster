@@ -1705,7 +1705,7 @@ def f2t_loader(partdir, string, fixlons):
     dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
     ## shift lons already to facilitate gridding later
     if fixlons:
-        dummy[:,1][dummy[:,1]>179.5] -= 360
+        dummy[:,1][dummy[:,1]>=179.5] -= 360
     return(dummy)
 
 def f2t_fixer(IDs, verbose, thresidx=1997000 ):
