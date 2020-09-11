@@ -1718,6 +1718,9 @@ def f2t_fixer(IDs, verbose, thresidx=1997000 ):
     return(IDs)
 
 def f2t_seeker(array2D, mask, val, lat, lon):
+    ## check if anything needs to be done at all
+    if mask is None:
+        return(array2D[:,0][np.where(~np.isnan(array2D[:,0]))])
     ## first, we search potential candidates using rectangular box
     imlat, imlon = np.where(mask==val)
     lat1 = lat[imlat].min() -0.5

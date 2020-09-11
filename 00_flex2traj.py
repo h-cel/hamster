@@ -67,7 +67,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskpath, maskval,
 
     
     ##---1.) load netCDF mask
-    mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
+    if maskpath is None:
+        mask = mlat = mlon = None
+    else:
+        mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
         
     ##---2.) create datetime object (covering arrival period + trajectory length)
     fulltime_str = f2t_timelord(ntraj_d=tml, dt_h=dt_h,
