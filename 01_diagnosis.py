@@ -86,9 +86,9 @@ def main_diagnosis(
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2), "%Y-%m-%d")
     # get end date (always 00 UTC of the 1st of the next month)
-    nayyyy          = (datetime_bgn + relativedelta(months=1)).strftime('%Y')
-    nam             = (datetime_bgn + relativedelta(months=1)).strftime('%m')
-    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
+    nayyyy          = (date_bgn + relativedelta(months=1)).strftime('%Y')
+    nam             = (date_bgn + relativedelta(months=1)).strftime('%m')
+    date_end        = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
     timestep        = datetime.timedelta(hours=6)
     date_seq        = []
     fdate_seq       = []
