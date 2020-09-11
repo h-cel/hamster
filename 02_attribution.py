@@ -277,7 +277,7 @@ def main_attribution(
         for i in ntot:
            
             ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
-            if fjumps and ifile_format=='dat.gz' and ary[0,i,0] < 3000:
+            if fjumps and ifile_format=='dat.gz' and (ary[0,i,0] < 3000 or ary[0,i,0] > 2e6):
                 if fjumpsfull:
                     # checking for the full trajectory length
                     jumps = np.array([])
