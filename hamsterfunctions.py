@@ -653,8 +653,8 @@ def gridder(plon, plat, pval,
     if (lon_mid>179.5):  lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
     if (lon_mid<-180.5): lon_mid += 360    # same for the other direction; only correct for 1deg grid (as below)!
     # 2. get grid index
-    ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid
     # and assign pval to gridcell (init. with 0's)
     gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
@@ -675,8 +675,8 @@ def mgridder(mlon, mlat, pval,
         - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
     # and assign pval to gridcell (init. with 0's)
     gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
@@ -692,8 +692,8 @@ def midpindex(parray,glon,glat):
     elif (mlon<-180.5):
         mlon += 360      # same for the other direction; only correct for 1deg grid (as below)!
     # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
     return ind_lat, ind_lon
 
 def arrpindex(parray,glon,glat):
@@ -1733,8 +1733,8 @@ def f2t_seeker(array2D, mask, val, lat, lon):
     idx = []
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
-        if mask[np.where(lat==np.round(array2D[jdx,2]))[0][0],
-                np.where(lon==np.round(array2D[jdx,1]))[0][0]] == val:
+        if mask[np.argmin(np.abs(lat-array2D[jdx,2])),
+                np.argmin(np.abs(lon-array2D[jdx,1]))] == val:
             idx.append(jdx)
     ## finally, return parcel IDs
     pid = array2D[:,0][np.asarray(idx)]
@@ -1878,8 +1878,8 @@ def whereinmask(mask, maskval, masklat, masklon, trajlat, trajlon):
     idx = []
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
-        if mask[np.where(masklat==np.round(trajlat[jdx]))[0][0],
-                np.where(masklon==np.round(trajlon[jdx]))[0][0]] == maskval:
+        if mask[np.argmin(np.abs(masklat-trajlat[jdx])),
+                np.argmin(np.abs(masklon-trajlon[jdx]))] == maskval:
             idx.append(jdx)
     ## finally, return indices for which traj in mask
     return(np.asarray(idx))
