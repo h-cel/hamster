@@ -94,7 +94,7 @@ def main_attribution(
             print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! additional statistics in: \t"+str(statfile))
-        if fwritestats:
+        if fwritestats and mattribution=="linear":
             print(" ! precipitation statistics in: \t"+str(pattfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
