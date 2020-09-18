@@ -4,7 +4,7 @@
 MAIN FUNCTIONS FOR 00_flex2traj
 """
 
-def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskpath, maskval,
+def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                    idir, odir, fout, workdir, lowmem):
 
     ###--- MISC ---################################################################
@@ -67,10 +67,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskpath, maskval,
 
     
     ##---1.) load netCDF mask
-    if maskpath is None:
+    if maskfile is None:
         mask = mlat = mlon = None
     else:
-        mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
+        mask, mlat, mlon = f2t_maskgrabber(path=maskfile)
         
     ##---2.) create datetime object (covering arrival period + trajectory length)
     fulltime_str = f2t_timelord(ntraj_d=tml, dt_h=dt_h,

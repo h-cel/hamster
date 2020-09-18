@@ -94,7 +94,7 @@ print(printsettings(args,args.steps))
 if args.steps ==0:
     main_flex2traj(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
                    tml=args.ctraj_len,
-                   maskpath=maskfile,
+                   maskfile=maskfile,
                    maskval=args.maskval,
                    idir=ipath_f2t,
                    odir=opath_f2t,
