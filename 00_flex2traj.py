@@ -67,7 +67,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
 
     
     ##---1.) load netCDF mask
-    if maskfile is None:
+    if maskfile is None or maskval==-999:
         mask = mlat = mlon = None
     else:
         mask, mlat, mlon = f2t_maskgrabber(path=maskfile)
