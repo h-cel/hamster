@@ -58,15 +58,6 @@ ibase_f2t = content.ibase_f2t
 ipath_f2t = content.ipath_f2t
 opath_f2t = content.opath_f2t
 wpath_f2t = wpath
-# create output directories if they do not exist
-if not os.path.exists(opath_f2t):
-        os.makedirs(opath_f2t)
-if not os.path.exists(opath_DGN):
-        os.makedirs(opath_DGN)
-if not os.path.exists(opath_ATR):
-        os.makedirs(opath_ATR)
-if not os.path.exists(opath_BIA):
-        os.makedirs(opath_BIA)
 
 ###########################################################################
 ##--- MAIN
@@ -89,6 +80,16 @@ exec(open("hamsterfunctions.py").read())
 args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args,args.steps))
+
+# create output directories if they do not exist (in dependency of step)
+if args.steps==0 and not os.path.exists(opath_f2t):
+        os.makedirs(opath_f2t)
+if args.steps==1 and not os.path.exists(opath_DGN):
+        os.makedirs(opath_DGN)
+if args.steps==2 and not os.path.exists(opath_ATR):
+        os.makedirs(opath_ATR)
+if args.steps==3 and not os.path.exists(opath_BIA):
+        os.makedirs(opath_BIA)
 
 ## (3) RUN main scripts with arguments
 if args.steps ==0:
