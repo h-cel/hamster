@@ -64,8 +64,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     outdir = odir+"/"+str(ryyyy)
     if not os.path.exists(outdir): # could use isdir too
         os.makedirs(outdir)
+    tmpworkdir = workdir+"/tmp"
     if lowmem:
-        tmpworkdir = workdir+"/tmp"
         if not os.path.exists(tmpworkdir):
             os.mkdir(tmpworkdir)
 
