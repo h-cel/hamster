@@ -1635,19 +1635,21 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
                     #if verbose: print("EOF reached.")
                     break
                 if verbose: print(str(idx)+" "+str(pid))
-                x       = struct.unpack('f', strm.read(4))[0]
-                y       = struct.unpack('f', strm.read(4))[0]
-                z       = struct.unpack('f', strm.read(4))[0]
-                itramem = struct.unpack('i', strm.read(4))[0]
-                oro     = struct.unpack('f', strm.read(4))[0]
-                pv      = struct.unpack('f', strm.read(4))[0]
-                qq      = struct.unpack('f', strm.read(4))[0]
-                rho     = struct.unpack('f', strm.read(4))[0]
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                tropo   = struct.unpack('f', strm.read(4))[0]
-                temp    = struct.unpack('f', strm.read(4))[0]
-                mass    = struct.unpack('f', strm.read(4))[0]
-                flist.append([pid, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
+                pdata   = struct.unpack("3fi8f", strm.read(12*4))
+                #x       = struct.unpack('f', strm.read(4))[0]
+                #y       = struct.unpack('f', strm.read(4))[0]
+                #z       = struct.unpack('f', strm.read(4))[0]
+                #itramem = struct.unpack('i', strm.read(4))[0]
+                #oro     = struct.unpack('f', strm.read(4))[0]
+                #pv      = struct.unpack('f', strm.read(4))[0]
+                #qq      = struct.unpack('f', strm.read(4))[0]
+                #rho     = struct.unpack('f', strm.read(4))[0]
+                #hmix    = struct.unpack('f', strm.read(4))[0]
+                #tropo   = struct.unpack('f', strm.read(4))[0]
+                #temp    = struct.unpack('f', strm.read(4))[0]
+                #mass    = struct.unpack('f', strm.read(4))[0]
+                flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
+                #flist.append([pid, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
                 idx     += 1
             except:
                 print("Maximum number of parcels reached.")
