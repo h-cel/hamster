@@ -1639,8 +1639,10 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         flist   = []
         # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
         tdata   = strm.read(int(maxn)*(8+4+12*4))
+        # get number of parcels from length of tdata
+        nparc   = math.floor(1+len(tdata)/60)
         # decode data per parcel
-        while idx<=maxn:
+        while idx<=nparc:
             try:
                 pid, pdata  = f2t_eraint_format(tdata, idx-1)
                 flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
