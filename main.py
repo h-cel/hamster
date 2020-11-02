@@ -81,6 +81,11 @@ args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
+# just waiting a random number of seconds (max. 30s)
+# to avoid overlap of path.exist and makedirs between parallel jobs (any better solution?)
+waiter  = random.randint(0,30)
+time.sleep(waiter)
+
 # create output directories if they do not exist (in dependency of step)
 if args.steps==0 and not os.path.exists(opath_f2t):
         os.makedirs(opath_f2t)
