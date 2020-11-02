@@ -1630,7 +1630,9 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     @author: Jessica Keune 06/2020
     #modified: Dominik Schumacher, 06/2020 ---> do use pid!
     #modified: Jessica Keune, 10/2020 --> speeeeeedup!!! 
+    # ATTN: hardcoded for 60 bytes / parcel from FP-ERA-INT
     """
+    nbytes_per_parcel = (8+4+12*4)
     with gzip.open(ifile, 'rb') as strm:
         # skip header
         _       = strm.read(4) # dummy
@@ -1639,10 +1641,10 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         idx     = 1
         flist   = []
         # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
-        tdata   = strm.read(int(maxn)*(8+4+12*4))
+        tdata   = strm.read(int(maxn)*nbytes_per_parcel)
         # get number of parcels from length of tdata
-        nparc   = math.floor(1+len(tdata)/60)
-        pdata   = struct.unpack((nparc-1)*'2fi3fi8f', tdata[0:((nparc-1)*60)])
+        nparc   = math.floor(1+len(tdata)/(nbytes_per_parcel))
+        pdata   = struct.unpack((nparc-1)*'2fi3fi8f', tdata[0:((nparc-1)*nbytes_per_parcel)])
         flist   = list(pdata)
         # decode data per parcel
         #while idx<=nparc:
