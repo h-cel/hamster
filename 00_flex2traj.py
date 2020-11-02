@@ -61,9 +61,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     if verbose: print(logo)
 
     ##---0.) pepare workdir
-    tmpworkdir = workdir+"/tmp"
-    if not os.path.exists(tmpworkdir):
-        os.mkdir(tmpworkdir)
+    if lowmem:
+        tmpworkdir = workdir+"/tmp"
+        if not os.path.exists(tmpworkdir):
+            os.mkdir(tmpworkdir)
 
     
     ##---1.) load netCDF mask
@@ -94,10 +95,11 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                    verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
    
     ##---5.) clean up
-    for f in os.listdir(tmpworkdir):
-        pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
-        if re.search(pattern, f):
-            os.remove(os.path.join(tmpworkdir, f))
+    if lowmem:
+        for f in os.listdir(tmpworkdir):
+            pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
+            if re.search(pattern, f):
+                os.remove(os.path.join(tmpworkdir, f))
  
     ##---6.) done
     if verbose: 
