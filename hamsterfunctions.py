@@ -1613,15 +1613,6 @@ def consistencycheck(attr,diag,bcscale,debug):
 
 #################################################################################################
 
-def f2t_eraint_format(tdata, icount):
-    # specific format of the FP-ERA-INT runs 
-    # will only work for this specific run...
-    pbyte   = 8+4+12*4
-    _       = struct.unpack('2f', tdata[(icount*pbyte):((icount*pbyte)+8)])[0]
-    pid     = struct.unpack('i', tdata[((icount*pbyte)+8):((icount*pbyte)+8+4)])[0]
-    pdata   = struct.unpack('3fi8f', tdata[((icount*pbyte)+(8+4)):((icount+1)*pbyte)])
-    return pid, pdata
-
 def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     """
     @action: reads binary outputs from FLEXPART
@@ -1646,18 +1637,8 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         nparc   = math.floor(len(tdata)/(nbytes_per_parcel))
         pdata   = struct.unpack((nparc)*'2fi3fi8f', tdata[0:((nparc)*nbytes_per_parcel)])
         flist   = list(pdata)
-        # decode data per parcel
-        #while idx<=nparc:
-        #    try:
-        #        pid, pdata  = f2t_eraint_format(tdata, idx-1)
-        #        flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
-        #        idx     += 1
-        #    except:
-        #        if verbose: print("Maximum number of parcels reached: "+str(idx))
-        #        break
     strm.close()
     return(np.reshape(flist, newshape=(nparc,15))[:,2:]) # 2: to skip dummy + time
-    #return(np.reshape(flist, newshape=(idx-1,13)))
 
 def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
