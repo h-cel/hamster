@@ -1629,6 +1629,7 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     @output: returns a numpy array of dimension nparcels x 13
     @author: Jessica Keune 06/2020
     #modified: Dominik Schumacher, 06/2020 ---> do use pid!
+    #modified: Jessica Keune, 10/2020 --> speeeeeedup!!! 
     """
     with gzip.open(ifile, 'rb') as strm:
         # skip header
@@ -1641,17 +1642,20 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         tdata   = strm.read(int(maxn)*(8+4+12*4))
         # get number of parcels from length of tdata
         nparc   = math.floor(1+len(tdata)/60)
+        pdata   = struct.unpack((nparc-1)*'2fi3fi8f', tdata[0:((nparc-1)*60)])
+        flist   = list(pdata)
         # decode data per parcel
-        while idx<=nparc:
-            try:
-                pid, pdata  = f2t_eraint_format(tdata, idx-1)
-                flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
-                idx     += 1
-            except:
-                if verbose: print("Maximum number of parcels reached: "+str(idx))
-                break
+        #while idx<=nparc:
+        #    try:
+        #        pid, pdata  = f2t_eraint_format(tdata, idx-1)
+        #        flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
+        #        idx     += 1
+        #    except:
+        #        if verbose: print("Maximum number of parcels reached: "+str(idx))
+        #        break
     strm.close()
-    return(np.reshape(flist, newshape=(idx-1,13)))
+    return(np.reshape(flist, newshape=(nparc-1,15))[:,2:]) # 2: to skip dummy + time
+    #return(np.reshape(flist, newshape=(idx-1,13)))
 
 def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
