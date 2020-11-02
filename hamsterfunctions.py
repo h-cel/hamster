@@ -1643,8 +1643,8 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
         tdata   = strm.read(int(maxn)*nbytes_per_parcel)
         # get number of parcels from length of tdata
-        nparc   = math.floor(1+len(tdata)/(nbytes_per_parcel))
-        pdata   = struct.unpack((nparc-1)*'2fi3fi8f', tdata[0:((nparc-1)*nbytes_per_parcel)])
+        nparc   = math.floor(len(tdata)/(nbytes_per_parcel))
+        pdata   = struct.unpack((nparc)*'2fi3fi8f', tdata[0:((nparc)*nbytes_per_parcel)])
         flist   = list(pdata)
         # decode data per parcel
         #while idx<=nparc:
@@ -1656,7 +1656,7 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         #        if verbose: print("Maximum number of parcels reached: "+str(idx))
         #        break
     strm.close()
-    return(np.reshape(flist, newshape=(nparc-1,15))[:,2:]) # 2: to skip dummy + time
+    return(np.reshape(flist, newshape=(nparc,15))[:,2:]) # 2: to skip dummy + time
     #return(np.reshape(flist, newshape=(idx-1,13)))
 
 def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
