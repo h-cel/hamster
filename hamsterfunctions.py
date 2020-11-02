@@ -1750,9 +1750,6 @@ def f2t_constructor(array3D, pid, time_str):
     return(trajs)
 
 def f2t_saver(odata, outdir, fout, tstring):
-    ## create dir if not present
-    if not os.path.exists(outdir): # could use isdir too
-        os.mkdir(outdir)
     with h5py.File(outdir+'/'+fout+'_'+tstring+'.h5', 'w') as f:
         f.create_dataset("trajdata", data=odata)
 

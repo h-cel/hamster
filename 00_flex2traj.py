@@ -60,7 +60,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     
     if verbose: print(logo)
 
-    ##---0.) pepare workdir
+    ##---0.) pepare directories
+    outdir = odir+"/"+str(ryyyy)
+    if not os.path.exists(outdir): # could use isdir too
+        os.makedirs(outdir)
     if lowmem:
         tmpworkdir = workdir+"/tmp"
         if not os.path.exists(tmpworkdir):
@@ -82,7 +85,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     data, trajs = f2t_establisher(partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                 outdir=odir+'/'+str(ryyyy), fout=fout,
+                                 outdir=outdir, fout=fout,
                                  verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
     
     ##---4.) continue with next steps
@@ -91,7 +94,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
         data, trajs = f2t_ascender(data=data, partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                   outdir=odir+'/'+str(ryyyy), fout=fout,
+                                   outdir=outdir, fout=fout,
                                    verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
    
     ##---5.) clean up
