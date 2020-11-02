@@ -1613,6 +1613,15 @@ def consistencycheck(attr,diag,bcscale,debug):
 
 #################################################################################################
 
+def f2t_eraint_format(tdata, icount):
+    # specific format of the FP-ERA-INT runs 
+    # will only work for this specific run...
+    pbyte   = 8+4+12*4
+    _       = struct.unpack('2f', tdata[(icount*pbyte):((icount*pbyte)+8)])[0]
+    pid     = struct.unpack('i', tdata[((icount*pbyte)+8):((icount*pbyte)+8+4)])[0]
+    pdata   = struct.unpack('3fi8f', tdata[((icount*pbyte)+(8+4)):((icount+1)*pbyte)])
+    return pid, pdata
+
 def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     """
     @action: reads binary outputs from FLEXPART
@@ -1622,24 +1631,22 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     #modified: Dominik Schumacher, 06/2020 ---> do use pid!
     """
     with gzip.open(ifile, 'rb') as strm:
+        # skip header
         _       = strm.read(4) # dummy
         _       = struct.unpack('i', strm.read(4))[0] # time
+        # start reading data
         idx     = 1
         flist   = []
-        # repeat
+        # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
+        tdata   = strm.read(int(maxn)*(8+4+12*4))
+        # decode data per parcel
         while idx<=maxn:
             try:
-                _       = strm.read(8) # dummy
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    #if verbose: print("EOF reached.")
-                    break
-                if verbose: print(str(idx)+" "+str(pid))
-                pdata   = struct.unpack("3fi8f", strm.read(12*4))
+                pid, pdata  = f2t_eraint_format(tdata, idx-1)
                 flist.append([pid, pdata[0], pdata[1], pdata[2], pdata[3], pdata[4], pdata[5], pdata[6], pdata[7], pdata[8], pdata[9], pdata[10], pdata[11]])
                 idx     += 1
             except:
-                print("Maximum number of parcels reached.")
+                if verbose: print("Maximum number of parcels reached: "+str(idx))
                 break
     strm.close()
     return(np.reshape(flist, newshape=(idx-1,13)))
