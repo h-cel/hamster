@@ -1696,6 +1696,13 @@ def f2t_loader(partdir, string):
     return(dummy)
 
 def f2t_fixer(IDs, verbose, thresidx=1997000 ):
+    # get duplicate IDs independent of threshidx...
+    #u, c    = np.unique(IDs, return_counts=True)
+    #dup     = u[c > 1]
+    print("\t --> Number of duplicates (unconditional): "+ str(len(dup)))
+    # add 2e6 to the second duplicate...
+    #for i in range(len(dup)):
+    #    IDs[np.where(IDs==dup[i])[0][1]] += 2e6
     ## simply shift to indices > 2e6
     IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
     if verbose:
