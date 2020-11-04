@@ -1642,7 +1642,7 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     # remove last line if data is bs (pid = -99999)
     if np.any(pdata[:,0]<0):
         pdata = np.delete(pdata, np.where(pdata[:,0]<0), axis=0)
-    return(np.reshape(flist, newshape=(nparc,15))[:,2:]) # 2: to skip dummy + time
+    return(pdata)
 
 def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
