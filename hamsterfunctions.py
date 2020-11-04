@@ -1704,7 +1704,7 @@ def f2t_fixer(IDs, verbose, thresidx=1997000 ):
     #for i in range(len(dup)):
     #    IDs[np.where(IDs==dup[i])[0][1]] += 2e6
     ## simply shift to indices > 2e6
-    IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
+    IDs[thresidx:][IDs[thresidx:]<(2e6-thresidx)] += 2e6
     if verbose:
         ndupl = np.where(IDs>2e6)[0].size
         if ndupl == 0:
