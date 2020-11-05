@@ -1745,6 +1745,7 @@ def f2t_locator(array2D, pid, tstring):
     pidx = np.where(np.isin(array2D[:,0], pid, assume_unique=False))[0] # <----- set True ??
     chosen = np.NaN*np.ones(shape=(len(pid), array2D.shape[1]))
     if not pidx.size == len(pid):
+        ## ATTN: this needs to be adjusted for other runs...
         print("---- INFO: not all parcels present in file --> partposit_"+tstring)
         idx_pidok = np.where(np.isin(pid, array2D[pidx,0], assume_unique=False))[0] # <----- set True ??
         chosen[idx_pidok,:] = array2D[pidx,:]
