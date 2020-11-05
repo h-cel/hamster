@@ -128,8 +128,12 @@ def main_attribution(
     # keep a copy of datetime.date formatted list for arv_idx further below
     fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
     # convert these datetime.date objects to datetime.datetime objects for netCDF writing
-    for idt in range(len(fdate_seq)):
-        fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
+    #for idt in range(len(fdate_seq)):
+    #    fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
+    #print(fdate_seq)
+    fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, datetime.timedelta(hours=24), ret="datetime")
+    #print(fdate_seq)
+
     # NOTE: better to keep these as lists to maintain consistency
 
     # calculate number of time steps, also aggregated to daily resolution
