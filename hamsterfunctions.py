@@ -1659,13 +1659,13 @@ def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     if lon.min()==-180 and lon.max()<180:
         pass
     elif np.array_equal(lon, np.arange(0,360)):
-        mask, lon = f2t_lon360to180(mask, lon, 1)
+        mask, lon = ncdf_lon360to180(mask, lon, 1)
     else:
         # this case is not implemented
         return(None)
     return(mask, lat, lon)
 
-def f2t_lon360to180(ary, lons, lonaxis=1):
+def ncdf_lon360to180(ary, lons, lonaxis=1):
     # bring lon axis to front to handle any shape of ary
     ary = np.moveaxis(ary, lonaxis, 0)
     ary_bu  = np.copy(ary)
