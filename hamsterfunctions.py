@@ -1587,6 +1587,11 @@ def ncdf_lon360to180(ary, lons, lonaxis=1):
     ary = np.moveaxis(ary, 0, lonaxis)
     return(ary, lons)
 
+def nextmonth(ddate):
+    nyyyy   = (ddate + relativedelta(months=1)).strftime('%Y')
+    nmm     = (ddate + relativedelta(months=1)).strftime('%m')
+    return(nyyyy, nmm)
+
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
     fulltime.append(tbgn - datetime.timedelta(days=ntraj_d, hours=dt_h))
