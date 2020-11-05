@@ -1670,7 +1670,9 @@ def f2t_loader(partdir, string, fixlons=True, fixids=True):
     ## fix longitudes
     if fixlons:
         dummy[:,1][dummy[:,1]>=179.5] -= 360
-    return(dummy)
+    ## sort array by parcel ID    
+    sorted_dummy = dummy[np.argsort(dummy[:,0]),:]
+    return(sorted_dummy)
 
 def f2t_fixid(IDs, verbose, thresidx=1997000 ):
     # get duplicate IDs independent of threshidx...
