@@ -1627,13 +1627,11 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         # skip header
         _       = strm.read(4) # dummy
         _       = struct.unpack('i', strm.read(4))[0] # time
-        # start reading data
-        idx     = 1
-        flist   = []
         # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
         tdata   = strm.read(int(maxn)*nbytes_per_parcel)
         # get number of parcels from length of tdata
         nparc   = math.floor(len(tdata)/(nbytes_per_parcel))
+        # decode binary data
         pdata   = struct.unpack((nparc)*'2fi3fi8f', tdata[0:((nparc)*nbytes_per_parcel)])
         flist   = list(pdata)
     strm.close()
