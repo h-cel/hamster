@@ -69,7 +69,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     if maskfile is None or maskval==-999:
         mask = mlat = mlon = None
     else:
-        mask, mlat, mlon = f2t_maskgrabber(path=maskfile)
+        mask, mlat, mlon = f2t_maskgrabber(maskfile)
         
     ##---2.) create datetime object (covering arrival period + trajectory length)
     fulltime_str = f2t_timelord(ntraj_d=tml, dt_h=dt_h,

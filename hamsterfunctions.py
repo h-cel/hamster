@@ -941,7 +941,6 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     # print info
     print("\n * Created and wrote to file: "+ofile+" of dimension "+str(myshape)+" !\n")
 
-
 def append2csv(filename, listvals):
     # Open file in append mode
     with open(filename, 'a+', newline='\n') as write_obj:
@@ -1552,9 +1551,9 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         pdata = np.delete(pdata, np.where(pdata[:,0]<0), axis=0)
     return(pdata)
 
-def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
+def f2t_maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
-    with nc4.Dataset(path, mode='r') as f:
+    with nc4.Dataset(maskfile, mode='r') as f:
         mask = np.asarray(f[maskvar][:])
         lat = np.asarray(f[latvar][:])
         lon = np.asarray(f[lonvar][:])
