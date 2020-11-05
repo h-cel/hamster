@@ -180,10 +180,10 @@ def main_attribution(
             ###--- PRELOOP v2
             # NOTE: code further below this function call here could also be moved to
             #       first main loop iteration, so that no dim checking necessary
-            ntrajstep, _, _ = readtrajdim(idate    = datetime_seq[0],
-                                          ipath    = ipath+"/"+str(ryyyy),
-                                          ifile_base = ifile_base,
-                                          verbose=False)
+            ntrajstep = readtraj(idate = datetime_seq[0],
+                                 ipath = ipath+"/"+str(ryyyy),
+                                 ifile_base = ifile_base,
+                                 verbose=False).shape[0]
 
             if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'

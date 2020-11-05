@@ -1818,35 +1818,6 @@ def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1
         IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
     return(sel)
 
-def readtrajdim(idate,      # run year
-                ipath,      # input data path
-                ifile_base, # loop over ifile_base filenames for each date
-                verbose=True): # NOTE: temporary solution
-    """
-    INPUT
-        - idate :       date as string [YYYYMMDDHH]
-        - ipath :       path where input files are located
-        - ifile_base :  base filename(s); ONLY FIRST ENTRY USED HERE
-    ACTION
-        determines dimensions of 3D array: ntrajlength x nparticles x nvars
-    RETURNS
-        - ntrajlength,  nparticles,  nvars
-    """
-    # skip any other ifile_base entries
-    iifile_base = ifile_base[0]
-    # Check if file exists /file format
-    ifile   = str(ipath+"/"+iifile_base+idate+".h5")
-    if not os.path.isfile(ifile):
-        print(ifile + " does not exist!")
-    elif os.path.isfile(ifile):
-        # Read file
-        if verbose:
-            print(" Reading " + ifile)
-        with h5py.File(ifile, "r") as f:
-            ntrajstep, nparticle, nvars = np.array(f['trajdata']).shape
-
-    return(ntrajstep, nparticle, nvars)
-
 def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
     ppospath = os.path.join(ipath_f2t,str(ryyyy))
     extendarchive = []
