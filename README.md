@@ -64,14 +64,14 @@ maskfile  = "./flexpart_data/masks/mask.nc"
 
 # INPUT paths
 ipath_f2t = "./flexpart_data/orig"
-ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t2"
-ipath_ATR = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t62/MON"
+ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2"
+ipath_ATR = ".flexpart_data/00_flex2traj/myregion"
 ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 
 # INPUT file name base
 ibase_f2t = "bahamas"
-ibase_DGN = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"]
-ibase_ATR = ["bahamas_AUXTRAJ"]
+ibase_DGN = ["global_"]
+ibase_ATR = ["bahamas"]
 
 # OUTPUT paths
 opath_f2t = "./flexpart_data/hamster/00_eraglobal"
@@ -111,7 +111,6 @@ for more details on setting dates, thresholds and other options. All user-specif
 - `-–cprec_dqv` and `–-cprec_rh` to adjust the detection of preciptation
 - `--cevap_c` and `--cheat_cc` to adjust the Clausius-Clapeyron criteria for evaporation and sensible heat, respectively
 - `--cevap_hgt`, etc., to filter for specific heights
-- `--fjumps` and `--fjumpsfull` to filter for jumps larger than `--cjumps` at the beginning of the trajectory or along the full trajectory
 - ... among a lot of other options. 
 
 
@@ -120,15 +119,18 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True) and requires additional data for the previous month in 02_attribution. 
 - The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (DANGER!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
-- If you use particle-o-matic output instead of flex2traj to construct trajectories for 02_attribution, make sure you dump only the following 6 variables (in addition to the default: parcel id, longitude, latitude): `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti` as the order, in which hamster reads in variables is fixed. 
+- While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 
+#### One important note. 
+- The mask for 00_flextraj has to be bigger than the mask for 02_attribution. This is especially important for precipitation, as we use the midpoint to detect precipitation over a certain region. If the same mask is used, your results of 02_attribution and 03_biascorrection won't be representative. 
+
 #### A very basic example. 
-1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
-2. Adjust the maskfile in `paths.txt`. 
-3. Construct trajectories arriving at the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month; and to repeat this task for the previous month if you're interested in heat advection), either (i) using particle-o-matic or (ii) using flex2traj, e.g., 
+1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. Make two masks: one that represents the area you're really interested in (for the attribution), and one that is +4-5° bigger on each side (used for flex2traj). 
+2. Adjust the maskfile in `paths.txt` (first, for flex2traj, i.e. the extended mask). 
+3. Construct trajectories arriving at the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month):
   ```python
-  python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 15 --maskval 1 
+  python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 16 --maskval 1 
   ```
 4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria (using the already available global data set on the VO), e.g.,  
   ```python
@@ -136,11 +138,12 @@ for more details on setting dates, thresholds and other options. All user-specif
   ...
   python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --expid "KAS_prh70_cpbl2_cevapcc0.9"
   ```
-5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days (using the h5 data created with flex2traj and hence using `--iformat h5`), e.g., 
+5. Adjust the mask in `paths.txt` to your region of interest (the smaller one) to continue with the attribution.
+6. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
   ```python
-  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9" --iformat h5
+  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9"
   ```
-6. Bias-correct the established source and aggregate the results over the backward time dimension
+7. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
   python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --bc_aggbwtime True
   ```
@@ -151,12 +154,11 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Everything is coded for a **backward** analysis (Where does the heat come from? What is the source region of precipitation?). Adjustments for a forward analysis can be easily made, but require code changes.
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
-- 'flex2traj' is the python replacement for *particle-o-matic*. 'flex2traj' is currently under development and is not yet optimized, but already functional. You can still use outputs from particle-o-matic using `--iformat dat.gz` (in fact, this is the default), or use output from flex2traj (produced with `--steps 0`) using `--iformat h5`. Once fully integrated, `ipath_ATR` should be set identical to `opath_f2t`. Note that regardless of the sink region size, 'flex2traj' reads in and temporarily stores data from all parcels during the backward analysis time period; in case of 15-day trajectories and 9 variables of interest, this translates to a numpy array with a size of ~ 7.2 GB (62 x 2e6 x 9 x 64 bit). For a small sink region with ~13'000 parcels (trajectory array: 62 x 13'000 x 9 x 64 bit ~ 0.5 GB), a total of 10 GB RAM is recommended to safely run flex2traj with a trajectory length of 15 days. There is a low-memory option available (`--lowmem`), for which the large data array is written as a temporary .dat file to the disk in the current working directory, but runtimes are considerably slower.    
-- In paths.txt, we are using lists for `ibase_DGN` and `ibase_ATR` - if these contain more than one entry, a loop over those filenames is performed. `ibase_f2t` only contains one string as we assume that you're only filtering for *one* region with flex2traj though (once particle-o-matic is replaced, we may adjust all this... `ibase_f2t` is then identical to `ibase_ATR` etc.)
-- Directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
+- Note that regardless of the sink region size, 'flex2traj' reads in and temporarily stores data from all parcels during the backward analysis time period; in case of 15-day trajectories and 9 variables of interest, this translates to a numpy array with a size of ~ 7.2 GB (62 x 2e6 x 9 x 64 bit). For a small sink region with ~13'000 parcels (trajectory array: 62 x 13'000 x 9 x 64 bit ~ 0.5 GB), a total of 10 GB RAM is recommended to safely run flex2traj with a trajectory length of 15 days.
+- In paths.txt, we are using lists for `ibase_DGN` and `ibase_ATR` - if these contain more than one entry, a loop over those filenames is performed. `ibase_f2t` only contains one string as we assume that you're only filtering for *one* region with flex2traj though.
+- flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
-- If you use particle-o-matic output instead of flex2traj to construct trajectories for 02_attribution, make sure you dump **only** the following 6 variables (in addition to the default: parcel id, longitude, latitude): `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti` - this needs to be considered as the order, in which hamster reads in variables, is fixed. 
 
 ## Epilogue
 Keep in mind that... 
