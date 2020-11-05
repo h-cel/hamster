@@ -1790,27 +1790,6 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     ##--5.) return data & trajs arrays (needed for next files)
     return(data, trajs)
 
-def f2t_recycler(workdir, partdir, selvars, time_str, ryyyy, verbose):
-    """
-    this could be integrated in ascender, but has been used as such already
-    and is thus tested; np.copy not needed here!
-    """
-    # must make a new memmap; data[:-1] = data[1:] results in growing array
-    old = np.memmap(workdir+'/'+time_str[-2]+'.dat', mode='r', dtype='float64',
-                     shape=(len(time_str),2000001,selvars.size))
-    new = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
-                     shape=(len(time_str),2000001,selvars.size))
-    new[:-1] = old[1:]
-    # load new data | rely on dummy variable
-    dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
-    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-    # insert data, use Nan for rest
-    new[-1,:dummy.shape[0]] = dummy[:]
-    new[-1,dummy.shape[0]:] = np.NaN
-    # remove old array (file)
-    os.remove(workdir+'/'+time_str[-2]+'.dat')
-    return(new)
-
 def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
                  mlat, mlon, outdir, fout, verbose, workdir):
     ##--1.) move old data & fill current step with new data  
