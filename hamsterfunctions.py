@@ -1692,13 +1692,13 @@ def f2t_loader(partdir, string, fixlons=True, fixids=True):
     dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
     ## fix parcel ID's (ATTN: specific to the global FP-ERA-Interim run!)
     if fixids:
-        dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+        dummy[:,0] = f2t_fixid(IDs=dummy[:,0], verbose=verbose) # fix IDs
     ## fix longitudes
     if fixlons:
         dummy[:,1][dummy[:,1]>=179.5] -= 360
     return(dummy)
 
-def f2t_fixer(IDs, verbose, thresidx=1997000 ):
+def f2t_fixid(IDs, verbose, thresidx=1997000 ):
     # get duplicate IDs independent of threshidx...
     #u, c    = np.unique(IDs, return_counts=True)
     #dup     = u[c > 1]
