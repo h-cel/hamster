@@ -42,7 +42,6 @@ def main_attribution(
         raise SystemExit("---- ABORTED: no can do, not implemented!")
  
     #### OUTPUT FILES
-    mainpath  = ipath+str(ryyyy)+"/"
     ## main netcdf output
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
