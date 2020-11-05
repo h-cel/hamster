@@ -78,10 +78,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     #---3.) handle first step
     if verbose: print("\n---- Reading files to begin constructing trajectories ...\n")
     data, trajs = f2t_establisher(partdir=idir+'/'+str(ryyyy), selvars=selvars,
-                                 time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
+                                 time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                      
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=outdir, fout=fout,
-                                 verbose=verbose, workdir=workdir)
+                                 verbose=verbose)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
@@ -90,7 +90,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=outdir, fout=fout,
-                                   verbose=verbose, workdir=workdir)
+                                   verbose=verbose)
    
     ##---5.) done
     if verbose: 

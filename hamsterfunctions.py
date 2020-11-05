@@ -1764,7 +1764,7 @@ def f2t_saver(odata, outdir, fout, tstring):
         f.create_dataset("trajdata", data=odata)
 
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
-                    outdir, fout, verbose, workdir):
+                    outdir, fout, verbose):
     ##-- 1.) load em files
     data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
@@ -1791,7 +1791,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     return(data, trajs)
 
 def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
-                 mlat, mlon, outdir, fout, verbose, workdir):
+                 mlat, mlon, outdir, fout, verbose):
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
     # use loop to avoid RAM spike here
