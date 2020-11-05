@@ -70,8 +70,8 @@ ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 
 # INPUT file name base
 ibase_f2t = "bahamas"
-ibase_DGN = ["global_"]
-ibase_ATR = ["bahamas"]
+ibase_DGN = "global"
+ibase_ATR = "bahamas"
 
 # OUTPUT paths
 opath_f2t = "./flexpart_data/hamster/00_eraglobal"
@@ -155,8 +155,8 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
 - Note that regardless of the sink region size, 'flex2traj' reads in and temporarily stores data from all parcels during the backward analysis time period; in case of 15-day trajectories and 9 variables of interest, this translates to a numpy array with a size of ~ 7.2 GB (62 x 2e6 x 9 x 64 bit). For a small sink region with ~13'000 parcels (trajectory array: 62 x 13'000 x 9 x 64 bit ~ 0.5 GB), a total of 10 GB RAM is recommended to safely run flex2traj with a trajectory length of 15 days.
-- In paths.txt, we are using lists for `ibase_DGN` and `ibase_ATR` - if these contain more than one entry, a loop over those filenames is performed. `ibase_f2t` only contains one string as we assume that you're only filtering for *one* region with flex2traj though.
-- flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002")
+- In paths.txt, use a single string to describe the filename base for `ibase_DGN`, `ìbase_ATR`, `ìbase_f2t` (before, `ibase_DGN` and `ibase_ATR` used to be lists of string and had to have underscores at the end --> this is not needed anymore!) -- so you can only read in **one** file from now on. 
+- flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002") - these are created automatically.
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
 
