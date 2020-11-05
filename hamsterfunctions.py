@@ -1551,7 +1551,7 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
         pdata = np.delete(pdata, np.where(pdata[:,0]<0), axis=0)
     return(pdata)
 
-def f2t_maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
+def maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
     with nc4.Dataset(maskfile, mode='r') as f:
         mask = np.asarray(f[maskvar][:])

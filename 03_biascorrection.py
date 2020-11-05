@@ -175,10 +175,8 @@ def main_biascorrection(
         print(" * Starting bias correction...")
     
     ## P-scaling requires arrival region mask
-    with nc4.Dataset(maskfile) as f:
-        mask = f['mask'][:]
-        mlat = f['lat'][:]
-        mlon = f['lon'][:]   
+    mask, mlat, mlon = maskgrabber(maskfile)
+
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     

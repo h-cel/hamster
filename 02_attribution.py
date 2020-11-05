@@ -60,10 +60,7 @@ def main_attribution(
     
     #### INPUT FILES
     ## read netcdf mask
-    with nc4.Dataset(maskfile) as f:
-        mask = f['mask'][:]
-        mlat = f['lat'][:]
-        mlon = f['lon'][:]
+    mask, mlat, mlon = maskgrabber(maskfile)
 
     #### DISCLAIMER
     if verbose:
