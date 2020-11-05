@@ -24,9 +24,6 @@ def main_attribution(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
-           fjumps,
-           fjumpsfull,
-           cjumps,
            refdate,
            fwrite_netcdf,
            precision,
@@ -200,7 +197,7 @@ def main_attribution(
 
     ## prepare STATS
     # number of parcels
-    tneval = tnjumps = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
+    tneval = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
     # precip. statistics
     psum = patt = punatt = pmiss = 0
 
@@ -244,7 +241,7 @@ def main_attribution(
                 ipatt = ipmiss = 0
 
         # STATS: number of parcels per file
-        neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
+        neval = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         # grab extended trajectory data
         if fmemento:
@@ -274,22 +271,6 @@ def main_attribution(
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
            
-            ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
-            if fjumps and (ary[0,i,0] < 3000 or ary[0,i,0] > 2e6):
-                if fjumpsfull:
-                    # checking for the full trajectory length
-                    jumps = np.array([])
-                    for it in range(ntrajleng-1):
-                        jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
-                else:
-                    jumps = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1])
-                if np.any(jumps > cjumps):
-                    njumps += int(1)
-                    findjump = np.argwhere(jumps > cjumps)
-                    if np.any(findjump > 0):
-                        print(" !!! ATTENTION: YOU JUST ENCOUNTERED A JUMP IN THE TAIL OF THE TRAJECTORY !!!")
-                    continue
-
             ## - 2.0) only evaluate if the parcel is in target region
 	        ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
@@ -664,13 +645,8 @@ def main_attribution(
                             if fmemento:
                                 pidlog[ID] = ix # NOTE: double-check
 
-        if fjumps:
-            neval   = len(ntot)-njumps
-        else: 
-            neval   = len(ntot)
+        neval   = len(ntot)
         if verbose:
-            if fjumps:
-                print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
             if nnevalh!=0:
                 print(" --- ATTENTION: "+str(nnevalh)+"/"+str(neval-nnevala)+" arriving parcels are not associated with any heat uptakes...")
@@ -707,7 +683,6 @@ def main_attribution(
         
         ## STATS summary
         tneval  += neval
-        tnjumps += njumps
         tnnevala+= nnevala
         tnnevalm+= nnevalm
         tnevalp += nevalp
@@ -743,7 +718,7 @@ def main_attribution(
         if fwrite_netcdf:
             print("\n Successfully written: "+ofile+" !\n")
 
-    writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
+    writestats_02(statfile,tneval,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
     if verbose: 
         with open(statfile, 'r') as sfile:
             print(sfile.read())
