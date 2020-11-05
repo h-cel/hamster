@@ -147,49 +147,6 @@ def printsettings(args,step):
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
 
-def read_partposit(ifile, maxn=3e6, verbose=True):
-    """
-    @action: reads binary outputs from FLEXPART
-    @input:  partposit_DATE.gz 
-    @output: returns a numpy array of dimension nparcels x 13
-    @author: Jessica Keune 06/2020
-    """
-    with gzip.open(ifile, 'rb') as strm:
-        dummy   = strm.read(4)
-        time    = struct.unpack('i', strm.read(4))[0]
-        idx     = 1
-        flist   = []
-        # repeat
-        while idx<=maxn:
-            try:
-                dummy   = strm.read(8)
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    print("EOF reached.")
-                    break
-                if verbose:
-                    print(str(idx)+" "+str(pid))
-                x       = struct.unpack('f', strm.read(4))[0]
-                y       = struct.unpack('f', strm.read(4))[0]
-                z       = struct.unpack('f', strm.read(4))[0]
-                itramem = struct.unpack('i', strm.read(4))[0]
-                oro     = struct.unpack('f', strm.read(4))[0]
-                pv      = struct.unpack('f', strm.read(4))[0]
-                qq      = struct.unpack('f', strm.read(4))[0]
-                rho     = struct.unpack('f', strm.read(4))[0]
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                tropo   = struct.unpack('f', strm.read(4))[0]
-                temp    = struct.unpack('f', strm.read(4))[0]
-                mass    = struct.unpack('f', strm.read(4))[0]
-                # ATTENTION: pid can occur twice! use idx instead as particle ID
-                flist.append([idx, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
-                idx     += 1
-            except:
-                break
-    strm.close()
-    return(np.reshape(flist, newshape=(idx-1,13)))
-        
-
 def readtraj(idate,      # run year
             ipath,      # input data path
             ifile_base, # loop over ifile_base filenames for each date
