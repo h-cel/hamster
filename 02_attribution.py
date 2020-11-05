@@ -122,17 +122,10 @@ def main_attribution(
     
     # arrival dates (6h seq)
     datetime_seq, fdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
-
-    # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
-    fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
-    # keep a copy of datetime.date formatted list for arv_idx further below
-    fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
-    # convert these datetime.date objects to datetime.datetime objects for netCDF writing
-    #for idt in range(len(fdate_seq)):
-    #    fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
-    #print(fdate_seq)
-    fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, datetime.timedelta(hours=24), ret="datetime")
-    #print(fdate_seq)
+    # daily dates (24h for netCDF writing)
+    fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, 
+                               datetime.timedelta(hours=24), ret="datetime")
+    fdateasdate     = datetime2date(fdate_seq)
 
     # NOTE: better to keep these as lists to maintain consistency
 

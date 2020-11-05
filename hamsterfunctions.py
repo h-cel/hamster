@@ -1592,6 +1592,10 @@ def nextmonth(ddate):
     nmm     = (ddate + relativedelta(months=1)).strftime('%m')
     return(nyyyy, nmm)
 
+def datetime2date(datetimeseq):
+    dateseq = np.unique([idate.date() for idate in datetimeseq]).tolist()
+    return(dateseq)
+
 def timelord(startdate, enddate, timestep, ret="", fformat='%Y%m%d%H'):
     datetime_seq    = []  
     fdatetime_seq   = []  
