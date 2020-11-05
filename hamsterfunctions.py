@@ -1764,13 +1764,9 @@ def f2t_saver(odata, outdir, fout, tstring):
         f.create_dataset("trajdata", data=odata)
 
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
-                    outdir, fout, verbose, workdir, lowmem):
+                    outdir, fout, verbose, workdir):
     ##-- 1.) load em files
-    if lowmem: 
-        data = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
-                         shape=(len(time_str),2000001,selvars.size))
-    else:
-        data = np.empty(shape=(len(time_str),2000001,selvars.size))
+    data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          dummy = f2t_loader(partdir=partdir, string=time_str[ii])[:,selvars] # load
@@ -1816,21 +1812,18 @@ def f2t_recycler(workdir, partdir, selvars, time_str, ryyyy, verbose):
     return(new)
 
 def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
-                 mlat, mlon, outdir, fout, verbose, workdir, lowmem):
+                 mlat, mlon, outdir, fout, verbose, workdir):
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
-    if lowmem:
-        data = f2t_recycler(workdir, partdir, selvars, time_str, ryyyy, verbose)
-    else:
-        # use loop to avoid RAM spike here
-        for ii in range(len(time_str)-1):
-            data[ii,:,:] = data[ii+1,:,:]
-        # load new data | rely on dummy variable
-        dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
-        dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-        # insert new data, use NaN for rest
-        data[-1,:dummy.shape[0]] = dummy[:]
-        data[-1,dummy.shape[0]:] = np.NaN
+    # use loop to avoid RAM spike here
+    for ii in range(len(time_str)-1):
+        data[ii,:,:] = data[ii+1,:,:]
+    # load new data | rely on dummy variable
+    dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
+    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+    # insert new data, use NaN for rest
+    data[-1,:dummy.shape[0]] = dummy[:]
+    data[-1,dummy.shape[0]:] = np.NaN
 
     ##--2.) find all IDs
     if verbose: print("       searching IDs", end='')
@@ -1846,10 +1839,7 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
     f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4]) # omit mins & secs
 
     ##--5.) return updated data & trajs arrays
-    if lowmem:
-        return(None, trajs)
-    else:
-        return(data, trajs)
+    return(data, trajs)
 
 def checknan(x):
     x[x>=9.9e+36]=np.nan

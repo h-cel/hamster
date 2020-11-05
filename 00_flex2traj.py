@@ -81,7 +81,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=outdir, fout=fout,
-                                 verbose=verbose, workdir=workdir, lowmem=False)
+                                 verbose=verbose, workdir=workdir)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
@@ -90,7 +90,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=outdir, fout=fout,
-                                   verbose=verbose, workdir=workdir, lowmem=False)
+                                   verbose=verbose, workdir=workdir)
    
     ##---5.) done
     if verbose: 
