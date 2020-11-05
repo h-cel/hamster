@@ -1766,8 +1766,8 @@ def maxlastn(series, n=4):
         maxy[ii,:-ii] = series[ii:]
     return(np.max(maxy, axis=0))
 
-def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1997000):
-    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]]
+def grabhpbl_partposit(ifile):
+    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
     return(dummy)
 
 def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
@@ -1792,7 +1792,8 @@ def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
         # go back from first timestep..
         timestr = (fdatetime_beg - datetime.timedelta(hours=qq*6+6)).strftime('%Y%m%d%H')+'0000'
 
-        # append data with shifted duplicate IDs to list
-        extendarchive.append(readhpbl_partposit(ppospath+'/partposit_'+timestr+'.gz'))
+        # append data
+        ifile = ppospath+'/partposit_'+timestr+'.gz'
+        extendarchive.append(grabhpbl_partposit(ifile))
 
     return(extendarchive)
