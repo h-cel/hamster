@@ -1592,6 +1592,22 @@ def nextmonth(ddate):
     nmm     = (ddate + relativedelta(months=1)).strftime('%m')
     return(nyyyy, nmm)
 
+def timelord(startdate, enddate, timestep, ret="", fformat='%Y%m%d%H'):
+    datetime_seq    = []  
+    fdatetime_seq   = []  
+    idatetime       = startdate
+    # create datetime string & datetime object
+    while idatetime <= enddate:
+        datetime_seq.append(idatetime.strftime(fformat))
+        fdatetime_seq.append(idatetime)
+        idatetime += timestep
+    if ret == "string":
+        return(datetime_seq)
+    elif ret == "datetime":
+        return(fdatetime_seq)
+    else:
+        return(datetime_seq, fdatetime_seq)
+
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
     fulltime.append(tbgn - datetime.timedelta(days=ntraj_d, hours=dt_h))

@@ -109,21 +109,19 @@ def main_attribution(
         print("\n--- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
 
     ## -- DATES
-    # NOTE: we begin at 06 UTC...
-    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-06", "%Y-%m-%d-%H") 
-    # get end date (always 00 UTC of the 1st of the next month)
-    nayyyy, nam     = nextmonth(datetime_bgn)
-    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
-    timestep        = datetime.timedelta(hours=6)
-    datetime_seq    = []
-    fdatetime_seq   = []
-    idatetime       = datetime_bgn
+    dt              = 6 # hardcoded for FLEXPART ERA-INTERIM with 6h
+    timestep        = datetime.timedelta(hours=dt)
 
-    # create arrival datetime string & datetime object
-    while idatetime <= datetime_end:
-        datetime_seq.append(idatetime.strftime('%Y%m%d%H'))
-        fdatetime_seq.append(idatetime)
-        idatetime += timestep
+    # get start date (to read trajectories) - NOTE: we begin at 06 UTC...
+    sdate_bgn       = str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-"+str(dt).zfill(2)
+    datetime_bgn    = datetime.datetime.strptime(sdate_bgn, "%Y-%m-%d-%H")
+    # get end date (to read trajectories) - NOTE: always 00 UTC of the 1st of the next month
+    nayyyy, nam     = nextmonth(datetime_bgn)
+    sdate_end       = str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00"
+    datetime_end    = datetime.datetime.strptime(sdate_end, "%Y-%m-%d-%H")
+    
+    # arrival dates (6h seq)
+    datetime_seq, fdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
 
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
     fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
