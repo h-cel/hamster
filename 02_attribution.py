@@ -40,7 +40,11 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
- 
+
+    #### INPUT PATHS (incl. year)
+    ipath_pp   = os.path.join(ipath_f2t,str(ryyyy))    # raw partposit data
+    ipath_tr   = os.path.join(ipath,str(ryyyy))        # trajectory data (h5 files)
+
     #### OUTPUT FILES
     ## main netcdf output
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
@@ -73,7 +77,8 @@ def main_attribution(
         precision = "f8"
         print(" ! Single precision should only be used for testing. Reset to double-precision.")
     if verbose:
-        print(" ! using input path: \t", 	ipath)
+        print(" ! using raw partposit input path: \t", 	ipath_pp)
+        print(" ! using trajectory data input path: \t", 	ipath_tr)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
         print(" ! using attribution method (P): \t" +str(mattribution))
@@ -177,13 +182,13 @@ def main_attribution(
             # NOTE: code further below this function call here could also be moved to
             #       first main loop iteration, so that no dim checking necessary
             ntrajstep = readtraj(idate = datetime_seq[0],
-                                 ipath = ipath+"/"+str(ryyyy),
+                                 ipath = ipath_tr,
                                  ifile_base = ifile_base,
                                  verbose=False).shape[0]
 
             if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'
-                extendarchive = grabmesomehpbl(pposbasepath=ipath_f2t, ryyyy=ryyyy,
+                extendarchive = grabmesomehpbl(ipath = ipath_pp,
                                                fdatetime_beg=fdatetime_seq[0], tml=tml,
                                                verbose=verbose)
             else:
@@ -211,7 +216,7 @@ def main_attribution(
 
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readtraj(idate    = datetime_seq[ix], 
-                       ipath    = ipath+"/"+str(ryyyy), 
+                       ipath    = ipath_tr,
                        ifile_base = ifile_base, 
                        verbose=verbose)
 

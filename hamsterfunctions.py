@@ -1770,8 +1770,7 @@ def grabhpbl_partposit(ifile):
     dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
     return(dummy)
 
-def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
-    ppospath = os.path.join(ipath_f2t,str(ryyyy))
+def grabmesomehpbl(ipath, fdatetime_beg, tml, verbose):
     extendarchive = []
 
     if verbose:
@@ -1793,7 +1792,7 @@ def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
         timestr = (fdatetime_beg - datetime.timedelta(hours=qq*6+6)).strftime('%Y%m%d%H')+'0000'
 
         # append data
-        ifile = ppospath+'/partposit_'+timestr+'.gz'
+        ifile = ipath+'/partposit_'+timestr+'.gz'
         extendarchive.append(grabhpbl_partposit(ifile))
 
     return(extendarchive)
