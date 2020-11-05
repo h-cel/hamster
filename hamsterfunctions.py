@@ -376,8 +376,8 @@ def get_refnpart(refdate, ryyyy, glon, glat):
 
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readtraj(idate    = refdate,
-                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
-                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
+                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2/"+str(ryyyy),
+                           ifile_base = ["global_"])
     nparticle   = ary.shape[1]
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
