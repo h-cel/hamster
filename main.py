@@ -105,8 +105,7 @@ if args.steps ==0:
                    idir=ipath_f2t,
                    odir=opath_f2t,
                    fout=ibase_f2t,
-                   workdir=wpath_f2t,
-                   lowmem=args.lowmem)
+                   workdir=wpath_f2t)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,

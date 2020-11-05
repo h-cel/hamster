@@ -5,7 +5,7 @@ MAIN FUNCTIONS FOR 00_flex2traj
 """
 
 def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
-                   idir, odir, fout, workdir, lowmem):
+                   idir, odir, fout, workdir):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -64,11 +64,6 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     outdir = odir+"/"+str(ryyyy)
     if not os.path.exists(outdir): # could use isdir too
         os.makedirs(outdir)
-    tmpworkdir = workdir+"/tmp"
-    if lowmem:
-        if not os.path.exists(tmpworkdir):
-            os.mkdir(tmpworkdir)
-
     
     ##---1.) load netCDF mask
     if maskfile is None or maskval==-999:
@@ -86,7 +81,7 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                  time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                  outdir=outdir, fout=fout,
-                                 verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
+                                 verbose=verbose, workdir=workdir, lowmem=False)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
@@ -95,16 +90,9 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
                                    outdir=outdir, fout=fout,
-                                   verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
+                                   verbose=verbose, workdir=workdir, lowmem=False)
    
-    ##---5.) clean up
-    if lowmem:
-        for f in os.listdir(tmpworkdir):
-            pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
-            if re.search(pattern, f):
-                os.remove(os.path.join(tmpworkdir, f))
- 
-    ##---6.) done
+    ##---5.) done
     if verbose: 
         print("\n\n---- Done! \n     Files with base '"+fout+"' written to:\n    ",odir+'/'+str(ryyyy))
         print("     Dimensions: nstep x nparcel x nvar\n     Var order: ", end='')
