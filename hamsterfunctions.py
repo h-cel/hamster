@@ -1688,10 +1688,14 @@ def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
-def f2t_loader(partdir, string):
+def f2t_loader(partdir, string, fixlons=True, fixids=True):
     dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
-    ## shift lons already to facilitate gridding later
-    dummy[:,1][dummy[:,1]>=179.5] -= 360
+    ## fix parcel ID's (ATTN: specific to the global FP-ERA-Interim run!)
+    if fixids:
+        dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+    ## fix longitudes
+    if fixlons:
+        dummy[:,1][dummy[:,1]>=179.5] -= 360
     return(dummy)
 
 def f2t_fixer(IDs, verbose, thresidx=1997000 ):
@@ -1770,7 +1774,6 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          dummy = f2t_loader(partdir=partdir, string=time_str[ii])[:,selvars] # load
-         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
          data[ii,dummy.shape[0]:] = np.NaN
 
@@ -1799,7 +1802,6 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
         data[ii,:,:] = data[ii+1,:,:]
     # load new data | rely on dummy variable
     dummy = f2t_loader(partdir=partdir, string=time_str[-1])[:,selvars]
-    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
     # insert new data, use NaN for rest
     data[-1,:dummy.shape[0]] = dummy[:]
     data[-1,dummy.shape[0]:] = np.NaN
