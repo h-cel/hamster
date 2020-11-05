@@ -125,9 +125,6 @@ def main_attribution(
         fdatetime_seq.append(idatetime)
         idatetime += timestep
 
-    # figure out when first uptakes occur (for pre-loop)
-    uptdatetime_bgn = datetime_bgn - datetime.timedelta(days=ctraj_len) - datetime.timedelta(hours=3)
-
     # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
     fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
     # keep a copy of datetime.date formatted list for arv_idx further below
@@ -171,12 +168,6 @@ def main_attribution(
         pidlog = -999*np.ones(shape=2100000).astype(int) 
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
-#            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
-#                         ipath, ifile_base,
-#                         ryyyy,
-#                         mask, mlat, mlon, maskval,
-#                         pidlog, tml,
-#                         verbose)
             ###--- PRELOOP v2
             # NOTE: code further below this function call here could also be moved to
             #       first main loop iteration, so that no dim checking necessary
