@@ -88,10 +88,13 @@ def printsettings(args,step):
     ## 01_DIAGNOSIS
     if step == 1 and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
+        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
+        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+
+        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
+        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
     if step == 1 and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
@@ -112,20 +115,23 @@ def printsettings(args,step):
     ## 02_ATTRIBUTION
     if (step == 2) and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
+        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "+
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
-         ))
+        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ 
+        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "+
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
+        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)))
     if (step == 2) and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         +", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)
          + "; REFERENCE: " +
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
         ))
@@ -134,9 +140,9 @@ def printsettings(args,step):
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.1, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         + ", "+ 
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+ ", "+ 
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
