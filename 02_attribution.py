@@ -120,9 +120,9 @@ def main_attribution(
     sdate_end       = str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00"
     datetime_end    = datetime.datetime.strptime(sdate_end, "%Y-%m-%d-%H")
     
-    # arrival dates (6h seq)
+    # file dates (arrival, 6h seq)
     datetime_seq, fdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
-    # daily dates (24h for netCDF writing)
+    # daily arrival dates (24h seq for netCDF writing)
     fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, 
                                datetime.timedelta(hours=24), ret="datetime")
     fdateasdate     = datetime2date(fdate_seq)
