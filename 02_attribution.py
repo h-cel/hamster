@@ -9,7 +9,7 @@ MAIN FUNCTIONS FOR 02_attribution
 
 def main_attribution(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, ifile_format, ipath_f2t,
+           ipath, ifile_base, ipath_f2t,
            opath, ofile_base,
            mode,
            gres,
@@ -175,7 +175,7 @@ def main_attribution(
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
 #            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
-#                         ipath, ifile_base, ifile_format,
+#                         ipath, ifile_base,
 #                         ryyyy,
 #                         mask, mlat, mlon, maskval,
 #                         pidlog, tml,
@@ -186,7 +186,6 @@ def main_attribution(
             ntrajstep, _, _ = readtrajdim(idate    = datetime_seq[0],
                                           ipath    = ipath+"/"+str(ryyyy),
                                           ifile_base = ifile_base,
-                                          ifile_format = ifile_format,
                                           verbose=False)
 
             if ntrajstep < tml+2+4:
@@ -221,7 +220,6 @@ def main_attribution(
         ary = readtraj(idate    = datetime_seq[ix], 
                        ipath    = ipath+"/"+str(ryyyy), 
                        ifile_base = ifile_base, 
-                       ifile_format = ifile_format,
                        verbose=verbose)
 
         nparcel     = ary.shape[1]
@@ -277,7 +275,7 @@ def main_attribution(
         for i in ntot:
            
             ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
-            if fjumps and ifile_format=='dat.gz' and (ary[0,i,0] < 3000 or ary[0,i,0] > 2e6):
+            if fjumps and (ary[0,i,0] < 3000 or ary[0,i,0] > 2e6):
                 if fjumpsfull:
                     # checking for the full trajectory length
                     jumps = np.array([])

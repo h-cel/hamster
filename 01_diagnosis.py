@@ -10,7 +10,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 
 def main_diagnosis(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, ifile_format,
+           ipath, ifile_base,
            opath, ofile_base,
            mode,
            gres,
@@ -140,7 +140,6 @@ def main_diagnosis(
         ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
-                               ifile_format = ifile_format,
                                verbose      = verbose)
         nparticle   = ary.shape[1]
         if verbose:
@@ -161,7 +160,7 @@ def main_diagnosis(
         for i in ntot:
 
             ## check for jumps 
-            if fjumps and ifile_format=='dat.gz' and ary[0,i,0] < 3000:
+            if fjumps and ary[0,i,0] < 3000:
                 jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1]) #lat1,lon1,lat2,lon2
                 if jump > cjumps:
                     njumps += int(1)

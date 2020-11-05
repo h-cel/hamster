@@ -78,7 +78,6 @@ def read_cmdargs():
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
-    parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -195,20 +194,16 @@ def read_partposit(ifile, maxn=3e6, verbose=True):
 def readtraj(idate,      # run year
             ipath,      # input data path
             ifile_base, # loop over ifile_base filenames for each date
-            ifile_format,# file format (dat.gz or h5)
             verbose=True): # NOTE: temporary solution
     """
     INPUT
         - idate :       date as string [YYYYMMDDHH]
         - ipath :       path where input files are located
         - ifile_base :  base filename(s); loop over filenames possible
-        - ifile_format: dat.gz (pom) or .h5 (f2t)
     ACTION
         reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
         flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
         and concatenates all information of files, 
-            - [ifile_base][idate].dat.gz
-        e.g. terabox_NH_AUXTRAJ_2002080100.dat.gz and terabox_SH_AUXTRAJ_2002080100.dat.gz
         to one array (nparticle = SUM ( nparticle[*] ) for all files of ifile_base)
     RETURNS
         - dataar :      data array of dimension (ntrajlength x nparticles x nvars)
@@ -218,7 +213,7 @@ def readtraj(idate,      # run year
     # loop over ifile_base, concatenating files for the same date 
     for iifile_base in ifile_base:
         # Check if file exists /file format
-        ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
+        ifile   = str(ipath+"/"+iifile_base+idate+".h5")
         if not os.path.isfile(ifile):
             print(ifile + " does not exist!")
             break
@@ -226,30 +221,14 @@ def readtraj(idate,      # run year
             # Read file
             if verbose:
                 print(" Reading " + ifile)
-            if ifile_format=="dat.gz":
-                ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-                nparticle   = int(ary_dim[0])
-                ntrajstep   = int(ary_dim[1])
-                nvars       = int(ary_dim[2])
-                if verbose:
-                    print("\t nparticle = ",nparticle, " |  ntrajstep = ",ntrajstep,"  | nvars = ",nvars)
-                ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
-                datav       = (np.asarray(ary_dat).flatten('C'))
-                if dataar is None:
-                    dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
-                else:
-                    dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
-            if ifile_format=="h5":
-                if dataar is None:
-                    with h5py.File(ifile, "r") as f:
-                        dataar      = np.array(f['trajdata'])
-                else:
-                    with h5py.File(ifile, "r") as f:
-                        dataar      = np.append(dataar, np.array(f['trajdata']), axis=1)
-
+            if dataar is None:
+                with h5py.File(ifile, "r") as f:
+                    dataar      = np.array(f['trajdata'])
+            else:
+                with h5py.File(ifile, "r") as f:
+                    dataar      = np.append(dataar, np.array(f['trajdata']), axis=1)
     # flip time axis    (TODO: flip axis depending on forward/backward flag)
     dataar          = dataar[::-1,:,:]
-
     return(dataar)
 
 
@@ -398,7 +377,7 @@ def get_refnpart(refdate, ryyyy, glon, glat):
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readtraj(idate    = refdate,
                            ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
-                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"], ifile_format="dat.gz")
+                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"])
     nparticle   = ary.shape[1]
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
@@ -1036,7 +1015,7 @@ def append2csv(filename, listvals):
         csv_writer.writerow(listvals)
 
 def preloop(datetime_bgn, uptdatetime_bgn, timestep,
-            ipath, ifile_base, ifile_format,
+            ipath, ifile_base,
             ryyyy,
             mask, mlat, mlon, maskval,
             pidlog, tml,
@@ -1068,7 +1047,6 @@ def preloop(datetime_bgn, uptdatetime_bgn, timestep,
         ary = readtraj( idate    = predatetime_seq[pix],
                        ipath    = ipath+"/"+str(ryyyy),
                        ifile_base = ifile_base,
-                       ifile_format = ifile_format,
                        verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
 
         nparcel   = ary.shape[1]
@@ -1908,14 +1886,12 @@ def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1
 def readtrajdim(idate,      # run year
                 ipath,      # input data path
                 ifile_base, # loop over ifile_base filenames for each date
-                ifile_format,# file format (dat.gz or h5)
                 verbose=True): # NOTE: temporary solution
     """
     INPUT
         - idate :       date as string [YYYYMMDDHH]
         - ipath :       path where input files are located
         - ifile_base :  base filename(s); ONLY FIRST ENTRY USED HERE
-        - ifile_format: dat.gz (pom) or .h5 (f2t)
     ACTION
         determines dimensions of 3D array: ntrajlength x nparticles x nvars
     RETURNS
@@ -1924,21 +1900,15 @@ def readtrajdim(idate,      # run year
     # skip any other ifile_base entries
     iifile_base = ifile_base[0]
     # Check if file exists /file format
-    ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
+    ifile   = str(ipath+"/"+iifile_base+idate+".h5")
     if not os.path.isfile(ifile):
         print(ifile + " does not exist!")
     elif os.path.isfile(ifile):
         # Read file
         if verbose:
             print(" Reading " + ifile)
-        if ifile_format=="dat.gz":
-            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-            nparticle   = int(ary_dim[0])
-            ntrajstep   = int(ary_dim[1])
-            nvars       = int(ary_dim[2])
-        if ifile_format=="h5":
-            with h5py.File(ifile, "r") as f:
-                ntrajstep, nparticle, nvars = np.array(f['trajdata']).shape
+        with h5py.File(ifile, "r") as f:
+            ntrajstep, nparticle, nvars = np.array(f['trajdata']).shape
 
     return(ntrajstep, nparticle, nvars)
 
