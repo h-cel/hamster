@@ -147,46 +147,24 @@ def printsettings(args,step):
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
 
-def readtraj(idate,      # run year
-            ipath,      # input data path
-            ifile_base, # loop over ifile_base filenames for each date
-            verbose=True): # NOTE: temporary solution
-    """
-    INPUT
-        - idate :       date as string [YYYYMMDDHH]
-        - ipath :       path where input files are located
-        - ifile_base :  base filename(s); loop over filenames possible
-    ACTION
-        reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
-        flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
-        and concatenates all information of files, 
-        to one array (nparticle = SUM ( nparticle[*] ) for all files of ifile_base)
-    RETURNS
-        - dataar :      data array of dimension (ntrajlength x nparticles x nvars)
-    """
-
-    dataar  = None
-    # loop over ifile_base, concatenating files for the same date 
-    for iifile_base in ifile_base:
-        # Check if file exists /file format
-        ifile   = str(ipath+"/"+iifile_base+idate+".h5")
-        if not os.path.isfile(ifile):
-            print(ifile + " does not exist!")
-            break
-        elif os.path.isfile(ifile):
-            # Read file
-            if verbose:
-                print(" Reading " + ifile)
-            if dataar is None:
-                with h5py.File(ifile, "r") as f:
-                    dataar      = np.array(f['trajdata'])
-            else:
-                with h5py.File(ifile, "r") as f:
-                    dataar      = np.append(dataar, np.array(f['trajdata']), axis=1)
-    # flip time axis    (TODO: flip axis depending on forward/backward flag)
+def readtraj(idate, # date as string [YYYYMMDDHH]
+            ipath,
+            ifile_base,
+            verbose=True):
+    # reads in *h5 data from flex2traj and flips the time axis
+    # returns data array of dimension (ntrajlength x nparticles x nvars)
+    # Check if file exists /file format
+    ifile   = str(ipath+"/"+ifile_base+idate+".h5")
+    if not os.path.isfile(ifile):
+        raise SystemExit(ifile + " does not exist!")
+    elif os.path.isfile(ifile):
+        if verbose:
+            print(" Reading " + ifile)
+        with h5py.File(ifile, "r") as f:
+            dataar      = np.array(f['trajdata'])
+    # flip time axis !!!
     dataar          = dataar[::-1,:,:]
     return(dataar)
-
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
     if (cpbl == 1):
