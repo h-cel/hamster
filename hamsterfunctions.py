@@ -154,7 +154,7 @@ def readtraj(idate, # date as string [YYYYMMDDHH]
     # reads in *h5 data from flex2traj and flips the time axis
     # returns data array of dimension (ntrajlength x nparticles x nvars)
     # Check if file exists /file format
-    ifile   = str(ipath+"/"+ifile_base+idate+".h5")
+    ifile   = str(ipath+"/"+ifile_base+"_"+idate+".h5")
     if not os.path.isfile(ifile):
         raise SystemExit(ifile + " does not exist!")
     elif os.path.isfile(ifile):
@@ -311,7 +311,7 @@ def get_refnpart(refdate, ryyyy, glon, glat):
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readtraj(idate    = refdate,
                            ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2/"+str(ryyyy),
-                           ifile_base = ["global_"])
+                           ifile_base = "global")
     nparticle   = ary.shape[1]
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
