@@ -1767,57 +1767,8 @@ def maxlastn(series, n=4):
     return(np.max(maxy, axis=0))
 
 def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1997000):
-    """
-    @action: reads binary outputs from FLEXPART
-    @input:  partposit_DATE.gz
-    @output: returns a numpy array of dimension nparcels x 13
-    @author: Jessica Keune 06/2020
-    @modified: by DSc
-    """
-    with gzip.open(ifile, 'rb') as strm:
-        _       = strm.read(4) # dummy
-        _       = struct.unpack('i', strm.read(4))[0] # time
-        idx     = 0
-        flist   = []
-        # repeat
-        while idx<maxn:
-            try:
-                _       = strm.read(8) # dummy
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    if verbose: print("EOF reached.")
-                    break
-
-                if verbose: print(str(idx)+" "+str(pid))
-                #x       = struct.unpack('f', strm.read(4))[0]
-                #y       = struct.unpack('f', strm.read(4))[0]
-                #z       = struct.unpack('f', strm.read(4))[0]
-                #itramem = struct.unpack('i', strm.read(4))[0]
-                #oro     = struct.unpack('f', strm.read(4))[0]
-                #pv      = struct.unpack('f', strm.read(4))[0]
-                #qq      = struct.unpack('f', strm.read(4))[0]
-                #rho     = struct.unpack('f', strm.read(4))[0]
-                _ = strm.read(32)
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                #tropo   = struct.unpack('f', strm.read(4))[0]
-                #temp    = struct.unpack('f', strm.read(4))[0]
-                #mass    = struct.unpack('f', strm.read(4))[0]
-                _ = strm.read(12)
-                flist.append([pid, hmix])
-                idx     += 1
-
-            except:
-                print("Maximum number of parcels reached.")
-                break
-    strm.close()
-    # reshape
-    sel = np.reshape(flist, newshape=(idx,2))
-    # shift duplicate IDs
-    if shiftIDs:
-        IDs   = sel[:,0]
-        # no need to change sel, IDs is nothing but a view ;)
-        IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
-    return(sel)
+    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]]
+    return(dummy)
 
 def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
     ppospath = os.path.join(ipath_f2t,str(ryyyy))
