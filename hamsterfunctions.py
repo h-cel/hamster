@@ -1799,7 +1799,7 @@ def grabhpbl_partposit(ifile):
     dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
     return(dummy)
 
-def grabmesomehpbl(ipath, fdatetime_beg, tml, verbose):
+def grabmesomehpbl(ipath, fdates_filelist, verbose):
     extendarchive = []
 
     if verbose:
@@ -1808,20 +1808,17 @@ def grabmesomehpbl(ipath, fdatetime_beg, tml, verbose):
         print("\n ! estimating remaining time for pre-loop ...")
         pretic = timeit.default_timer()
 
-    for qq in range(tml+5):
-        if verbose and qq==1:
+    for it in range(len(fdates_filelist)):
+        if verbose and it==1:
             pretoc = timeit.default_timer()
-            mins   = round((tml+5)*(pretoc-pretic)/60, 2)
+            mins   = round((len(fdates_filelist))*(pretoc-pretic)/60, 2)
             if mins < 1.0:
                 print("  ---> "+str(mins*60)+" seconds to go, how about some stretching in the meantime?")
             else:
                 print("  ---> "+str(mins)+" minutes to go, might want to grab a coffee...")
 
-        # go back from first timestep..
-        timestr = (fdatetime_beg - datetime.timedelta(hours=qq*6+6)).strftime('%Y%m%d%H')+'0000'
-
         # append data
-        ifile = ipath+'/partposit_'+timestr+'.gz'
+        ifile = ipath+'/partposit_'+fdates_filelist[it]+'.gz'
         extendarchive.append(grabhpbl_partposit(ifile))
 
     return(extendarchive)

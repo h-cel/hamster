@@ -121,7 +121,7 @@ def main_attribution(
     datetime_end    = datetime.datetime.strptime(sdate_end, "%Y-%m-%d-%H")
     
     # file dates (arrival, 6h seq)
-    datetime_seq, fdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
+    datetime_seq, fdatetime_seq, ffdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
     # daily arrival dates (24h seq for netCDF writing)
     fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, 
                                datetime.timedelta(hours=24), ret="datetime")
@@ -171,10 +171,12 @@ def main_attribution(
                                  ifile_base = ifile_base,
                                  verbose=False).shape[0]
 
+            # I believe this could be done for parcels of interest / pot. conflict only... but we'll leave it like this for now
             if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'
+                filedates = timelord(fdatetime_seq[0]-(tml+5)*timestep,fdatetime_seq[0]-timestep,timestep, ret="fileformat")
                 extendarchive = grabmesomehpbl(ipath = ipath_pp,
-                                               fdatetime_beg=fdatetime_seq[0], tml=tml,
+                                               fdates_filelist=filedates,
                                                verbose=verbose)
             else:
                 if verbose: print("\n=== \t INFO: no pre-loop needed, trajectories are long enough")
