@@ -159,6 +159,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002") - these are created automatically.
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
+- Use `--maskval -999` (or set maskfile="" in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj.
 
 ## Epilogue
 Keep in mind that... 
