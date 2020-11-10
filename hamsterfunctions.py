@@ -1599,18 +1599,22 @@ def datetime2date(datetimeseq):
 def timelord(startdate, enddate, timestep, ret="", fformat='%Y%m%d%H'):
     datetime_seq    = []  
     fdatetime_seq   = []  
+    ffdatetime_seq  = []
     idatetime       = startdate
     # create datetime string & datetime object
     while idatetime <= enddate:
         datetime_seq.append(idatetime.strftime(fformat))
         fdatetime_seq.append(idatetime)
+        ffdatetime_seq.append(idatetime.strftime('%Y%m%d%H')+'0000')
         idatetime += timestep
     if ret == "string":
         return(datetime_seq)
     elif ret == "datetime":
         return(fdatetime_seq)
+    elif ret == "fileformat":
+        return(ffdatetime_seq)
     else:
-        return(datetime_seq, fdatetime_seq)
+        return(datetime_seq, fdatetime_seq, ffdatetime_seq)
 
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
