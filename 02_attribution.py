@@ -174,9 +174,9 @@ def main_attribution(
             # I believe this could be done for parcels of interest / pot. conflict only... but we'll leave it like this for now
             if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'
-                filedates = timelord(fdatetime_seq[0]-(tml+5)*timestep,fdatetime_seq[0]-timestep,timestep, ret="fileformat")
-                extendarchive = grabmesomehpbl(ipath = ipath_pp,
-                                               fdates_filelist=filedates,
+                preloop_dates = timelord(fdatetime_seq[0]-(tml+5)*timestep,fdatetime_seq[0]-timestep,timestep, ret="fileformat")
+                preloop_files = [ipath_pp+"/partposit_"+idfile+".gz" for idfile in preloop_dates]
+                extendarchive = grabmesomehpbl(filelist=preloop_files,
                                                verbose=verbose)
             else:
                 if verbose: print("\n=== \t INFO: no pre-loop needed, trajectories are long enough")
