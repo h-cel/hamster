@@ -70,6 +70,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
         mask = mlat = mlon = None
     else:
         mask, mlat, mlon = maskgrabber(maskfile)
+        # extend mask (allows use of the same mask for all steps 0-3) - using a sponge of 5deg in both directions here
+        mask    = extendmask(mask=mask, mlat=mlat, mlon=mlon, maskval=maskval, nx=5, ny=5, debug=False)
         
     ##---2.) create datetime object (covering arrival period + trajectory length)
     fulltime_str = f2t_timelord(ntraj_d=tml, dt_h=dt_h,

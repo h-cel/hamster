@@ -1534,6 +1534,51 @@ def ncdf_lon360to180(ary, lons, lonaxis=1):
     ary = np.moveaxis(ary, 0, lonaxis)
     return(ary, lons)
 
+def writemasknc(mask, mlat, mlon, ofile="mask.nc"):
+   # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+    ### create dimensions ###
+    nc_f.createDimension('lat', mlat.size)
+    nc_f.createDimension('lon', mlon.size)
+    # create variables
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    # set attributes
+    nc_f.title          = "HAMSTER: mask"
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    ncmask.units        = '-'
+    # write data
+    longitudes[:]       = mlon
+    latitudes[:]        = mlat
+    ncmask[:]           = mask
+    # close file
+    nc_f.close()
+    print("\n * Created "+str(ofile)+" !")
+
+def extendmask(mask, mlat, mlon, maskval, nx=5, ny=5, debug=False):
+    imlat, imlon = np.where(mask==maskval)
+    lat1 = mlat[imlat].min() -ny
+    lat2 = mlat[imlat].max() +ny
+    lon1 = mlon[imlon].min() -nx
+    lon2 = mlon[imlon].max() +nx
+    # super ugly, but does what it should..
+    ilats   = np.where( (mlat >= lat1) & (mlat <= lat2) )
+    ilons   = np.where( (mlon >= lon1) & (mlon <= lon2) )
+    extmask = np.zeros(shape=mask.shape)
+    dmask   = np.zeros(shape=mask.shape)
+    dmask[ilats,:] += 1
+    dmask[:,ilons] += 1
+    extmask[np.where(dmask==2)]=maskval
+    if debug:
+        writemasknc(extmask,mlat,mlon,"extmask.nc")
+    return(extmask)
+
 def nextmonth(ddate):
     nyyyy   = (ddate + relativedelta(months=1)).strftime('%Y')
     nmm     = (ddate + relativedelta(months=1)).strftime('%m')
