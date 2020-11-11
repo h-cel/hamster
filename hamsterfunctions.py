@@ -1670,12 +1670,14 @@ def find_potential_parcels(plon, plat, mlon, mlat, mask, maskval):
     return(idx_inbox) # ATTN: returns index only (not pid)
 
 def f2t_seeker(array3D, mask, val, lat, lon):
-    ## check if anything needs to be done at all (any arrival point (-1) in extended mask?)
+    ## check if anything needs to be done at all
     if mask is None:
         return(array3D[-1,:,0][np.where(~np.isnan(array3D[-1,:,0]))])
+    ## use an extended mask to make sure we get everything (arriving + midpoint parcels!)
+    extmask   = extendmask(mask=mask, mlat=lat, mlon=lon, maskval=val, nx=5, ny=5, debug=False)
     ## first, we search potential candidates arriving in extended mask, using a rectangular box
     idx_inbox = find_potential_parcels(plon=array3D[-1,:,1], plat=array3D[-1,:,2], 
-                                       mlon=lon, mlat=lat, mask=mask, maskval=val)
+                                       mlon=lon, mlat=lat, mask=extmask, maskval=val)
     ## now check if *really* in mask (slow!)
     idx = []
     for ii in range(idx_inbox.size):
