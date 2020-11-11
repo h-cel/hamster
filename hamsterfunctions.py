@@ -1647,6 +1647,14 @@ def f2t_fixid(IDs, verbose, thresidx=1997000 ):
             print("        --> "+str(ndupl)+" duplicate IDs shifted")
     return(IDs)
 
+def is_parcel_in_mask(plat, plon, mlat, mlon, mask, maskval):
+    imlat   = np.argmin(np.abs(mlat-plat))
+    imlon   = np.argmin(np.abs(mlon-plon))
+    if mask[imlat,imlon] == maskval:
+        return(True)
+    else:
+        return(False)
+
 def f2t_seeker(array2D, mask, val, lat, lon):
     ## check if anything needs to be done at all
     if mask is None:
