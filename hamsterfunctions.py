@@ -1683,14 +1683,14 @@ def f2t_seeker(array3D, mask, val, lat, lon):
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
         # check if arrival point in mask
-        if is_parcel_in_mask(plon=array3D[-1,jdx,1],plat=array3D[-1,jdx,2],mlon=lon,mlat=lat,mask=mask,maskval=val):
+        if is_parcel_in_mask(plon=array3D[-1,jdx,1],plat=array3D[-1,jdx,2],mlon=lon,mlat=lat,mask=extmask,maskval=val):
             idx.append(jdx)
-        else:    
-            # check if midpoint is mask
-            # (only calc. if arrival point is not in mask, to speed up process)   
-            midlat,midlon = midpoint_on_sphere2(array3D[-1,jdx,2],array3D[-1,jdx,1],array3D[-2,jdx,2],array3D[-2,jdx,1])
-            if is_parcel_in_mask(plon=midlon,plat=midlat,mlon=lon,mlat=lat,mask=mask,maskval=val):
-                idx.append(jdx)
+        #else:    
+        #    # check if midpoint is mask
+        #    # (only calc. if arrival point is not in mask, to speed up process)   
+        #    midlat,midlon = midpoint_on_sphere2(array3D[-1,jdx,2],array3D[-1,jdx,1],array3D[-2,jdx,2],array3D[-2,jdx,1])
+        #    if is_parcel_in_mask(plon=midlon,plat=midlat,mlon=lon,mlat=lat,mask=mask,maskval=val):
+        #        idx.append(jdx)
     ## finally, return parcel IDs
     pid = array3D[-1,:,0][np.asarray(idx)]
     return(pid)
