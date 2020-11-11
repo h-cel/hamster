@@ -1669,21 +1669,22 @@ def find_potential_parcels(plon, plat, mlon, mlat, mask, maskval):
                           (plat >= lat1) & (plat <= lat2) )[0]
     return(idx_inbox) # ATTN: returns index only (not pid)
 
-def f2t_seeker(array2D, mask, val, lat, lon):
-    ## check if anything needs to be done at all
+def f2t_seeker(array3D, mask, val, lat, lon):
+    ## check if anything needs to be done at all (any arrival point (-1) in extended mask?)
     if mask is None:
-        return(array2D[:,0][np.where(~np.isnan(array2D[:,0]))])
-    ## first, we search potential candidates using rectangular box
-    idx_inbox = find_potential_parcels(plon=array2D[:,1], plat=array2D[:,2], mlon=lon, mlat=lat, mask=mask, maskval=val)
+        return(array3D[-1,:,0][np.where(~np.isnan(array3D[-1,:,0]))])
+    ## first, we search potential candidates arriving in extended mask, using a rectangular box
+    idx_inbox = find_potential_parcels(plon=array3D[-1,:,1], plat=array3D[-1,:,2], 
+                                       mlon=lon, mlat=lat, mask=mask, maskval=val)
     ## now check if *really* in mask (slow!)
     idx = []
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
-        if mask[np.argmin(np.abs(lat-array2D[jdx,2])),
-                np.argmin(np.abs(lon-array2D[jdx,1]))] == val:
+        if mask[np.argmin(np.abs(lat-array3D[-1,jdx,2])),
+                np.argmin(np.abs(lon-array3D[-1,jdx,1]))] == val:
             idx.append(jdx)
     ## finally, return parcel IDs
-    pid = array2D[:,0][np.asarray(idx)]
+    pid = array3D[-1,:,0][np.asarray(idx)]
     return(pid)
 
 def f2t_locator(array2D, pid, tstring):
@@ -1727,7 +1728,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
 
     ##-- 2.) find IDs within mask
     if verbose: print("       searching IDs", end='')
-    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+    pid_inmask = f2t_seeker(array3D=data[:,:,:],
                             mask=mask, val=maskval, lat=mlat, lon=mlon)
 
     ##-- 3.) grab data for IDs
@@ -1757,7 +1758,7 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
 
     ##--2.) find all IDs
     if verbose: print("       searching IDs", end='')
-    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+    pid_inmask = f2t_seeker(array3D=data[:,:,:],
                             mask=mask, val=maskval, lat=mlat, lon=mlon)
 
     ##--3.) construct new trajectories (trajs recycling option has been removed)
