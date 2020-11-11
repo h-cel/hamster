@@ -1655,21 +1655,26 @@ def is_parcel_in_mask(plat, plon, mlat, mlon, mask, maskval):
     else:
         return(False)
 
+def find_potential_parcels(plon, plat, mlon, mlat, mask, maskval):
+    ## search for potential candidates using rectangular box using min/max of mask extent
+    imlat, imlon = np.where(mask==maskval)
+    dlon = abs(mlon[0]-mlon[1])/2
+    dlat = abs(mlat[0]-mlat[1])/2
+    lat1 = mlat[imlat].min() -dlat
+    lat2 = mlat[imlat].max() +dlat
+    lon1 = mlon[imlon].min() -dlon
+    lon2 = mlon[imlon].max() +dlon
+    ## go for it (this is pretty fast)
+    idx_inbox = np.where( (plon >= lon1) & (plon <= lon2) &
+                          (plat >= lat1) & (plat <= lat2) )[0]
+    return(idx_inbox) # ATTN: returns index only (not pid)
+
 def f2t_seeker(array2D, mask, val, lat, lon):
     ## check if anything needs to be done at all
     if mask is None:
         return(array2D[:,0][np.where(~np.isnan(array2D[:,0]))])
     ## first, we search potential candidates using rectangular box
-    imlat, imlon = np.where(mask==val)
-    dlon = abs(lon[0]-lon[1])/2
-    dlat = abs(lat[0]-lat[1])/2
-    lat1 = lat[imlat].min() -dlat
-    lat2 = lat[imlat].max() +dlat
-    lon1 = lon[imlon].min() -dlon
-    lon2 = lon[imlon].max() +dlon
-    ## go for it (this is pretty fast)
-    idx_inbox = np.where( (array2D[:,1] >= lon1) & (array2D[:,1] <= lon2) &
-                          (array2D[:,2] >= lat1) & (array2D[:,2] <= lat2) )[0]
+    idx_inbox = find_potential_parcels(plon=array2D[:,1], plat=array2D[:,2], mlon=lon, mlat=lat, mask=mask, maskval=val)
     ## now check if *really* in mask (slow!)
     idx = []
     for ii in range(idx_inbox.size):
