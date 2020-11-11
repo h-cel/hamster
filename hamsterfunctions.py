@@ -1661,10 +1661,12 @@ def f2t_seeker(array2D, mask, val, lat, lon):
         return(array2D[:,0][np.where(~np.isnan(array2D[:,0]))])
     ## first, we search potential candidates using rectangular box
     imlat, imlon = np.where(mask==val)
-    lat1 = lat[imlat].min() -0.5
-    lat2 = lat[imlat].max() +0.5
-    lon1 = lon[imlon].min() -0.5
-    lon2 = lon[imlon].max() +0.5
+    dlon = abs(lon[0]-lon[1])/2
+    dlat = abs(lat[0]-lat[1])/2
+    lat1 = lat[imlat].min() -dlat
+    lat2 = lat[imlat].max() +dlat
+    lon1 = lon[imlon].min() -dlon
+    lon2 = lon[imlon].max() +dlon
     ## go for it (this is pretty fast)
     idx_inbox = np.where( (array2D[:,1] >= lon1) & (array2D[:,1] <= lon2) &
                           (array2D[:,2] >= lat1) & (array2D[:,2] <= lat2) )[0]
