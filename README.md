@@ -123,13 +123,13 @@ for more details on setting dates, thresholds and other options. All user-specif
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - Use `--maskval -999` (or set maskfile="" in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
 
-#### One important note. 
-- The mask for 00_flextraj has to be bigger than the mask for 02_attribution. This is especially important for precipitation, as we use the midpoint to detect precipitation over a certain region. If the same mask is used, your results of 02_attribution and 03_biascorrection won't be representative. 
+#### UPDATE (Nov 2020)
+- As of now, we no longer need two masks (previously, an extended mask was needed for flex2traj). 
 
 #### A very basic example. 
-1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. Make two masks: one that represents the area you're really interested in (for the attribution), and one that is +4-5° bigger on each side (used for flex2traj). 
-2. Adjust the maskfile in `paths.txt` (first, for flex2traj, i.e. the extended mask). 
-3. Construct trajectories arriving at the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month):
+1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
+2. Adjust the maskfile in `paths.txt`.
+3. Construct trajectories for parcels whose arrival+midpoints are over the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month):
   ```python
   python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 16 --maskval 1 
   ```
@@ -139,12 +139,11 @@ for more details on setting dates, thresholds and other options. All user-specif
   ...
   python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --expid "KAS_prh70_cpbl2_cevapcc0.9"
   ```
-5. Adjust the mask in `paths.txt` to your region of interest (the smaller one) to continue with the attribution.
-6. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
+5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
   ```python
   python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9"
   ```
-7. Bias-correct the established source and aggregate the results over the backward time dimension
+6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
   python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --bc_aggbwtime True
   ```
