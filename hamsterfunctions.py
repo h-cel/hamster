@@ -1680,8 +1680,7 @@ def f2t_seeker(array3D, mask, val, lat, lon):
     idx = []
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
-        if mask[np.argmin(np.abs(lat-array3D[-1,jdx,2])),
-                np.argmin(np.abs(lon-array3D[-1,jdx,1]))] == val:
+        if is_parcel_in_mask(plon=array3D[-1,jdx,1],plat=array3D[-1,jdx,2],mlon=lon,mlat=lat,mask=mask,maskval=val):
             idx.append(jdx)
     ## finally, return parcel IDs
     pid = array3D[-1,:,0][np.asarray(idx)]
