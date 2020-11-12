@@ -1567,6 +1567,7 @@ def extendmask(mask, mlat, mlon, maskval, nx=5, ny=5, debug=False):
     lat2 = mlat[imlat].max() +ny
     lon1 = mlon[imlon].min() -nx
     lon2 = mlon[imlon].max() +nx
+    ## ATTN this is not yet working close to -180/+180 and -90/90 ... we should probably check for some python functions dealing with grids 
     # super ugly, but does what it should..
     ilats   = np.where( (mlat >= lat1) & (mlat <= lat2) )
     ilons   = np.where( (mlon >= lon1) & (mlon <= lon2) )
