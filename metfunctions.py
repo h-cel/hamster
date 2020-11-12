@@ -214,7 +214,10 @@ def midpoint_on_sphere2(lat1, lon1, lat2, lon2):
     by      = math.cos(lat2) * math.sin(lon2 - lon1)
     latm    = math.atan2(math.sin(lat1) + math.sin(lat2), math.sqrt((math.cos(lat1) + bx) * (math.cos(lat1) + bx) + by**2))
     lonm    = lon1 + math.atan2(by, math.cos(lat1) + bx)
-    return math.degrees(latm), math.degrees(lonm)
+    londeg  = math.degrees(lonm)
+    if (londeg>180): londeg -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    latdeg  = math.degrees(latm)
+    return latdeg, londeg
 
 
 def q2rh(q_kgkg,p_Pa,T_K):
