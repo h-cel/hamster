@@ -1687,6 +1687,9 @@ def f2t_seeker(array3D, mask, val, lat, lon):
         if is_parcel_in_mask(plon=carray3D[-1,ii,1],plat=carray3D[-1,ii,2],mlon=lon,mlat=lat,mask=mask,maskval=val):
             pid.append(carray3D[-1,ii,0])
         else:    
+            if np.any(np.isnan(carray3D[:,ii,0:3])):
+                # parcel disappeared --> skip
+                continue
             # check if midpoint is mask
             # (only calc. if arrival point is not in mask, to speed up process)   
             midlat,midlon = midpoint_on_sphere2(carray3D[-1,ii,2],carray3D[-1,ii,1],carray3D[-2,ii,2],carray3D[-2,ii,1])
