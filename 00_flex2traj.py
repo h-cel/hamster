@@ -5,7 +5,7 @@ MAIN FUNCTIONS FOR 00_flex2traj
 """
 
 def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval, cpbl_strict,
-                   idir, odir, fout, workdir):
+        idir, odir, fout):
 
     ###--- MISC ---################################################################
     logo =""" 
