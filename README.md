@@ -131,18 +131,17 @@ for more details on setting dates, thresholds and other options. All user-specif
 
 #### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` and `--tdiagnosis` can be replaced with `-dgn`). 
-- Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True) and requires additional data for the previous month in 02_attribution. 
+- Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True). This flag requires additional data of the previous month, that is extracted from the trajectories or, if not available from the trajectories, read in from the binary FLEXPART files in a preloop. Hence, the smoothest workflow is obtained if flex2traj dumps trajectories that are one day longer than what is needed in 02_attribution (e.g., run `python main.py --steps 0 --ctraj_len 16` but `python main.py --steps 0 --ctraj_len 15` -- the preloop is not needed in this case). 
 - The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (DANGER!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
 - While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - Use `--maskval -999` (or set maskfile="" in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
-- The smoothest workflow is obtained if flex2traj dumps trajectories that are one day longer than what is needed in 02_attribution (e.g., run `python main.py --steps 0 --ctraj_len 16` but `python main.py --steps 0 --ctraj_len 15` -- the preloop is not needed in this case) 
 
 #### A very basic example. 
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
 2. Adjust the maskfile in `paths.txt`.
-3. Construct trajectories for parcels whose arrival+midpoints are over the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month):
+3. Construct trajectories for parcels whose arrival+midpoints are over the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month and the first day of the following month):
   ```python
   python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 16 --maskval 1 
   ```
@@ -169,13 +168,12 @@ for more details on setting dates, thresholds and other options. All user-specif
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
 - The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
 - Note that regardless of the sink region size, 'flex2traj' reads in and temporarily stores data from all parcels during the backward analysis time period; in case of 15-day trajectories and 9 variables of interest, this translates to a numpy array with a size of ~ 7.2 GB (62 x 2e6 x 9 x 64 bit). For a small sink region with ~13'000 parcels (trajectory array: 62 x 13'000 x 9 x 64 bit ~ 0.5 GB), a total of 10 GB RAM is recommended to safely run flex2traj with a trajectory length of 15 days.
-- In paths.txt, use a single string to describe the filename base for `ibase_DGN`, `ìbase_ATR`, `ìbase_f2t` (before, `ibase_DGN` and `ibase_ATR` used to be lists of string and had to have underscores at the end --> this is not needed anymore!) -- so you can only read in **one** file from now on. 
-- flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002") - these are created automatically.
+- flex2traj-related directories are currently assumed to have an annual structure (e.g., path_f2t_diag + "/2002") - these are created automatically.
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
 
 ## Known errors. 
-- **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
+- **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda) and only on some clusters (victini). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
 
 ## Epilogue
 Keep in mind that... 
