@@ -11,8 +11,10 @@ This section describes the prerequisites required to run HAMSTER, as well as the
 To run HAMSTER, you need 
 * python 3
 * [git](https://git-scm.com/)
+
 and
 * [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
+
 or
 * python 3 and the required modules on a cluster
 
