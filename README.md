@@ -70,22 +70,27 @@ The file paths.txt is not part of **HAMSTER**. Users have to create the file the
 # MASK
 maskfile  = "./flexpart_data/masks/mask.nc"
 
-# INPUT paths
-ipath_f2t = "./flexpart_data/orig"
-ipath_DGN = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2"
-ipath_ATR = ".flexpart_data/00_flex2traj/myregion"
-ipath_REF = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
+# location of original flexpart files (untarred)
+## (untar the original FLEXPART partposit_* files to this directory)
+path_orig = "./flexpart_data/orig"
 
-# INPUT file name base
-ibase_f2t = "bahamas"
-ibase_DGN = "global"
-ibase_ATR = "bahamas"
+# location of the reference data used for bias correction (e.g., ERA-Interim)
+## (available on the VSC Tier-2 HPC clusters)
+path_ref  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
 
-# OUTPUT paths
-opath_f2t = "./flexpart_data/hamster/00_eraglobal"
-opath_DGN = "./flexpart_data/hamster/01_diagnosis"
-opath_ATR = "./flexpart_data/hamster/02_attribution"
-opath_BIA = "./flexpart_data/hamster/03_biascorrection"
+# path and base name for global parcel diag data (t2)
+## (available on the VSC Tier-2 HPC clusters)
+base_f2t_diag = "global"
+path_f2t_diag = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2"
+
+# path and base name for parcel trajectory data
+base_f2t_traj = "bahamas_15d"
+path_f2t_traj = "./flexpart_data/bahamas/f2t_traj"
+
+# paths for processed data
+path_diag = "./flexpart_data/bahamas/diag"
+path_attr = "./flexpart_data/bahamas/attr"
+path_bias = "./flexpart_data/bahamas/bias"
 ```
 
 The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive.
