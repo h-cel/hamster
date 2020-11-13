@@ -10,8 +10,11 @@ This section describes the prerequisites required to run HAMSTER, as well as the
 ### Prerequisites
 To run HAMSTER, you need 
 * python 3
-* [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
 * [git](https://git-scm.com/)
+and
+* [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
+or
+* python 3 and the required modules on a cluster
 
 ### Installation
 1. Clone the repository
@@ -19,11 +22,16 @@ To run HAMSTER, you need
 git clone https://github.ugent.be/jkeune/hamster.git
 cd hamster
 ```
-2. Make an anaconda environment with the necessary python packages
+2. Load the following python 3.7 environment: 
+```
+module load yaff/1.6.0-intel-2019b-Python-3.7.4
+module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
+```
+Alternatively, make an anaconda environment with the necessary python packages
 ```
 conda create -n _newenvironment_ --file requirements.txt
 ```
-or install the packages listed in requirements.txt in your local environment. 
+or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
 
 - - - - 
 ## HAMSTER: modules.
@@ -97,7 +105,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 
 #### The most important settings are: 
 
-- `--steps` to select the part of hamster that is being executed (e.g., `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
+- `--steps` to select the part of hamster that is being executed (e.g., `--steps 0` runs flex2traj, `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
 - `--ayyyy` and `--am` to select the analysis year and month (e.g., `--ayyyy 2002 --am 1`)
 - `--tdiagnosis` to select a diagnosis methodology with (default) criteria (e.g., `--tdiagnosis SOD` for constant thresholds of moisture for evaporation and potential temperature for sensible heat, restricted to the planetary boundary layer (PBL), following Sodemann et al. (2008) and Schumacher et al. (2019); `--tdiagnosis SOD2` to use all moisture uptakes above a threshold to detect and quantify evaporation, following Sodemann (2020); `--tdiagnosis KAS` to select a Clausius-Clapeyron dependent threshold for evaporation and sensible heat fluxes, i.e. define moisture thresholds based on the temperature and temperature-thresholds based on the moisture)
 - `--expid` to name a setting (e.g., `--expid Ghent_SOD`)
@@ -122,9 +130,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - Use `--maskval -999` (or set maskfile="" in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
-
-#### UPDATE (Nov 2020)
-- As of now, we no longer need two masks (previously, an extended mask was needed for flex2traj). 
+- The smoothest workflow is obtained if flex2traj dumps trajectories that are one day longer than what is needed in 02_attribution (e.g., run `python main.py --steps 0 --ctraj_len 16` but `python main.py --steps 0 --ctraj_len 15` -- the preloop is not needed in this case) 
 
 #### A very basic example. 
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
@@ -160,6 +166,9 @@ for more details on setting dates, thresholds and other options. All user-specif
 - flex2traj-related directories are currently assumed to have an annual structure (e.g., ipath_ATR + "/2002") - these are created automatically.
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
+
+## Known errors. 
+- **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
 
 ## Epilogue
 Keep in mind that... 
