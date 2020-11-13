@@ -25,14 +25,14 @@ or
     cd hamster
     ```
 2. Load the following python 3.7 environment: 
-```
-module load yaff/1.6.0-intel-2019b-Python-3.7.4
-module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
-```
+    ```
+    module load yaff/1.6.0-intel-2019b-Python-3.7.4
+    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
+    ```
 Alternatively, make an anaconda environment with the necessary python packages
-```
-conda create -n _newenvironment_ --file requirements.txt
-```
+    ```
+    conda create -n _newenvironment_ --file requirements.txt
+    ```
 or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
 
 - - - - 
