@@ -20,10 +20,10 @@ or
 
 ### Installation
 1. Clone the repository
-```
-git clone https://github.ugent.be/jkeune/hamster.git
-cd hamster
-```
+    ```
+    git clone https://github.ugent.be/jkeune/hamster.git
+    cd hamster
+    ```
 2. Load the following python 3.7 environment: 
 ```
 module load yaff/1.6.0-intel-2019b-Python-3.7.4
