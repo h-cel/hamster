@@ -86,8 +86,10 @@ time.sleep(waiter)
 # create output directories if they do not exist (in dependency of step)
 if args.steps==0 and args.ctraj_len==0 and not os.path.exists(path_f2t_diag):
         os.makedirs(path_f2t_diag)
+        os.makedirs(path_f2t_diag+"/"+str(args.ryyyy))
 if args.steps==0 and args.ctraj_len>0 and not os.path.exists(path_f2t_traj):
         os.makedirs(path_f2t_traj)
+        os.makedirs(path_f2t_traj+"/"+str(args.ryyyy))
 if args.steps==1 and not os.path.exists(path_diag):
         os.makedirs(path_diag)
 if args.steps==2 and not os.path.exists(path_attr):
