@@ -136,7 +136,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
 - While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
-- Use `--maskval -999` (or set maskfile="" in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
+- Use `--maskval -999` (or set maskfile=None in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
 
 #### A very basic example. 
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
