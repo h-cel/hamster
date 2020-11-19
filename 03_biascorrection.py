@@ -176,6 +176,8 @@ def main_biascorrection(
     
     ## P-scaling requires arrival region mask
     mask, mlat, mlon = maskgrabber(maskfile)
+    # currently, only identical grids (mask = attribution = reference data) are supported...
+    gridcheck(mlat,totlats,mlon,totlons)
 
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
