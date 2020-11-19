@@ -175,6 +175,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 
 ## Known errors. 
 - **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda) and only on some clusters (victini). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
+- **Resolutions other than 1°**: the current version only supports grids of 1 degree - for ALL data (mask, reference data, hamster output) - the code should abort if that is not the case, stating that the grids are not identical, but it may not necessarily do so... so check your outputs carefully, if its runs through anyhow (at least step 3 - bias correction - should be erroneous!)
 
 ## Epilogue
 Keep in mind that... 
