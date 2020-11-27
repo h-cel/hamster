@@ -145,28 +145,31 @@ def main_biascorrection(
     if verbose: 
         print(" * Reading reference data...")
     
-    Eref = eraloader_12hourly(var='e',
+    Eref, reflats, reflons = eraloader_12hourly(var='e',
                      datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     Eref = convert_mm_m3(Eref, areas)
         
-    Href = eraloader_12hourly(var='sshf',
+    Href, reflats, reflons = eraloader_12hourly(var='sshf',
                      datapath=ipathR+"/sshf_12hourly/H_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     
-    Pref = eraloader_12hourly(var='tp',
+    Pref, reflats, reflons = eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     Pref = convert_mm_m3(Pref, areas)
      

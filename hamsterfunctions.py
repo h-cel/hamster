@@ -830,7 +830,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     else:
         raise SystemExit("---- aborted: no can do.")
     
-    return daily
+    return daily, reflats, reflons
    
 def checkdim(var):
     # check dimension of variables (has to be consistent) and use 2D, 3D or 4D definitions
