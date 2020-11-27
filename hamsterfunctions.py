@@ -1511,6 +1511,10 @@ def maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
     # lats check (order irrelevant, just must be within [-90,90])
     if not (lat.min()==-90 or lat.max()==90):
         return(None)
+    # lats check - now check order (currently required: -90 --> 90) and adjust if needed
+    if not latsok(lat):
+        mask, lat   = ncdf_fliplats(mask, lat, lataxis=0)
+    #print("LATSOK: "+str(latsok(lat)))
     # lons check
     if lon.min()==-180 and lon.max()<180:
         pass
@@ -1534,6 +1538,19 @@ def ncdf_lon360to180(ary, lons, lonaxis=1):
     # move axis back to where it was
     ary = np.moveaxis(ary, 0, lonaxis)
     return(ary, lons)
+
+def latsok(lats):
+    # returns True if no flip needed; returns False if flip needed
+    # standard for now: -90 --> 90 (contrary to ERA-Int)
+    if lats[0]<lats[-1]:
+        return(True)
+    elif lats[0]>lats[-1]:
+        return(False)
+
+def ncdf_fliplats(ary, lats, lataxis=0):
+    flip_ary     = np.flip(ary, axis=lataxis)
+    flip_lats    = np.flipud(lats)
+    return flip_ary, flip_lats
 
 def writemasknc(mask, mlat, mlon, ofile="mask.nc"):
    # create netCDF4 instance
