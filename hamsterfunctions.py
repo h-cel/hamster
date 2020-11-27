@@ -1514,7 +1514,6 @@ def maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
     # lats check - now check order (currently required: -90 --> 90) and adjust if needed
     if not latsok(lat):
         mask, lat   = ncdf_fliplats(mask, lat, lataxis=0)
-    #print("LATSOK: "+str(latsok(lat)))
     # lons check
     if lon.min()==-180 and lon.max()<180:
         pass
