@@ -104,9 +104,7 @@ def main_attribution(
     
     ## grids
     glon, glat, garea = makegrid(resolution=gres)
-    ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
-    if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
-        print("\n--- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
+    gridcheck(glat,mlat,glon,mlon)
 
     ## -- DATES
     dt              = 6 # hardcoded for FLEXPART ERA-INTERIM with 6h
