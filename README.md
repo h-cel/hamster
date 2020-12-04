@@ -26,7 +26,7 @@ or
     ```
 2. Load the following python 3.7 environment: 
     ```
-    module load yaff/1.6.0-intel-2019b-Python-3.7.4
+    module load h5py/2.10.0-intel-2019b-Python-3.7.4
     module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
     ```
 Alternatively, make an anaconda environment with the necessary python packages
