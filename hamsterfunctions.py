@@ -33,6 +33,7 @@ def read_cmdargs():
     DEP:    uses argparse
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('--pathfile',   '-pf',  help = "name of pathfile (default: paths.txt)",                         metavar ="", type = str,     default = "paths.txt")
     parser.add_argument('--steps',      '-st',  help = "steps performed (0: flex2traj, 1: diagnosis, 2: attribution, 3: bias correction)", metavar ="", type = int,     default = 1)
     parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          metavar ="", type = int,     default = 2002)
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            metavar ="", type = int,     default = 1)

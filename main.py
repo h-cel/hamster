@@ -36,31 +36,10 @@ import calendar
 import h5py
 import re
 
-###########################################################################
-##--- PATHS
-###########################################################################
-
-## determine working directory
-wpath = os.getcwd()
-
-## load input and output paths & input file name base(s)
-content = imp.load_source('',wpath+"/paths.txt") # load like a python module
-path_ref = content.path_ref
-path_orig = content.path_orig
-path_diag = content.path_diag
-path_attr = content.path_attr
-path_bias = content.path_bias
-maskfile  = content.maskfile
-path_f2t_diag = content.path_f2t_diag
-base_f2t_diag = content.base_f2t_diag
-path_f2t_traj = content.path_f2t_traj
-base_f2t_traj = content.base_f2t_traj
 
 ###########################################################################
-##--- MAIN
+##--- FUNCTIONS + COMMAND LINE ARGUMENTS
 ###########################################################################
-
-os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
 exec(open("disclaimer.py").read())
@@ -72,8 +51,8 @@ exec(open("02_attribution.py").read())
 exec(open("03_biascorrection.py").read())
 exec(open("hamsterfunctions.py").read())
 
-## (2) get date, thresholds and flags from command line (job script) 
-#      note: this is where we set the default values now. 
+## (2) COMMAND LINE ARGUMENTS
+# read command line arguments (dates, thresholds and other flags)
 args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args,args.steps))
@@ -83,6 +62,28 @@ print(printsettings(args,args.steps))
 if args.waiter:
     waiter  = random.randint(0,30)
     time.sleep(waiter)
+
+###########################################################################
+##--- PATHS
+###########################################################################
+
+## determine working directory
+wpath = os.getcwd()
+os.chdir(wpath)
+
+## load input and output paths & input file name base(s)
+print("Using paths from: "+ wpath+"/"+args.pathfile)
+content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
+path_ref = content.path_ref
+path_orig = content.path_orig
+path_diag = content.path_diag
+path_attr = content.path_attr
+path_bias = content.path_bias
+maskfile  = content.maskfile
+path_f2t_diag = content.path_f2t_diag
+base_f2t_diag = content.base_f2t_diag
+path_f2t_traj = content.path_f2t_traj
+base_f2t_traj = content.base_f2t_traj
 
 # create output directories if they do not exist (in dependency of step)
 if args.steps==0 and args.ctraj_len==0 and not os.path.exists(path_f2t_diag):
@@ -98,6 +99,9 @@ if args.steps==2 and not os.path.exists(path_attr):
 if args.steps==3 and not os.path.exists(path_bias):
         os.makedirs(path_bias)
 
+###########################################################################
+##--- MAIN
+###########################################################################
 ## (3) RUN main scripts with arguments
 if args.steps ==0:
     if args.ctraj_len==0:
