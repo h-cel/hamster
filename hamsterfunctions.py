@@ -33,6 +33,7 @@ def read_cmdargs():
     DEP:    uses argparse
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('--pathfile',   '-pf',  help = "name of pathfile (default: paths.txt)",                         metavar ="", type = str,     default = "paths.txt")
     parser.add_argument('--steps',      '-st',  help = "steps performed (0: flex2traj, 1: diagnosis, 2: attribution, 3: bias correction)", metavar ="", type = int,     default = 1)
     parser.add_argument('--ayyyy',      '-ay',  help = "analysis year (YYYY)",                                          metavar ="", type = int,     default = 2002)
     parser.add_argument('--am',         '-am',  help = "analysis month (M)",                                            metavar ="", type = int,     default = 1)
@@ -50,10 +51,7 @@ def read_cmdargs():
     parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            metavar ="", type = float,   default = 0.7)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
-    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL - 1: both within max, 2: one within max, 3: not used", metavar ="", type = int,     default = 1)
-    parser.add_argument('--fjumps',     '-fj',  help = "filter out jumps (flag)",                                       metavar ="", type = str2bol, default = True,    nargs='?')
-    parser.add_argument('--fjumpsfull', '-fjf', help = "filter out jumps for full trajectory length (flag)",            metavar ="", type = str2bol, default = False,   nargs='?')
-    parser.add_argument('--cjumps',     '-cj',  help = "threshold to filter for jumps [km]",                            metavar ="", type = int,     default = 2000)
+    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL - 1: both within max, 2: one within max, 3: not used", metavar ="", type = int,     default = 2)
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag, DEVELOPMENT)",                 metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
@@ -78,9 +76,7 @@ def read_cmdargs():
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
-    parser.add_argument('--fix',        '-fx',  help = "flex2traj shift lons to (-180.5, 179.5) [boolean], def: True",  metavar ="", type = str2bol, default = True)
-    parser.add_argument('--lowmem',     '-lm',  help = "flex2traj low memory mode [boolean], def: False",               metavar ="", type = str2bol, default = False)
-    parser.add_argument('--iformat',    '-ff',  help = "input file format ('dat.gz' or 'h5')",                          metavar ="", type = str, default = "dat.gz")
+    parser.add_argument('--waiter',     '-wt',  help = "random waiter to avoid simulatenous access to files",           metavar ="", type = str2bol, default = True, nargs='?')
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -94,18 +90,19 @@ def printsettings(args,step):
     ## 01_DIAGNOSIS
     if step == 1 and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
+        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         +", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)))
+        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+
+        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
+        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
     if step == 1 and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
         "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)
          + "; REFERENCE: " +
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"))
     if step == 1 and args.tdiagnosis in ['SOD2']:
@@ -114,28 +111,29 @@ def printsettings(args,step):
         "[[EVAPORATION]] cevap_dqv = 0.1, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
         "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
     
     ## 02_ATTRIBUTION
     if (step == 2) and args.tdiagnosis in ['KAS']:
         return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
+        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "+
         "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         +", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps)+ ", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
-         ))
+        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ 
+        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "+
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
+        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)))
     if (step == 2) and args.tdiagnosis in ['SOD']:
         return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps) + ", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)
          + "; REFERENCE: " +
         "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
         ))
@@ -144,116 +142,31 @@ def printsettings(args,step):
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
         "[[EVAPORATION]] cevap_dqv = 0.1, " +
         "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         + ", fjumps = "+str(args.fjumps)+", cjumps = "+str(args.cjumps) + ", "+ 
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+", memento = "+str(args.memento) 
+        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+ ", "+ 
+        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+        ", memento = "+str(args.memento)
          + "; REFERENCE: " +
         "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
 
-def read_partposit(ifile, maxn=3e6, verbose=True):
-    """
-    @action: reads binary outputs from FLEXPART
-    @input:  partposit_DATE.gz 
-    @output: returns a numpy array of dimension nparcels x 13
-    @author: Jessica Keune 06/2020
-    """
-    with gzip.open(ifile, 'rb') as strm:
-        dummy   = strm.read(4)
-        time    = struct.unpack('i', strm.read(4))[0]
-        idx     = 1
-        flist   = []
-        # repeat
-        while idx<=maxn:
-            try:
-                dummy   = strm.read(8)
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    print("EOF reached.")
-                    break
-                if verbose:
-                    print(str(idx)+" "+str(pid))
-                x       = struct.unpack('f', strm.read(4))[0]
-                y       = struct.unpack('f', strm.read(4))[0]
-                z       = struct.unpack('f', strm.read(4))[0]
-                itramem = struct.unpack('i', strm.read(4))[0]
-                oro     = struct.unpack('f', strm.read(4))[0]
-                pv      = struct.unpack('f', strm.read(4))[0]
-                qq      = struct.unpack('f', strm.read(4))[0]
-                rho     = struct.unpack('f', strm.read(4))[0]
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                tropo   = struct.unpack('f', strm.read(4))[0]
-                temp    = struct.unpack('f', strm.read(4))[0]
-                mass    = struct.unpack('f', strm.read(4))[0]
-                # ATTENTION: pid can occur twice! use idx instead as particle ID
-                flist.append([idx, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
-                idx     += 1
-            except:
-                break
-    strm.close()
-    return(np.reshape(flist, newshape=(idx-1,13)))
-        
-
-def readtraj(idate,      # run year
-            ipath,      # input data path
-            ifile_base, # loop over ifile_base filenames for each date
-            ifile_format,# file format (dat.gz or h5)
-            verbose=True): # NOTE: temporary solution
-    """
-    INPUT
-        - idate :       date as string [YYYYMMDDHH]
-        - ipath :       path where input files are located
-        - ifile_base :  base filename(s); loop over filenames possible
-        - ifile_format: dat.gz (pom) or .h5 (f2t)
-    ACTION
-        reads trajectories into 3D array of dimension (ntrajlength x nparticles x nvars),
-        flipping time axis (HARDCODED: from backward to 'forward', i.e. to 1 = now, 0 = previous)
-        and concatenates all information of files, 
-            - [ifile_base][idate].dat.gz
-        e.g. terabox_NH_AUXTRAJ_2002080100.dat.gz and terabox_SH_AUXTRAJ_2002080100.dat.gz
-        to one array (nparticle = SUM ( nparticle[*] ) for all files of ifile_base)
-    RETURNS
-        - dataar :      data array of dimension (ntrajlength x nparticles x nvars)
-    """
-
-    dataar  = None
-    # loop over ifile_base, concatenating files for the same date 
-    for iifile_base in ifile_base:
-        # Check if file exists /file format
-        ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
-        if not os.path.isfile(ifile):
-            print(ifile + " does not exist!")
-            break
-        elif os.path.isfile(ifile):
-            # Read file
-            if verbose:
-                print(" Reading " + ifile)
-            if ifile_format=="dat.gz":
-                ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-                nparticle   = int(ary_dim[0])
-                ntrajstep   = int(ary_dim[1])
-                nvars       = int(ary_dim[2])
-                if verbose:
-                    print("\t nparticle = ",nparticle, " |  ntrajstep = ",ntrajstep,"  | nvars = ",nvars)
-                ary_dat     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=2)
-                datav       = (np.asarray(ary_dat).flatten('C'))
-                if dataar is None:
-                    dataar      = np.reshape(datav, (ntrajstep,nparticle,nvars), order='F')
-                else:
-                    dataar      = np.append(dataar, np.reshape(datav, (ntrajstep,nparticle,nvars), order='F'), axis=1)
-            if ifile_format=="h5":
-                if dataar is None:
-                    with h5py.File(ifile, "r") as f:
-                        dataar      = np.array(f['trajdata'])
-                else:
-                    with h5py.File(ifile, "r") as f:
-                        dataar      = np.append(dataar, np.array(f['trajdata']), axis=1)
-
-    # flip time axis    (TODO: flip axis depending on forward/backward flag)
+def readtraj(idate, # date as string [YYYYMMDDHH]
+            ipath,
+            ifile_base,
+            verbose=True):
+    # reads in *h5 data from flex2traj and flips the time axis
+    # returns data array of dimension (ntrajlength x nparticles x nvars)
+    # Check if file exists /file format
+    ifile   = str(ipath+"/"+ifile_base+"_"+idate+".h5")
+    if not os.path.isfile(ifile):
+        raise SystemExit(ifile + " does not exist!")
+    elif os.path.isfile(ifile):
+        if verbose:
+            print(" Reading " + ifile)
+        with h5py.File(ifile, "r") as f:
+            dataar      = np.array(f['trajdata'])
+    # flip time axis !!!
     dataar          = dataar[::-1,:,:]
-
     return(dataar)
-
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
     if (cpbl == 1):
@@ -399,8 +312,8 @@ def get_refnpart(refdate, ryyyy, glon, glat):
 
     ary_npart   = np.zeros(shape=(glat.size,glon.size))
     ary         = readtraj(idate    = refdate,
-                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/particle-o-matic_t0/gglobal/"+str(ryyyy),
-                           ifile_base = ["terabox_NH_AUXTRAJ_", "terabox_SH_AUXTRAJ_"], ifile_format="dat.gz")
+                           ipath    = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2/"+str(ryyyy),
+                           ifile_base = "global")
     nparticle   = ary.shape[1]
     for i in range(nparticle):
         lons, lats, _, _, _, _, _, _, _, _ = readparcel(ary[:,i,:])
@@ -653,8 +566,8 @@ def gridder(plon, plat, pval,
     if (lon_mid>179.5):  lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
     if (lon_mid<-180.5): lon_mid += 360    # same for the other direction; only correct for 1deg grid (as below)!
     # 2. get grid index
-    ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-lat_mid))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-lon_mid))    # index on grid
     # and assign pval to gridcell (init. with 0's)
     gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
@@ -675,8 +588,8 @@ def mgridder(mlon, mlat, pval,
         - array of dimension (glat.size x glon.size) with 0's and one value assigned
     """
     # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
     # and assign pval to gridcell (init. with 0's)
     gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
     gval[ind_lat,ind_lon]    += pval
@@ -692,8 +605,8 @@ def midpindex(parray,glon,glat):
     elif (mlon<-180.5):
         mlon += 360      # same for the other direction; only correct for 1deg grid (as below)!
     # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid # ATTN, works only for 1deg grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid # ATTN, works only for 1deg grid
+    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
+    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
     return ind_lat, ind_lon
 
 def arrpindex(parray,glon,glat):
@@ -918,7 +831,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     else:
         raise SystemExit("---- aborted: no can do.")
     
-    return daily
+    return daily, reflats, reflons
    
 def checkdim(var):
     # check dimension of variables (has to be consistent) and use 2D, 3D or 4D definitions
@@ -1030,66 +943,11 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     # print info
     print("\n * Created and wrote to file: "+ofile+" of dimension "+str(myshape)+" !\n")
 
-
 def append2csv(filename, listvals):
     # Open file in append mode
     with open(filename, 'a+', newline='\n') as write_obj:
         csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
         csv_writer.writerow(listvals)
-
-def preloop(datetime_bgn, uptdatetime_bgn, timestep,
-            ipath, ifile_base, ifile_format,
-            ryyyy,
-            mask, mlat, mlon, maskval,
-            pidlog, tml,
-            verbose):
-
-    ## p1) create required datetime string object
-    predatetime_bgn = uptdatetime_bgn + datetime.timedelta(hours=3)
-    predatetime_end = datetime_bgn
-    predatetime_seq = []
-    idatetime       = predatetime_bgn
-    while idatetime < predatetime_end:
-        predatetime_seq.append(idatetime.strftime('%Y%m%d%H'))
-        idatetime += timestep # timestep was defined above
-    npretime = len(predatetime_seq)
-
-    if verbose:
-        print("\n--------------------------------------------------------------------------------------")
-        print("\n ! performing pre-loop to log advected parcels arriving prior to analysis time")
-        print("\n ! estimating remaining time for pre-loop ...")
-
-    ## p2) loop through files (.. to log in-ABL hits)
-    pretic = timeit.default_timer()
-    for pix in range(npretime):
-        if verbose and pix==1:
-            pretoc = timeit.default_timer()
-            print("  ---> "+str(round(npretime*(pretoc-pretic)/60, 2))+" minutes to go, grab a coffee..")
-
-        ## p3) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
-        ary = readtraj( idate    = predatetime_seq[pix],
-                       ipath    = ipath+"/"+str(ryyyy),
-                       ifile_base = ifile_base,
-                       ifile_format = ifile_format,
-                       verbose=False) # NOTE: ugly, but this way, other instances need no change (per default: True)
-
-        nparcel   = ary.shape[1]
-        ntot    = range(nparcel)
-
-        ## p4) now loop through parcels
-        for i in ntot:
-            ## check for arriving parcels
-            alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-            if not mask[alat_ind,alon_ind]==maskval:
-               continue
-            ## read ONLY parcel and ABL heights
-            hgt, hpbl = readheights(ary[:4,i,:])
-
-            ## p5) LOG ONLY parcels arriving in PBL (or nocturnal layer)
-            if ( hgt[0] < np.max(hpbl[:4]) ):
-                ID = int(ary[0,i,0])
-                pidlog[ID] = pix - tml # NOTE: tml != npretime (double-check?)
-    return( pidlog )
 
 def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
                        dX, dtemp, dA, dB, c_cc, dAdB):
@@ -1388,12 +1246,11 @@ def calc_ctab_measures(cdict):
     odr         = try_div(a*d,c*b)              # odd's ratio      
     return({"acc":acc,"far":far,"fbias":fbias,"pod":pod,"pofd":pofd,"sr":sr,"pss":pss,"odr":odr})
 
-def writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss):
+def writestats_02(statfile,tneval,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss):
     with open(statfile,'w') as sfile:
         writer=csv.writer(sfile, delimiter='\t', lineterminator='\n',quoting = csv.QUOTE_NONE, quotechar='',)
         writer.writerow(["* - PARCEL STATISTICS: "])
         writer.writerow(["   --- TOTAL EVALUATED PARCELS:       " , str(tneval)])
-        writer.writerow(["   --- # PARCELS FILTERED OUT (JUMPS):" , str(tnjumps)])
         writer.writerow([" "])
         writer.writerow(["   --- # PARCELS ARRIVING INSIDE MASK:" , str(tneval-tnnevala)])
         if tnnevala!=tneval:
@@ -1621,44 +1478,31 @@ def f2t_read_partposit(ifile, maxn=3e6, verbose=False):
     @output: returns a numpy array of dimension nparcels x 13
     @author: Jessica Keune 06/2020
     #modified: Dominik Schumacher, 06/2020 ---> do use pid!
+    #modified: Jessica Keune, 10/2020 --> speeeeeedup!!! 
+    # ATTN: hardcoded for 60 bytes / parcel from FP-ERA-INT
     """
+    nbytes_per_parcel = (8+4+12*4)
     with gzip.open(ifile, 'rb') as strm:
+        # skip header
         _       = strm.read(4) # dummy
         _       = struct.unpack('i', strm.read(4))[0] # time
-        idx     = 1
-        flist   = []
-        # repeat
-        while idx<=maxn:
-            try:
-                _       = strm.read(8) # dummy
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    #if verbose: print("EOF reached.")
-                    break
-                if verbose: print(str(idx)+" "+str(pid))
-                x       = struct.unpack('f', strm.read(4))[0]
-                y       = struct.unpack('f', strm.read(4))[0]
-                z       = struct.unpack('f', strm.read(4))[0]
-                itramem = struct.unpack('i', strm.read(4))[0]
-                oro     = struct.unpack('f', strm.read(4))[0]
-                pv      = struct.unpack('f', strm.read(4))[0]
-                qq      = struct.unpack('f', strm.read(4))[0]
-                rho     = struct.unpack('f', strm.read(4))[0]
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                tropo   = struct.unpack('f', strm.read(4))[0]
-                temp    = struct.unpack('f', strm.read(4))[0]
-                mass    = struct.unpack('f', strm.read(4))[0]
-                flist.append([pid, x, y, z, itramem, oro, pv, qq, rho, hmix, tropo, temp, mass])
-                idx     += 1
-            except:
-                print("Maximum number of parcels reached.")
-                break
+        # grep full binary data set (ATTN: 60 bytes for FP-ERA-Int hardcoded)
+        tdata   = strm.read(int(maxn)*nbytes_per_parcel)
+        # get number of parcels from length of tdata
+        nparc   = math.floor(len(tdata)/(nbytes_per_parcel))
+        # decode binary data
+        pdata   = struct.unpack((nparc)*'2fi3fi8f', tdata[0:((nparc)*nbytes_per_parcel)])
+        flist   = list(pdata)
     strm.close()
-    return(np.reshape(flist, newshape=(idx-1,13)))
+    pdata   = np.reshape(flist, newshape=(nparc,15))[:,2:]
+    # remove last line if data is bs (pid = -99999)
+    if np.any(pdata[:,0]<0):
+        pdata = np.delete(pdata, np.where(pdata[:,0]<0), axis=0)
+    return(pdata)
 
-def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
+def maskgrabber(maskfile, maskvar='mask', latvar='lat', lonvar='lon'):
     # load
-    with nc4.Dataset(path, mode='r') as f:
+    with nc4.Dataset(maskfile, mode='r') as f:
         mask = np.asarray(f[maskvar][:])
         lat = np.asarray(f[latvar][:])
         lon = np.asarray(f[lonvar][:])
@@ -1668,17 +1512,20 @@ def f2t_maskgrabber(path, maskvar='mask', latvar='lat', lonvar='lon'):
     # lats check (order irrelevant, just must be within [-90,90])
     if not (lat.min()==-90 or lat.max()==90):
         return(None)
+    # lats check - now check order (currently required: -90 --> 90) and adjust if needed
+    if not latsok(lat):
+        mask, lat   = ncdf_fliplats(mask, lat, lataxis=0)
     # lons check
     if lon.min()==-180 and lon.max()<180:
         pass
     elif np.array_equal(lon, np.arange(0,360)):
-        mask, lon = f2t_lon360to180(mask, lon, 1)
+        mask, lon = ncdf_lon360to180(mask, lon, 1)
     else:
         # this case is not implemented
         return(None)
     return(mask, lat, lon)
 
-def f2t_lon360to180(ary, lons, lonaxis=1):
+def ncdf_lon360to180(ary, lons, lonaxis=1):
     # bring lon axis to front to handle any shape of ary
     ary = np.moveaxis(ary, lonaxis, 0)
     ary_bu  = np.copy(ary)
@@ -1692,6 +1539,100 @@ def f2t_lon360to180(ary, lons, lonaxis=1):
     ary = np.moveaxis(ary, 0, lonaxis)
     return(ary, lons)
 
+def latsok(lats):
+    # returns True if no flip needed; returns False if flip needed
+    # standard for now: -90 --> 90 (contrary to ERA-Int)
+    if lats[0]<lats[-1]:
+        return(True)
+    elif lats[0]>lats[-1]:
+        return(False)
+
+def ncdf_fliplats(ary, lats, lataxis=0):
+    flip_ary     = np.flip(ary, axis=lataxis)
+    flip_lats    = np.flipud(lats)
+    return flip_ary, flip_lats
+
+def writemasknc(mask, mlat, mlon, ofile="mask.nc"):
+   # create netCDF4 instance
+    nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
+    ### create dimensions ###
+    nc_f.createDimension('lat', mlat.size)
+    nc_f.createDimension('lon', mlon.size)
+    # create variables
+    latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
+    longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
+    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    # set attributes
+    nc_f.title          = "HAMSTER: mask"
+    today               = datetime.datetime.now()
+    nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
+    nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
+    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    latitudes.units     = 'degrees_north'
+    longitudes.units    = 'degrees_east'
+    ncmask.units        = '-'
+    # write data
+    longitudes[:]       = mlon
+    latitudes[:]        = mlat
+    ncmask[:]           = mask
+    # close file
+    nc_f.close()
+    print("\n * Created "+str(ofile)+" !")
+
+def extendmask(mask, mlat, mlon, maskval, nx=5, ny=5, debug=False):
+    imlat, imlon = np.where(mask==maskval)
+    lat1 = mlat[imlat].min() -ny
+    lat2 = mlat[imlat].max() +ny
+    lon1 = mlon[imlon].min() -nx
+    lon2 = mlon[imlon].max() +nx
+    if lon1<-180:
+        lon1 += 360
+    if lon2>180:
+        lon2 -= 360
+    # super ugly, but does what it should..
+    ilats   = np.where( (mlat >= lat1) & (mlat <= lat2) )
+    if (lon1 < lon2):
+        ilons   = np.where( (mlon >= lon1) & (mlon <= lon2) )
+    else:
+        ilons   = np.where( (mlon >= lon1) | (mlon <= lon2) )
+    extmask = np.zeros(shape=mask.shape)
+    dmask   = np.zeros(shape=mask.shape)
+    dmask[ilats,:] += 1
+    dmask[:,ilons] += 1
+    extmask[np.where(dmask==2)]=maskval
+    if debug:
+        writemasknc(extmask,mlat,mlon,"extmask.nc")
+    return(extmask)
+
+def nextmonth(ddate):
+    nyyyy   = (ddate + relativedelta(months=1)).strftime('%Y')
+    nmm     = (ddate + relativedelta(months=1)).strftime('%m')
+    return(nyyyy, nmm)
+
+def datetime2date(datetimeseq):
+    dateseq = np.unique([idate.date() for idate in datetimeseq]).tolist()
+    return(dateseq)
+
+def timelord(startdate, enddate, timestep, ret="", fformat='%Y%m%d%H'):
+    datetime_seq    = []  
+    fdatetime_seq   = []  
+    ffdatetime_seq  = []
+    idatetime       = startdate
+    # create datetime string & datetime object
+    while idatetime <= enddate:
+        datetime_seq.append(idatetime.strftime(fformat))
+        fdatetime_seq.append(idatetime)
+        ffdatetime_seq.append(idatetime.strftime('%Y%m%d%H')+'0000')
+        idatetime += timestep
+    if ret == "string":
+        return(datetime_seq)
+    elif ret == "datetime":
+        return(fdatetime_seq)
+    elif ret == "fileformat":
+        return(ffdatetime_seq)
+    else:
+        return(datetime_seq, fdatetime_seq, ffdatetime_seq)
+
 def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime = []
     fulltime.append(tbgn - datetime.timedelta(days=ntraj_d, hours=dt_h))
@@ -1701,16 +1642,28 @@ def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
-def f2t_loader(partdir, string, fixlons):
-    dummy = f2t_read_partposit(partdir+'/partposit_'+string+'.gz', verbose=False)
-    ## shift lons already to facilitate gridding later
+def f2t_loader(ifile, fixlons=True, fixids=True):
+    dummy = f2t_read_partposit(ifile, verbose=False)
+    ## fix parcel ID's (ATTN: specific to the global FP-ERA-Interim run!)
+    if fixids:
+        dummy[:,0] = f2t_fixid(IDs=dummy[:,0], verbose=verbose) # fix IDs
+    ## fix longitudes
     if fixlons:
-        dummy[:,1][dummy[:,1]>179.5] -= 360
-    return(dummy)
+        dummy[:,1][dummy[:,1]>=179.5] -= 360
+    ## sort array by parcel ID    
+    sorted_dummy = dummy[np.argsort(dummy[:,0]),:]
+    return(sorted_dummy)
 
-def f2t_fixer(IDs, verbose, thresidx=1997000 ):
+def f2t_fixid(IDs, verbose, thresidx=1997000 ):
+    # get duplicate IDs independent of threshidx...
+    #u, c    = np.unique(IDs, return_counts=True)
+    #dup     = u[c > 1]
+    #print("\t --> Number of duplicates (unconditional): "+ str(len(dup)))
+    # add 2e6 to the second duplicate...
+    #for i in range(len(dup)):
+    #    IDs[np.where(IDs==dup[i])[0][1]] += 2e6
     ## simply shift to indices > 2e6
-    IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
+    IDs[thresidx:][IDs[thresidx:]<(2e6-thresidx)] += 2e6
     if verbose:
         ndupl = np.where(IDs>2e6)[0].size
         if ndupl == 0:
@@ -1719,32 +1672,63 @@ def f2t_fixer(IDs, verbose, thresidx=1997000 ):
             print("        --> "+str(ndupl)+" duplicate IDs shifted")
     return(IDs)
 
-def f2t_seeker(array2D, mask, val, lat, lon):
-    ## first, we search potential candidates using rectangular box
-    imlat, imlon = np.where(mask==val)
-    lat1 = lat[imlat].min() -0.5
-    lat2 = lat[imlat].max() +0.5
-    lon1 = lon[imlon].min() -0.5
-    lon2 = lon[imlon].max() +0.5
+def is_parcel_in_mask(plat, plon, mlat, mlon, mask, maskval):
+    imlat   = np.argmin(np.abs(mlat-plat))
+    imlon   = np.argmin(np.abs(mlon-plon))
+    if mask[imlat,imlon] == maskval:
+        return(True)
+    else:
+        return(False)
+
+def find_potential_parcels(plon, plat, mlon, mlat, mask, maskval):
+    ## search for potential candidates using rectangular box using min/max of mask extent
+    imlat, imlon = np.where(mask==maskval)
+    dlon = abs(mlon[0]-mlon[1])/2
+    dlat = abs(mlat[0]-mlat[1])/2
+    lat1 = mlat[imlat].min() -dlat
+    lat2 = mlat[imlat].max() +dlat
+    lon1 = mlon[imlon].min() -dlon
+    lon2 = mlon[imlon].max() +dlon
     ## go for it (this is pretty fast)
-    idx_inbox = np.where( (array2D[:,1] >= lon1) & (array2D[:,1] <= lon2) &
-                          (array2D[:,2] >= lat1) & (array2D[:,2] <= lat2) )[0]
+    idx_inbox = np.where( (plon >= lon1) & (plon <= lon2) &
+                          (plat >= lat1) & (plat <= lat2) )[0]
+    return(idx_inbox) # ATTN: returns index only (not pid)
+
+def f2t_seeker(array3D, mask, val, lat, lon):
+    ## check if anything needs to be done at all
+    if mask is None:
+        return(array3D[-1,:,0][np.where(~np.isnan(array3D[-1,:,0]))])
+    ## use an extended mask to make sure we get everything (arriving + midpoint parcels!)
+    extmask   = extendmask(mask=mask, mlat=lat, mlon=lon, maskval=val, nx=5, ny=5, debug=False)
+    ## first, we search potential candidates arriving in extended mask, using a rectangular box
+    idx_inbox = find_potential_parcels(plon=array3D[-1,:,1], plat=array3D[-1,:,2], 
+                                       mlon=lon, mlat=lat, mask=extmask, maskval=val)
+    # work with subset of array3D for all potential candidates
+    carray3D = f2t_constructor(array3D=array3D[-2:,:,:], pid=array3D[-1,idx_inbox,0], time_str=["-2","-1"])
     ## now check if *really* in mask (slow!)
-    idx = []
+    pid = []
     for ii in range(idx_inbox.size):
-        jdx = idx_inbox[ii]
-        if mask[np.where(lat==np.round(array2D[jdx,2]))[0][0],
-                np.where(lon==np.round(array2D[jdx,1]))[0][0]] == val:
-            idx.append(jdx)
+        # check if arrival point in mask
+        if is_parcel_in_mask(plon=carray3D[-1,ii,1],plat=carray3D[-1,ii,2],mlon=lon,mlat=lat,mask=mask,maskval=val):
+            pid.append(carray3D[-1,ii,0])
+        else:    
+            if np.any(np.isnan(carray3D[:,ii,0:3])):
+                # parcel disappeared --> skip
+                continue
+            # check if midpoint is mask
+            # (only calc. if arrival point is not in mask, to speed up process)   
+            midlat,midlon = midpoint_on_sphere2(carray3D[-1,ii,2],carray3D[-1,ii,1],carray3D[-2,ii,2],carray3D[-2,ii,1])
+            if is_parcel_in_mask(plon=midlon,plat=midlat,mlon=lon,mlat=lat,mask=mask,maskval=val):
+                pid.append(carray3D[-1,ii,0])
     ## finally, return parcel IDs
-    pid = array2D[:,0][np.asarray(idx)]
-    return(pid)
+    return(np.asarray(pid))
 
 def f2t_locator(array2D, pid, tstring):
     ## figure out where parcels are (lines may shift b/w files)
     pidx = np.where(np.isin(array2D[:,0], pid, assume_unique=False))[0] # <----- set True ??
     chosen = np.NaN*np.ones(shape=(len(pid), array2D.shape[1]))
     if not pidx.size == len(pid):
+        ## ATTN: this needs to be adjusted for other runs...
         print("---- INFO: not all parcels present in file --> partposit_"+tstring)
         idx_pidok = np.where(np.isin(pid, array2D[pidx,0], assume_unique=False))[0] # <----- set True ??
         chosen[idx_pidok,:] = array2D[pidx,:]
@@ -1764,31 +1748,23 @@ def f2t_constructor(array3D, pid, time_str):
     return(trajs)
 
 def f2t_saver(odata, outdir, fout, tstring):
-    ## create dir if not present
-    if not os.path.exists(outdir): # could use isdir too
-        os.mkdir(outdir)
     with h5py.File(outdir+'/'+fout+'_'+tstring+'.h5', 'w') as f:
         f.create_dataset("trajdata", data=odata)
 
 def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon,
-                    outdir, fout, fixlons, verbose, workdir, lowmem):
+                    outdir, fout, verbose):
     ##-- 1.) load em files
-    if lowmem: 
-        data = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
-                         shape=(len(time_str),2000001,selvars.size))
-    else:
-        data = np.empty(shape=(len(time_str),2000001,selvars.size))
+    data = np.empty(shape=(len(time_str),2000001,selvars.size))
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
-         dummy = f2t_loader(partdir=partdir, string=time_str[ii],
-                            fixlons=fixlons)[:,selvars] # load
-         dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
+         ifile = partdir+'/partposit_'+time_str[ii]+'.gz'
+         dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars] # load
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
          data[ii,dummy.shape[0]:] = np.NaN
 
     ##-- 2.) find IDs within mask
     if verbose: print("       searching IDs", end='')
-    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+    pid_inmask = f2t_seeker(array3D=data[:,:,:],
                             mask=mask, val=maskval, lat=mlat, lon=mlon)
 
     ##-- 3.) grab data for IDs
@@ -1802,48 +1778,23 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     ##--5.) return data & trajs arrays (needed for next files)
     return(data, trajs)
 
-def f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose):
-    """
-    this could be integrated in ascender, but has been used as such already
-    and is thus tested; np.copy not needed here!
-    """
-    # must make a new memmap; data[:-1] = data[1:] results in growing array
-    old = np.memmap(workdir+'/'+time_str[-2]+'.dat', mode='r', dtype='float64',
-                     shape=(len(time_str),2000001,selvars.size))
-    new = np.memmap(workdir+'/'+time_str[-1]+'.dat', mode='w+', dtype='float64',
-                     shape=(len(time_str),2000001,selvars.size))
-    new[:-1] = old[1:]
-    # load new data | rely on dummy variable
-    dummy = f2t_loader(partdir=partdir, string=time_str[-1],fixlons=fixlons)[:,selvars]
-    dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-    # insert data, use Nan for rest
-    new[-1,:dummy.shape[0]] = dummy[:]
-    new[-1,dummy.shape[0]:] = np.NaN
-    # remove old array (file)
-    os.remove(workdir+'/'+time_str[-2]+'.dat')
-    return(new)
-
 def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
-                 mlat, mlon, outdir, fout, fixlons, verbose, workdir, lowmem):
+                 mlat, mlon, outdir, fout, verbose):
     ##--1.) move old data & fill current step with new data  
     if verbose: print("\n      ", time_str[-1][:-4], end='')
-    if lowmem:
-        data = f2t_recycler(workdir, partdir, selvars, time_str, fixlons, ryyyy, verbose)
-    else:
-        # use loop to avoid RAM spike here
-        for ii in range(len(time_str)-1):
-            data[ii,:,:] = data[ii+1,:,:]
-        # load new data | rely on dummy variable
-        dummy = f2t_loader(partdir=partdir, string=time_str[-1],
-                           fixlons=fixlons)[:,selvars]
-        dummy[:,0] = f2t_fixer(IDs=dummy[:,0], verbose=verbose) # fix IDs
-        # insert new data, use NaN for rest
-        data[-1,:dummy.shape[0]] = dummy[:]
-        data[-1,dummy.shape[0]:] = np.NaN
+    # use loop to avoid RAM spike here
+    for ii in range(len(time_str)-1):
+        data[ii,:,:] = data[ii+1,:,:]
+    # load new data | rely on dummy variable
+    ifile = partdir+'/partposit_'+time_str[-1]+'.gz'
+    dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars]
+    # insert new data, use NaN for rest
+    data[-1,:dummy.shape[0]] = dummy[:]
+    data[-1,dummy.shape[0]:] = np.NaN
 
     ##--2.) find all IDs
     if verbose: print("       searching IDs", end='')
-    pid_inmask = f2t_seeker(array2D=data[-1,:,:],
+    pid_inmask = f2t_seeker(array3D=data[:,:,:],
                             mask=mask, val=maskval, lat=mlat, lon=mlon)
 
     ##--3.) construct new trajectories (trajs recycling option has been removed)
@@ -1855,10 +1806,7 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
     f2t_saver(odata=trajs, outdir=outdir, fout=fout, tstring=time_str[-1][:-4]) # omit mins & secs
 
     ##--5.) return updated data & trajs arrays
-    if lowmem:
-        return(None, trajs)
-    else:
-        return(data, trajs)
+    return(data, trajs)
 
 def checknan(x):
     x[x>=9.9e+36]=np.nan
@@ -1878,8 +1826,8 @@ def whereinmask(mask, maskval, masklat, masklon, trajlat, trajlon):
     idx = []
     for ii in range(idx_inbox.size):
         jdx = idx_inbox[ii]
-        if mask[np.where(masklat==np.round(trajlat[jdx]))[0][0],
-                np.where(masklon==np.round(trajlon[jdx]))[0][0]] == maskval:
+        if mask[np.argmin(np.abs(masklat-trajlat[jdx])),
+                np.argmin(np.abs(masklon-trajlon[jdx]))] == maskval:
             idx.append(jdx)
     ## finally, return indices for which traj in mask
     return(np.asarray(idx))
@@ -1891,98 +1839,11 @@ def maxlastn(series, n=4):
         maxy[ii,:-ii] = series[ii:]
     return(np.max(maxy, axis=0))
 
-def readhpbl_partposit(ifile, maxn=3e6, verbose=False, shiftIDs=True, thresidx=1997000):
-    """
-    @action: reads binary outputs from FLEXPART
-    @input:  partposit_DATE.gz
-    @output: returns a numpy array of dimension nparcels x 13
-    @author: Jessica Keune 06/2020
-    @modified: by DSc
-    """
-    with gzip.open(ifile, 'rb') as strm:
-        _       = strm.read(4) # dummy
-        _       = struct.unpack('i', strm.read(4))[0] # time
-        idx     = 0
-        flist   = []
-        # repeat
-        while idx<maxn:
-            try:
-                _       = strm.read(8) # dummy
-                pid     = struct.unpack('i', strm.read(4))[0]
-                if pid  == -99999:
-                    if verbose: print("EOF reached.")
-                    break
+def grabhpbl_partposit(ifile):
+    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
+    return(dummy)
 
-                if verbose: print(str(idx)+" "+str(pid))
-                #x       = struct.unpack('f', strm.read(4))[0]
-                #y       = struct.unpack('f', strm.read(4))[0]
-                #z       = struct.unpack('f', strm.read(4))[0]
-                #itramem = struct.unpack('i', strm.read(4))[0]
-                #oro     = struct.unpack('f', strm.read(4))[0]
-                #pv      = struct.unpack('f', strm.read(4))[0]
-                #qq      = struct.unpack('f', strm.read(4))[0]
-                #rho     = struct.unpack('f', strm.read(4))[0]
-                _ = strm.read(32)
-                hmix    = struct.unpack('f', strm.read(4))[0]
-                #tropo   = struct.unpack('f', strm.read(4))[0]
-                #temp    = struct.unpack('f', strm.read(4))[0]
-                #mass    = struct.unpack('f', strm.read(4))[0]
-                _ = strm.read(12)
-                flist.append([pid, hmix])
-                idx     += 1
-
-            except:
-                print("Maximum number of parcels reached.")
-                break
-    strm.close()
-    # reshape
-    sel = np.reshape(flist, newshape=(idx,2))
-    # shift duplicate IDs
-    if shiftIDs:
-        IDs   = sel[:,0]
-        # no need to change sel, IDs is nothing but a view ;)
-        IDs[thresidx:][IDs[thresidx:]<2e6-thresidx] += 2e6
-    return(sel)
-
-def readtrajdim(idate,      # run year
-                ipath,      # input data path
-                ifile_base, # loop over ifile_base filenames for each date
-                ifile_format,# file format (dat.gz or h5)
-                verbose=True): # NOTE: temporary solution
-    """
-    INPUT
-        - idate :       date as string [YYYYMMDDHH]
-        - ipath :       path where input files are located
-        - ifile_base :  base filename(s); ONLY FIRST ENTRY USED HERE
-        - ifile_format: dat.gz (pom) or .h5 (f2t)
-    ACTION
-        determines dimensions of 3D array: ntrajlength x nparticles x nvars
-    RETURNS
-        - ntrajlength,  nparticles,  nvars
-    """
-    # skip any other ifile_base entries
-    iifile_base = ifile_base[0]
-    # Check if file exists /file format
-    ifile   = str(ipath+"/"+iifile_base+idate+"."+ifile_format)
-    if not os.path.isfile(ifile):
-        print(ifile + " does not exist!")
-    elif os.path.isfile(ifile):
-        # Read file
-        if verbose:
-            print(" Reading " + ifile)
-        if ifile_format=="dat.gz":
-            ary_dim     = pd.read_table(gzip.open(ifile, 'rb'), sep="\s+", header=None, skiprows=1, nrows=1)
-            nparticle   = int(ary_dim[0])
-            ntrajstep   = int(ary_dim[1])
-            nvars       = int(ary_dim[2])
-        if ifile_format=="h5":
-            with h5py.File(ifile, "r") as f:
-                ntrajstep, nparticle, nvars = np.array(f['trajdata']).shape
-
-    return(ntrajstep, nparticle, nvars)
-
-def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
-    ppospath = os.path.join(ipath_f2t,str(ryyyy))
+def grabmesomehpbl(filelist, verbose):
     extendarchive = []
 
     if verbose:
@@ -1991,19 +1852,16 @@ def grabmesomehpbl(pposbasepath, ryyyy, fdatetime_beg, tml, verbose):
         print("\n ! estimating remaining time for pre-loop ...")
         pretic = timeit.default_timer()
 
-    for qq in range(tml+5):
-        if verbose and qq==1:
+    for it in range(len(filelist)):
+        if verbose and it==1:
             pretoc = timeit.default_timer()
-            mins   = round((tml+5)*(pretoc-pretic)/60, 2)
+            mins   = round((len(filelist))*(pretoc-pretic)/60, 2)
             if mins < 1.0:
                 print("  ---> "+str(mins*60)+" seconds to go, how about some stretching in the meantime?")
             else:
                 print("  ---> "+str(mins)+" minutes to go, might want to grab a coffee...")
 
-        # go back from first timestep..
-        timestr = (fdatetime_beg - datetime.timedelta(hours=qq*6+6)).strftime('%Y%m%d%H')+'0000'
-
-        # append data with shifted duplicate IDs to list
-        extendarchive.append(readhpbl_partposit(ppospath+'/partposit_'+timestr+'.gz'))
+        # append data
+        extendarchive.append(grabhpbl_partposit(filelist[it]))
 
     return(extendarchive)

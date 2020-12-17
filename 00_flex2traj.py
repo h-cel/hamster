@@ -4,8 +4,8 @@
 MAIN FUNCTIONS FOR 00_flex2traj
 """
 
-def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval, 
-                   idir, odir, fout, workdir, lowmem):
+def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
+        idir, odir, fout):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -60,14 +60,16 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
     
     if verbose: print(logo)
 
-    ##---0.) pepare workdir
-    tmpworkdir = workdir+"/tmp"
-    if not os.path.exists(tmpworkdir):
-        os.mkdir(tmpworkdir)
-
+    ##---0.) pepare directories
+    outdir = odir+"/"+str(ryyyy)
+    if not os.path.exists(outdir): # could use isdir too
+        os.makedirs(outdir)
     
     ##---1.) load netCDF mask
-    mask, mlat, mlon = f2t_maskgrabber(path=maskpath)
+    if maskfile is None or maskval==-999:
+        mask = mlat = mlon = None
+    else:
+        mask, mlat, mlon = maskgrabber(maskfile)
         
     ##---2.) create datetime object (covering arrival period + trajectory length)
     fulltime_str = f2t_timelord(ntraj_d=tml, dt_h=dt_h,
@@ -76,10 +78,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
     #---3.) handle first step
     if verbose: print("\n---- Reading files to begin constructing trajectories ...\n")
     data, trajs = f2t_establisher(partdir=idir+'/'+str(ryyyy), selvars=selvars,
-                                 time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                                 
+                                 time_str=fulltime_str[:ntraj], ryyyy=ryyyy,                      
                                  mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                 outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                 verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
+                                 outdir=outdir, fout=fout,
+                                 verbose=verbose)
     
     ##---4.) continue with next steps
     if verbose: print("\n\n---- Adding more files ... ")
@@ -87,16 +89,10 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, fixlons, maskpath, maskval,
         data, trajs = f2t_ascender(data=data, partdir=idir+'/'+str(ryyyy), selvars=selvars,
                                    time_str=fulltime_str[ii:ntraj+ii], ryyyy=ryyyy,
                                    mask=mask, maskval=maskval, mlat=mlat, mlon=mlon,
-                                   outdir=odir+'/'+str(ryyyy), fout=fout, fixlons=fixlons,
-                                   verbose=verbose, workdir=tmpworkdir, lowmem=lowmem)
+                                   outdir=outdir, fout=fout,
+                                   verbose=verbose)
    
-    ##---5.) clean up
-    for f in os.listdir(tmpworkdir):
-        pattern=str(ayyyy)+str(am+1).zfill(2)+"01000000.dat" # all other files are already deleted in the process..
-        if re.search(pattern, f):
-            os.remove(os.path.join(tmpworkdir, f))
- 
-    ##---6.) done
+    ##---5.) done
     if verbose: 
         print("\n\n---- Done! \n     Files with base '"+fout+"' written to:\n    ",odir+'/'+str(ryyyy))
         print("     Dimensions: nstep x nparcel x nvar\n     Var order: ", end='')

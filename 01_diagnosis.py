@@ -10,7 +10,7 @@ MAIN FUNCTIONS FOR 01_diagnosis
 
 def main_diagnosis(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, ifile_format,
+           ipath, ifile_base,
            opath, ofile_base,
            mode,
            gres,
@@ -22,8 +22,6 @@ def main_diagnosis(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
-           fjumps,
-           cjumps,
            refdate,
            fwrite_netcdf,
            precision,
@@ -86,9 +84,9 @@ def main_diagnosis(
     ## -- DATES
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2), "%Y-%m-%d")
     # get end date (always 00 UTC of the 1st of the next month)
-    nayyyy          = (datetime_bgn + relativedelta(months=1)).strftime('%Y')
-    nam             = (datetime_bgn + relativedelta(months=1)).strftime('%m')
-    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
+    nayyyy          = (date_bgn + relativedelta(months=1)).strftime('%Y')
+    nam             = (date_bgn + relativedelta(months=1)).strftime('%m')
+    date_end        = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
     timestep        = datetime.timedelta(hours=6)
     date_seq        = []
     fdate_seq       = []
@@ -140,7 +138,6 @@ def main_diagnosis(
         ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
-                               ifile_format = ifile_format,
                                verbose      = verbose)
         nparticle   = ary.shape[1]
         if verbose:
@@ -155,18 +152,10 @@ def main_diagnosis(
         #smalltic = timeit.default_timer()
        
         # log variables
-        njumps  = 0
        
         ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
         for i in ntot:
 
-            ## check for jumps 
-            if fjumps:
-                jump = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1]) #lat1,lon1,lat2,lon2
-                if jump > cjumps:
-                    njumps += int(1)
-                    continue
-                    
             ## get midpoint at the very beginning
             #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
             lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat) # :2 for clarity, not needed
@@ -272,10 +261,6 @@ def main_diagnosis(
                     ary_heat[lat_ind,lon_ind] += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
         
-        # print stats
-        if verbose:
-            print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/len(ntot)) +"%) jumps.")
-
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 

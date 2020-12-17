@@ -36,43 +36,10 @@ import calendar
 import h5py
 import re
 
-###########################################################################
-##--- PATHS
-###########################################################################
-
-## determine working directory
-wpath = os.getcwd()
-
-## load input and output paths & input file name base(s)
-content = imp.load_source('',wpath+"/paths.txt") # load like a python module
-ipath_REF = content.ipath_REF # input path (01_diagnosis)
-ipath_DGN = content.ipath_DGN # input path (01_diagnosis)
-ibase_DGN = content.ibase_DGN # input file name base(s)
-opath_DGN = content.opath_DGN # output path
-ipath_ATR = content.ipath_ATR # as above (for 02_attribution)
-ibase_ATR = content.ibase_ATR
-opath_ATR = content.opath_ATR
-opath_BIA = content.opath_BIA
-maskfile  = content.maskfile
-ibase_f2t = content.ibase_f2t
-ipath_f2t = content.ipath_f2t
-opath_f2t = content.opath_f2t
-wpath_f2t = wpath
-# create output directories if they do not exist
-if not os.path.exists(opath_f2t):
-        os.makedirs(opath_f2t)
-if not os.path.exists(opath_DGN):
-        os.makedirs(opath_DGN)
-if not os.path.exists(opath_ATR):
-        os.makedirs(opath_ATR)
-if not os.path.exists(opath_BIA):
-        os.makedirs(opath_BIA)
 
 ###########################################################################
-##--- MAIN
+##--- FUNCTIONS + COMMAND LINE ARGUMENTS
 ###########################################################################
-
-os.chdir(wpath)
 
 ## (1) LOADING FUNCTIONS
 exec(open("disclaimer.py").read())
@@ -84,31 +51,78 @@ exec(open("02_attribution.py").read())
 exec(open("03_biascorrection.py").read())
 exec(open("hamsterfunctions.py").read())
 
-## (2) get date, thresholds and flags from command line (job script) 
-#      note: this is where we set the default values now. 
+## (2) COMMAND LINE ARGUMENTS
+# read command line arguments (dates, thresholds and other flags)
 args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
+# just waiting a random number of seconds (max. 30s)
+# to avoid overlap of path.exist and makedirs between parallel jobs (any better solution?)
+if args.waiter:
+    waiter  = random.randint(0,30)
+    time.sleep(waiter)
+
+###########################################################################
+##--- PATHS
+###########################################################################
+
+## determine working directory
+wpath = os.getcwd()
+os.chdir(wpath)
+
+## load input and output paths & input file name base(s)
+print("Using paths from: "+ wpath+"/"+args.pathfile)
+content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
+path_ref = content.path_ref
+path_orig = content.path_orig
+path_diag = content.path_diag
+path_attr = content.path_attr
+path_bias = content.path_bias
+maskfile  = content.maskfile
+path_f2t_diag = content.path_f2t_diag
+base_f2t_diag = content.base_f2t_diag
+path_f2t_traj = content.path_f2t_traj
+base_f2t_traj = content.base_f2t_traj
+
+# create output directories if they do not exist (in dependency of step)
+if args.steps==0 and args.ctraj_len==0 and not os.path.exists(path_f2t_diag):
+        os.makedirs(path_f2t_diag)
+        os.makedirs(path_f2t_diag+"/"+str(args.ryyyy))
+if args.steps==0 and args.ctraj_len>0 and not os.path.exists(path_f2t_traj):
+        os.makedirs(path_f2t_traj)
+        os.makedirs(path_f2t_traj+"/"+str(args.ryyyy))
+if args.steps==1 and not os.path.exists(path_diag):
+        os.makedirs(path_diag)
+if args.steps==2 and not os.path.exists(path_attr):
+        os.makedirs(path_attr)
+if args.steps==3 and not os.path.exists(path_bias):
+        os.makedirs(path_bias)
+
+###########################################################################
+##--- MAIN
+###########################################################################
 ## (3) RUN main scripts with arguments
 if args.steps ==0:
+    if args.ctraj_len==0:
+        path_f2t=path_f2t_diag
+        base_f2t=base_f2t_diag
+    elif args.ctraj_len>0:
+        path_f2t=path_f2t_traj
+        base_f2t=base_f2t_traj
     main_flex2traj(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
                    tml=args.ctraj_len,
-                   fixlons=args.fix,
-                   maskpath=maskfile,
+                   maskfile=maskfile,
                    maskval=args.maskval,
-                   idir=ipath_f2t,
-                   odir=opath_f2t,
-                   fout=ibase_f2t,
-                   workdir=wpath_f2t,
-                   lowmem=args.lowmem)
+                   idir=path_orig,
+                   odir=path_f2t,
+                   fout=base_f2t)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
-              ipath=ipath_DGN,
-              ifile_base=ibase_DGN, 
-              ifile_format=args.iformat,
-              opath=opath_DGN,
+              ipath=path_f2t_diag,
+              ifile_base=base_f2t_diag,
+              opath=path_diag,
               ofile_base=args.expid,
               mode=args.mode,
               gres=args.gres,
@@ -124,8 +138,6 @@ if args.steps == 1:
               cprec_dtemp=args.cprec_dtemp,
               cprec_rh=args.cprec_rh,
               cpbl_strict=args.cpbl_strict,
-              fjumps=args.fjumps,
-              cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
@@ -136,11 +148,10 @@ if args.steps == 1:
 
 if args.steps == 2:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
-              ipath=ipath_ATR,
-              ifile_base=ibase_ATR,
-              ifile_format=args.iformat,
-              ipath_f2t=ipath_f2t,
-              opath=opath_ATR,
+              ipath=path_f2t_traj,
+              ifile_base=base_f2t_traj,
+              ipath_f2t=path_orig,
+              opath=path_attr,
               ofile_base=args.expid,
               mode=args.mode,
               gres=args.gres,
@@ -159,9 +170,6 @@ if args.steps == 2:
               cprec_dtemp=args.cprec_dtemp, 
               cprec_rh=args.cprec_rh,
               cpbl_strict=args.cpbl_strict,
-              fjumps=args.fjumps,
-              fjumpsfull=args.fjumpsfull,
-              cjumps=args.cjumps,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
@@ -181,10 +189,10 @@ if args.steps == 2:
 
 if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               opathA=opath_ATR, 
-               opathD=opath_DGN, 
-               ipathR=ipath_REF,
-               opath=opath_BIA, 
+               opathA=path_attr, 
+               opathD=path_diag, 
+               ipathR=path_ref,
+               opath=path_bias, 
                ofile_base=args.expid, # output
                mode=args.mode,
                maskfile=maskfile,

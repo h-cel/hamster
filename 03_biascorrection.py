@@ -145,28 +145,31 @@ def main_biascorrection(
     if verbose: 
         print(" * Reading reference data...")
     
-    Eref = eraloader_12hourly(var='e',
+    Eref, reflats, reflons = eraloader_12hourly(var='e',
                      datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     Eref = convert_mm_m3(Eref, areas)
         
-    Href = eraloader_12hourly(var='sshf',
+    Href, reflats, reflons = eraloader_12hourly(var='sshf',
                      datapath=ipathR+"/sshf_12hourly/H_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     
-    Pref = eraloader_12hourly(var='tp',
+    Pref, reflats, reflons = eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
+    gridcheck(totlats,reflats,totlons,reflons)
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     Pref = convert_mm_m3(Pref, areas)
      
@@ -175,10 +178,10 @@ def main_biascorrection(
         print(" * Starting bias correction...")
     
     ## P-scaling requires arrival region mask
-    with nc4.Dataset(maskfile) as f:
-        mask = f['mask'][:]
-        mlat = f['lat'][:]
-        mlon = f['lon'][:]   
+    mask, mlat, mlon = maskgrabber(maskfile)
+    # currently, only identical grids (mask = attribution = reference data) are supported...
+    gridcheck(mlat,totlats,mlon,totlons)
+
     xla, xlo    = np.where(mask==maskval) # P[:,xla,xlo] is merely a 2D array... ;)
     ibgn        = np.where(uptake_time==arrival_time[0])[0][0] # only arrival days!
     

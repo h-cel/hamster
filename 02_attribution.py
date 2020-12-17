@@ -9,7 +9,7 @@ MAIN FUNCTIONS FOR 02_attribution
 
 def main_attribution(
            ryyyy, ayyyy, am, ad,
-           ipath, ifile_base, ifile_format, ipath_f2t,
+           ipath, ifile_base, ipath_f2t,
            opath, ofile_base,
            mode,
            gres,
@@ -24,9 +24,6 @@ def main_attribution(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
-           fjumps,
-           fjumpsfull,
-           cjumps,
            refdate,
            fwrite_netcdf,
            precision,
@@ -43,9 +40,12 @@ def main_attribution(
     # TODO: add missing features
     if fcc_advanced or fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
- 
+
+    #### INPUT PATHS (incl. year)
+    ipath_pp   = os.path.join(ipath_f2t,str(ryyyy))    # raw partposit data
+    ipath_tr   = os.path.join(ipath,str(ryyyy))        # trajectory data (h5 files)
+
     #### OUTPUT FILES
-    mainpath  = ipath+str(ryyyy)+"/"
     ## main netcdf output
     ofilename = str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
@@ -63,10 +63,7 @@ def main_attribution(
     
     #### INPUT FILES
     ## read netcdf mask
-    with nc4.Dataset(maskfile) as f:
-        mask = f['mask'][:]
-        mlat = f['lat'][:]
-        mlon = f['lon'][:]
+    mask, mlat, mlon = maskgrabber(maskfile)
 
     #### DISCLAIMER
     if verbose:
@@ -80,7 +77,8 @@ def main_attribution(
         precision = "f8"
         print(" ! Single precision should only be used for testing. Reset to double-precision.")
     if verbose:
-        print(" ! using input path: \t", 	ipath)
+        print(" ! using raw partposit input path: \t", 	ipath_pp)
+        print(" ! using trajectory data input path: \t", 	ipath_tr)
         print(" ! using internal timer: \t" +str(ftimethis) )
         print(" ! using mode: \t" +str(mode))
         print(" ! using attribution method (P): \t" +str(mattribution))
@@ -94,7 +92,7 @@ def main_attribution(
             print(" \t ! with grid resolution: \t", str(gres) )
             print(" \t ! output file: \t", opath+"/"+ofilename)
         print(" ! additional statistics in: \t"+str(statfile))
-        if fwritestats:
+        if fwritestats and mattribution=="linear":
             print(" ! precipitation statistics in: \t"+str(pattfile))
         print("\n============================================================================================================")
         print("\n============================================================================================================")
@@ -106,38 +104,27 @@ def main_attribution(
     
     ## grids
     glon, glat, garea = makegrid(resolution=gres)
-    ## Sanity check: is glon/glat equal to mlon/mlat from maskfile?
-    if not np.array_equal(glon,mlon) or not np.array_equal(glat,mlat):
-        print("\n--- WARNING: the grid from the maskfile is not identical to the target grid... please check. Proceeding nevertheless. \n")
+    gridcheck(glat,mlat,glon,mlon)
 
     ## -- DATES
-    # NOTE: we begin at 06 UTC...
-    datetime_bgn    = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-06", "%Y-%m-%d-%H") 
-    # get end date (always 00 UTC of the 1st of the next month)
-    nayyyy          = (datetime_bgn + relativedelta(months=1)).strftime('%Y')
-    nam             = (datetime_bgn + relativedelta(months=1)).strftime('%m')
-    datetime_end    = datetime.datetime.strptime(str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00",  "%Y-%m-%d-%H")
-    timestep        = datetime.timedelta(hours=6)
-    datetime_seq    = []
-    fdatetime_seq   = []
-    idatetime       = datetime_bgn
+    dt              = 6 # hardcoded for FLEXPART ERA-INTERIM with 6h
+    timestep        = datetime.timedelta(hours=dt)
 
-    # create arrival datetime string & datetime object
-    while idatetime <= datetime_end:
-        datetime_seq.append(idatetime.strftime('%Y%m%d%H'))
-        fdatetime_seq.append(idatetime)
-        idatetime += timestep
+    # get start date (to read trajectories) - NOTE: we begin at 06 UTC...
+    sdate_bgn       = str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2)+"-"+str(dt).zfill(2)
+    datetime_bgn    = datetime.datetime.strptime(sdate_bgn, "%Y-%m-%d-%H")
+    # get end date (to read trajectories) - NOTE: always 00 UTC of the 1st of the next month
+    nayyyy, nam     = nextmonth(datetime_bgn)
+    sdate_end       = str(nayyyy)+"-"+str(nam).zfill(2)+"-01-00"
+    datetime_end    = datetime.datetime.strptime(sdate_end, "%Y-%m-%d-%H")
+    
+    # file dates (arrival, 6h seq)
+    datetime_seq, fdatetime_seq, ffdatetime_seq = timelord(datetime_bgn, datetime_end, timestep)
+    # daily arrival dates (24h seq for netCDF writing)
+    fdate_seq       = timelord(datetime_bgn - timestep, datetime_end - timestep, 
+                               datetime.timedelta(hours=24), ret="datetime")
+    fdateasdate     = datetime2date(fdate_seq)
 
-    # figure out when first uptakes occur (for pre-loop)
-    uptdatetime_bgn = datetime_bgn - datetime.timedelta(days=ctraj_len) - datetime.timedelta(hours=3)
-
-    # aggregate to daily, NOTE: arrival at 00 UTC means parcel has arrived on prev day    
-    fdate_seq = np.unique([fdt.date() for fdt in fdatetime_seq[:-1]]).tolist() # omit last dt object (00:00)
-    # keep a copy of datetime.date formatted list for arv_idx further below
-    fdateasdate = np.copy(fdate_seq).tolist() # NOTE: using deepcopy instead of np.copy would be more proper
-    # convert these datetime.date objects to datetime.datetime objects for netCDF writing
-    for idt in range(len(fdate_seq)):
-        fdate_seq[idt]    = datetime.datetime(fdate_seq[idt].year, fdate_seq[idt].month, fdate_seq[idt].day)
     # NOTE: better to keep these as lists to maintain consistency
 
     # calculate number of time steps, also aggregated to daily resolution
@@ -174,33 +161,29 @@ def main_attribution(
         pidlog = -999*np.ones(shape=2100000).astype(int) 
         
         if mode == "oper": # skip if multi-counting somehow desired and/or if testing
-#            pidlog = preloop(datetime_bgn, uptdatetime_bgn, timestep,
-#                         ipath, ifile_base, ifile_format,
-#                         ryyyy,
-#                         mask, mlat, mlon, maskval,
-#                         pidlog, tml,
-#                         verbose)
             ###--- PRELOOP v2
             # NOTE: code further below this function call here could also be moved to
             #       first main loop iteration, so that no dim checking necessary
-            ntrajstep, _, _ = readtrajdim(idate    = datetime_seq[0],
-                                          ipath    = ipath+"/"+str(ryyyy),
-                                          ifile_base = ifile_base,
-                                          ifile_format = ifile_format,
-                                          verbose=False)
+            ntrajstep = readtraj(idate = datetime_seq[0],
+                                 ipath = ipath_tr,
+                                 ifile_base = ifile_base,
+                                 verbose=False).shape[0]
 
-            if ntrajstep == tml+2:
+            # I believe this could be done for parcels of interest / pot. conflict only... but we'll leave it like this for now
+            if ntrajstep < tml+2+4:
                 # only do this if data really isn't already 'there'
-                extendarchive = grabmesomehpbl(pposbasepath=ipath_f2t, ryyyy=ryyyy,
-                                               fdatetime_beg=fdatetime_seq[0], tml=tml,
+                preloop_dates = timelord(fdatetime_seq[0]-(tml+5)*timestep,fdatetime_seq[0]-timestep,timestep, ret="fileformat")
+                preloop_files = [ipath_pp+"/partposit_"+idfile+".gz" for idfile in preloop_dates]
+                extendarchive = grabmesomehpbl(filelist=preloop_files,
                                                verbose=verbose)
-
+            else:
+                if verbose: print("\n=== \t INFO: no pre-loop needed, trajectories are long enough")
 
     ###--- MAIN LOOP
 
     ## prepare STATS
     # number of parcels
-    tneval = tnjumps = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
+    tneval = tnnevala = tnnevalm = tnevalp = tnnevalp = tnevalh = tnnevalh = 0
     # precip. statistics
     psum = patt = punatt = pmiss = 0
 
@@ -218,9 +201,8 @@ def main_attribution(
 
         ## 1) read in all files associated with data --> ary is of dimension (ntrajlen x nparcels x nvars)
         ary = readtraj(idate    = datetime_seq[ix], 
-                       ipath    = ipath+"/"+str(ryyyy), 
+                       ipath    = ipath_tr,
                        ifile_base = ifile_base, 
-                       ifile_format = ifile_format,
                        verbose=verbose)
 
         nparcel     = ary.shape[1]
@@ -245,16 +227,16 @@ def main_attribution(
                 ipatt = ipmiss = 0
 
         # STATS: number of parcels per file
-        neval = njumps = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
+        neval = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         # grab extended trajectory data
         if fmemento:
             # NOTE: pom data can come with duplicate IDs; remove to avoid (some) trouble
             if not np.unique(ary[0,:,0]).size == ary[0,:,0].size:
-                print("duplicates detected, original pom array shape=",ary.shape)
+                print("\t INFO: duplicates detected, original pom array shape=",ary.shape)
                 _, ikeep = np.unique(ary[0,:,0], return_index=True)
                 ary = ary[:,ikeep,:]
-                print("duplicates eliminated, new pom array shape=",ary.shape)
+                print("\t INFO: duplicates eliminated, new pom array shape=",ary.shape)
                 nparcel   = ary.shape[1]   # update
                 ntot      = range(nparcel)
             # NOTE: yet another ******* pom fix ... to be removed!
@@ -265,7 +247,7 @@ def main_attribution(
             IDs[thresidx:][IDs[thresidx:]<3000] += 2e6
 
             # extract what is needed from extendarchive if trajs 'too short'
-            if ary.shape[0] == tml+2 and ix < ctraj_len*4:
+            if ary.shape[0] < tml+2+4 and ix < ctraj_len*4:
                 extendtrajs = np.empty(shape=(4, nparcel, 2))
                 for pp in range(4):
                     allIDs     = extendarchive[-(4-pp+ix)][:,0]
@@ -275,28 +257,12 @@ def main_attribution(
         ## 2) diagnose P, E, H and npart per grid cell
         for i in ntot:
            
-            ## CHECK FOR JUMPS; disregard entire trajectory if it contains a jump
-            if fjumps and ifile_format=='dat.gz':
-                if fjumpsfull:
-                    # checking for the full trajectory length
-                    jumps = np.array([])
-                    for it in range(ntrajleng-1):
-                        jumps = np.append(jumps, dist_on_sphere(ary[it,i,2],ary[it,i,1],ary[it+1,i,2],ary[it+1,i,1]))#lat1,lon1,lat2,lon2
-                else:
-                    jumps = dist_on_sphere(ary[0,i,2],ary[0,i,1],ary[1,i,2],ary[1,i,1])
-                if np.any(jumps > cjumps):
-                    njumps += int(1)
-                    findjump = np.argwhere(jumps > cjumps)
-                    if np.any(findjump > 0):
-                        print(" !!! ATTENTION: YOU JUST ENCOUNTERED A JUMP IN THE TAIL OF THE TRAJECTORY !!!")
-                    continue
-
             ## - 2.0) only evaluate if the parcel is in target region
 	        ## NOTE: I took only the last two time steps for now; should this be 4?
             ## NOTE2: I am assuming that the mask grid is identical to the target grid for now
             mlat_ind, mlon_ind = midpindex(ary[:2,i,:],glon=mlon,glat=mlat)
             alat_ind, alon_ind = arrpindex(ary[0,i,:],glon=mlon,glat=mlat)
-            if not mask[mlat_ind,mlon_ind]==maskval and not mask[alat_ind,alon_ind]==maskval:
+            if not mask[alat_ind,alon_ind]==maskval:
                 nnevalm     += 1
                 nnevala     += 1
                 continue
@@ -313,7 +279,7 @@ def main_attribution(
 
                         # check if parcel was 'in PBL'
                         hgt = ary[:(tml+2),i,3] # consistent with max traj len
-                        if ary.shape[0] == tml+2:
+                        if ary.shape[0] < tml+2+4:
                             longhpbl = np.concatenate((ary[:(tml+2),i,7], extendtrajs[:,i,1]))
                         else:
                             longhpbl = ary[:(tml+2+4),i,7]
@@ -665,13 +631,8 @@ def main_attribution(
                             if fmemento:
                                 pidlog[ID] = ix # NOTE: double-check
 
-        if fjumps:
-            neval   = len(ntot)-njumps
-        else: 
-            neval   = len(ntot)
+        neval   = len(ntot)
         if verbose:
-            if fjumps:
-                print(" STATS: Encountered " + str(njumps) + " ({:.2f}".format(100*njumps/neval) +"%) jumps.")
             print(" STATS: Evaluated "+str(neval-nnevala)+" ({:.2f}".format(100*(neval-nnevala)/(neval)) +"%) arriving parcels inside mask (advection).")
             if nnevalh!=0:
                 print(" --- ATTENTION: "+str(nnevalh)+"/"+str(neval-nnevala)+" arriving parcels are not associated with any heat uptakes...")
@@ -708,7 +669,6 @@ def main_attribution(
         
         ## STATS summary
         tneval  += neval
-        tnjumps += njumps
         tnnevala+= nnevala
         tnnevalm+= nnevalm
         tnevalp += nevalp
@@ -744,7 +704,7 @@ def main_attribution(
         if fwrite_netcdf:
             print("\n Successfully written: "+ofile+" !\n")
 
-    writestats_02(statfile,tneval,tnjumps,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
+    writestats_02(statfile,tneval,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
     if verbose: 
         with open(statfile, 'r') as sfile:
             print(sfile.read())
