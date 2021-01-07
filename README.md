@@ -186,7 +186,7 @@ Keep in mind that...
 Dominik Schumacher and Jessica Keune
 
 ### License
-Copyright 2019 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
+Copyright 2021 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
 
 This software is published under the GPLv3 license. This means: 
 1. Anyone can copy, modify and distribute this software. 

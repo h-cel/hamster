@@ -619,7 +619,7 @@ def arrpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-lons))
     return ind_lat, ind_lon
 
-def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
+def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.4"):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -652,7 +652,7 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision):
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
@@ -694,7 +694,7 @@ def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,
     nc_f['H_n_part'][ix,:,:]  = ary_hnpart
     nc_f.close()
 
-def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision):
+def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentversion="v0.4"):
                 
     # delete nc file if it is present (avoiding error message)
     try:
@@ -725,7 +725,7 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision):
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.long_name    = 'Difference between uptake and arrival time, in days'
@@ -848,7 +848,8 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
                  E2P, E2P_Es, E2P_Ps, E2P_EPs,
                  strargs,precision,
-                 fwrite_month):
+                 fwrite_month,
+                 currentversion="v0.4"):
     
     # delete nc file if it is present (avoiding error message)
     try:
@@ -890,7 +891,7 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     if not np.any(np.isnan(udate_seq)):    
@@ -1281,7 +1282,8 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
                  frac_Had,
                  alpha_P,alpha_P_Ecorrected,alpha_P_res,
                  alpha_E,alpha_H,
-                 strargs,precision):
+                 strargs,precision,
+                 currentversion="v0.4"):
     
     Prefsum     = np.nansum(Pref,axis=(1,2))
     Pdiagsum    = np.nansum(Pdiag,axis=(1,2))
@@ -1339,7 +1341,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     utimes.units        = 'hours since 1900-01-01 00:00:00'
@@ -1552,7 +1554,7 @@ def ncdf_fliplats(ary, lats, lataxis=0):
     flip_lats    = np.flipud(lats)
     return flip_ary, flip_lats
 
-def writemasknc(mask, mlat, mlon, ofile="mask.nc"):
+def writemasknc(mask, mlat, mlon, ofile="mask.nc",currentversion="v0.4"):
    # create netCDF4 instance
     nc_f = nc4.Dataset(ofile,'w', format='NETCDF4')
     ### create dimensions ###
@@ -1567,7 +1569,7 @@ def writemasknc(mask, mlat, mlon, ofile="mask.nc"):
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER v0.2 ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
     ncmask.units        = '-'
