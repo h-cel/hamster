@@ -11,8 +11,25 @@ To execute interactively:
 
 ## METEOROLOGY FUNCTIONS
 
-def calc_pres(dens,temp):
-    return(dens*RSPECIFIC*temp)
+def calc_pres(rho_kgm3, q_kgkg, T_K):
+    """
+    INPUTS
+        - rho_kgm3 : kg m-3,    density
+        - q_kgkg : kg kg-1,     specific humidity
+        - T_K : K,              temperature
+    ACTION
+        Pressure is obtained using the ideal gas law, to which end the
+        virtual temperature is calculated, allowing to use the specific
+        gas constant of dry air
+    OUTPUTS
+        - pres_Pa: Pa,             pressure
+    """
+    ## convert specific humidity to mixing ratio (exact)
+    r_kgkg = -q_kgkg/(q_kgkg-1)
+    ## now calculate virtual temperature 
+    Tv_K = T_K*(1 + r_kgkg/EPSILON)/(1 + r_kgkg)
+    ## use ideal gas to obtain pressure
+    return rho_kgm3*RSPECIFIC*Tv_K
 
 def dist_on_sphere(lat1,lon1,lat2,lon2):
     """
