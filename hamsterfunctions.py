@@ -193,7 +193,7 @@ def readparcel(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
 
@@ -219,14 +219,15 @@ def readsparcel(parray):
 def readpres(parray):
     temp    = parray[:,8]                   # temperature (K)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     return pres
 
 def readepottemp(parray):
     temp    = parray[:,8]                   # temperature (K)
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
     return epottemp
 
@@ -234,7 +235,7 @@ def readpottemp(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
     temp    = parray[:,8]                   # temperature (K)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     return pottemp
 
@@ -275,7 +276,7 @@ def glanceparcel(parray):
     temp    = parray[:,8]                   # temperature (K)
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
 
     return ztra, hpbl, temp, qv, dens, pres
 
