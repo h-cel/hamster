@@ -717,7 +717,7 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
     utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('time','level','lat','lon'))
+    heats               = nc_f.createVariable('Had', precision, ('time','level','lat','lon'))
     etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'))
     
     # set attributes
@@ -755,7 +755,7 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
 
     nc_f = nc4.Dataset(ofile, 'r+')
     nc_f['E2P'][ix,:,:,:]     = ary_etop[:,:,:]
-    nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
+    nc_f['Had'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
 
 def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):

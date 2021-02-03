@@ -78,7 +78,7 @@ def main_biascorrection(
 
     with nc4.Dataset(attrfile, mode="r") as f:
         E2Psrt       = np.asarray(checknan(f['E2P'][:]))
-        Hadsrt       = np.asarray(checknan(f['H'][:]))
+        Hadsrt       = np.asarray(checknan(f['Had'][:]))
         arrival_time = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
         utime_srt    = np.asarray(f['level'][:])
         uptake_time  = udays2udate(arrival_time,utime_srt)
