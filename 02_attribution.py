@@ -20,7 +20,6 @@ def main_attribution(
            tdiagnosis,
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
-           cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
@@ -34,11 +33,11 @@ def main_attribution(
            crandomnit,
            randatt_forcall,
            explainp,fdupscale,fmupscale,
-           fcc_advanced,fvariable_mass,fwritestats,
+           fvariable_mass,fwritestats,
            strargs):
 
     # TODO: add missing features
-    if fcc_advanced or fvariable_mass:
+    if fvariable_mass:
         raise SystemExit("---- ABORTED: no can do, not implemented!")
 
     #### INPUT PATHS (incl. year)

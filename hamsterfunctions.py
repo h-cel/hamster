@@ -46,9 +46,7 @@ def read_cmdargs():
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
     parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                metavar ="", type = float,   default = 0)
-    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            metavar ="", type = float,   default = 0.7)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
-    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            metavar ="", type = float,   default = 0.7)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
     parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
@@ -88,65 +86,26 @@ def read_cmdargs():
 
 def printsettings(args,step):
     ## 01_DIAGNOSIS
-    if step == 1 and args.tdiagnosis in ['KAS']:
-        return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
+    if (step == 1):
+        return(str("Diagnosis with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
         ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
-        "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+
+        "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
+        "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
         ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+
         ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
-    if step == 1 and args.tdiagnosis in ['SOD']:
-        return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + "; REFERENCE: " +
-        "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"))
-    if step == 1 and args.tdiagnosis in ['SOD2']:
-        return(str("Diagnosis following Sodemann (2020) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.1, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         + "; REFERENCE: " +
-        "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
     
     ## 02_ATTRIBUTION
-    if (step == 2) and args.tdiagnosis in ['KAS']:
-        return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
+    if (step == 2):
+        return(str("Diagnosis and attribution with the following settings: "+
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
         ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "+
-        "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ 
-        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "+
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
-        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
+        "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
+        "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
+        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
         ", memento = "+str(args.memento)))
-    if (step == 2) and args.tdiagnosis in ['SOD']:
-        return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)
-         + "; REFERENCE: " +
-        "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
-        ))
-    if (step == 2) and args.tdiagnosis in ['SOD2']:
-        return(str("Diagnosis following Sodemann (2020) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.1, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+ ", "+ 
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)
-         + "; REFERENCE: " +
-        "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
 
 
 def readtraj(idate, # date as string [YYYYMMDDHH]
@@ -956,14 +915,6 @@ def append2csv(filename, listvals):
         csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
         csv_writer.writerow(listvals)
 
-def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
-                       dX, dtemp, dA, dB, c_cc, dAdB):
-    ## NOTE: for heat, dX==dB, but not for evap!
-    is_inpbl    = PBL_check(cpbl_strict, z=hgt, hpbl=hpbl, sethpbl=c_hgt)
-    is_uptk     = dX > dtemp
-    is_uptkcc   = np.abs(dA) < c_cc * dB * dAdB
-    return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
-    
 
 def convert2daily(xar,ftime,fagg="mean"):
 

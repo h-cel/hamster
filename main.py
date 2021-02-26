@@ -130,8 +130,6 @@ if args.steps == 1:
               veryverbose=args.veryverbose,
               tdiagnosis=args.tdiagnosis,
               cheat_dtemp=args.cheat_dtemp,
-              cheat_cc=args.cheat_cc,
-              cevap_cc=args.cevap_cc,
               cevap_hgt=args.cevap_hgt,
               cheat_hgt=args.cheat_hgt,
               cprec_dqv=args.cprec_dqv,
@@ -142,7 +140,6 @@ if args.steps == 1:
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
               ftimethis=args.timethis,
-              fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
               strargs=printsettings(args,1))
 
@@ -162,8 +159,6 @@ if args.steps == 2:
               tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
               cheat_dtemp=args.cheat_dtemp,
-              cheat_cc=args.cheat_cc, 
-              cevap_cc=args.cevap_cc,
               cevap_hgt=args.cevap_hgt, 
               cheat_hgt=args.cheat_hgt,
               cprec_dqv=args.cprec_dqv, 
@@ -182,7 +177,6 @@ if args.steps == 2:
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,
-              fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
               fwritestats=args.writestats,
               strargs=printsettings(args,2))

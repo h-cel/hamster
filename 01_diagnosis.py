@@ -18,33 +18,16 @@ def main_diagnosis(
            veryverbose,
            tdiagnosis,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
-           cheat_cc, cevap_cc, # for H, E diagnosis (lower = more strict)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_dtemp, cprec_rh,
            cpbl_strict,
            refdate,
            fwrite_netcdf,
            precision,
-           ftimethis,fcc_advanced,fvariable_mass,
+           ftimethis,fvariable_mass,
            strargs):
 
-    """
-    comments
     
-    - more sophisticated ABL criteria as in versionD are highly beneficial to
-      avoid E-overestimation over deserts; for H, it does not seem to change
-      as much.
-    - with the current configuration, there are only 4 parameters:
-        
-        cheat_dtemp = 1. (Kelvin),
-        f_dqdst == cevap_cc,
-        cprec_dtemp = 0. (Kelvin), # not a good idea to increase this a lot    
-        cprec_rh=80 (%) 
-        
-        thus, the previosuly introduced dz-Parameter could return,
-        with the advantage of being used both for E,H & P 
-        (as of now, dz>0 is used for P anyways).
-    """
     # Consistency checks
     if mode=="oper" and precision=="f4":
         precision = "f8"
