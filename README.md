@@ -122,7 +122,7 @@ for more details on setting dates, thresholds and other options. All user-specif
 
 
 #### Fine-tuning of detection criteria can be done using, e.g., 
-- `--cpbl_strict` to determine the 'strictness' of the PBL criteria (`--cpbl_strict 1` requires both instances to be within the maximum PBL, `--cpbl_strict 2` requires only one instance to be within the maximum PBL; `--cpbl_strict 0` does not filter for the PBL at all)
+- `--cpbl_strict` to determine the 'strictness' of the PBL criteria (`--cpbl_strict 2` requires both instances to be within the maximum PBL, `--cpbl_strict 1` requires only one instance to be within the maximum PBL; `--cpbl_strict 0` does not filter for the PBL at all)
 - `-–cprec_dqv` and `–-cprec_rh` to adjust the detection of preciptation
 - `--cevap_c` and `--cheat_cc` to adjust the Clausius-Clapeyron criteria for evaporation and sensible heat, respectively
 - `--cevap_hgt`, etc., to filter for specific heights
@@ -150,17 +150,17 @@ for more details on setting dates, thresholds and other options. All user-specif
   ```python
   python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis SOD --cprec_rh 70 --expid "SOD_prh-70"
   ...
-  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --expid "KAS_prh70_cpbl2_cevapcc0.9"
+  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 1 --cevap_cc 0.9 --expid "KAS_prh70_cpbl1_cevapcc0.9"
   ```
 5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
   ```python
-  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 2 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl2_cevapcc0.9"
+  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 1 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl1_cevapcc0.9"
   ```
 6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
-  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl2_cevapcc0.9" --bc_aggbwtime True
+  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl1_cevapcc0.9" --bc_aggbwtime True
   ```
-  The final netcdf file, `KAS_prh70_cpbl2_cevapcc0.9_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
+  The final netcdf file, `KAS_prh70_cpbl1_cevapcc0.9_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
 
 
 ## Miscellaneous notes

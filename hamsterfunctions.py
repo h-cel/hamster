@@ -51,7 +51,7 @@ def read_cmdargs():
     parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            metavar ="", type = float,   default = 0.7)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
-    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL - 1: both within max, 2: one within max, 3: not used", metavar ="", type = int,     default = 2)
+    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
     parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag, DEVELOPMENT)",                 metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
@@ -169,19 +169,21 @@ def readtraj(idate, # date as string [YYYYMMDDHH]
     return(dataar)
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
+    if (cpbl == 0):
+        # do not check for PBL; use everything
+        return True
     if (cpbl == 1):
-        #if (ztra < max(np.max(hpbl),maxhgt)).all():
-        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
-            return True
-        else:
-            return False
-    if (cpbl == 2):
+        # at least one location is within the max PBL
         if (ztra < max(hpbl[1],hpbl[0],maxhgt)).any():
             return True
         else:
             return False
-    if (cpbl == 3):
-        return True
+    if (cpbl == 2):
+        # both locations are within the max PBL 
+        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
+            return True
+        else:
+            return False
 
 def readparcel(parray):
     lats    = parray[:,2]                   # latitude
@@ -359,11 +361,14 @@ def PBL_check(cpbl_strict, z, hpbl, sethpbl):
     hpbl[hpbl<sethpbl] = sethpbl
     befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
     after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
-    if cpbl_strict == 1:
+    if cpbl_strict == 2:
+        # both inside (and)
         change_inside = np.logical_and(befor_inside, after_inside)
-    elif cpbl_strict == 2:
+    elif cpbl_strict == 1:
+        # one inside (or) 
         change_inside = np.logical_or(befor_inside, after_inside)
-    elif cpbl_strict == 3:
+    elif cpbl_strict == 0:
+        # no pbl check
         change_inside = np.ones(dtype=bool, shape=befor_inside.size)
     return change_inside
 
