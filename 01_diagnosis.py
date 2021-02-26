@@ -168,51 +168,8 @@ def main_diagnosis(
             pottemp                 = readpottemp(ary[:2,i,:])
             dTH                     = trajparceldiff(pottemp, 'diff')
 
-            ##  KAS: KEUNE AND SCHUMACHER
-            if tdiagnosis == 'KAS':
-
-                # precipitation
-                if (dq < cprec_dqv):
-                    pres = readpres(ary[:,i,:])
-                    if ( ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
-                         ary_prec[lat_ind,lon_ind] += dq
-                         ary_pnpart[lat_ind,lon_ind] += int(1)
-
-                # evaporation and sensible heat 
-                if ( checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt) or checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt) ):
-                    if ( dq > 0 or dTH > 0):
-                        pres                = readpres(ary[:,i,:])
-
-                        # sensible heat
-                        if ( dTH > 0 and checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt)):
-                            dqmax = cheat_cc * dqsdT(p_hPa=pres[1]/1e2, T_degC=temp[1]-TREF)
-                            if fcc_advanced:
-                                dT = trajparceldiff(temp, 'diff')
-                                if  ((dTH > cheat_dtemp) and ( (dT > 0 and abs(dq) < dT*dqmax) or (dT < 0 and abs(dq) < dTHdqmax) )):
-                                    ary_heat[lat_ind,lon_ind] += dTH
-                                    ary_hnpart[lat_ind,lon_ind] += int(1)
-                            else:
-                                if  ((dTH > cheat_dtemp) and abs(dq) < dTH*dqmax ):
-                                    ary_heat[lat_ind,lon_ind] += dTH
-                                    ary_hnpart[lat_ind,lon_ind] += int(1)
-
-                        # evaporation
-                        if ( dq > 0 and checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt)):
-                            epottemp        = readepottemp(ary[:,i,:])
-                            dTHe            = trajparceldiff(epottemp, 'diff')
-                            dTmax           = cevap_cc*dTdqs(p_hPa=pres[1]/1e2, q_kgkg=qv[1])
-                            if fcc_advanced:
-                                dT = trajparceldiff(temp, 'diff')
-                                if ( (dTHe - dTH) > cheat_dtemp and ( (dT > 0 and dT < dq*dTmax) or (dT < 0 and abs(dTH) < dq*dTmax) )):
-                                    ary_evap[lat_ind,lon_ind] += dq
-                                    ary_enpart[lat_ind,lon_ind] += int(1)
-                            else:
-                                if ( (dTHe - dTH) > cheat_dtemp and abs(dTH) < dq*dTmax ):
-                                    ary_evap[lat_ind,lon_ind] += dq
-                                    ary_enpart[lat_ind,lon_ind] += int(1)
-
             ## SOD: SODEMANN ET AL., 2008
-            elif tdiagnosis == 'SOD':
+            if tdiagnosis == 'SOD':
         
                 # note: not optimized wrt runtime
                 pres            = readpres(ary[:,i,:])
@@ -236,6 +193,7 @@ def main_diagnosis(
                         (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[lat_ind,lon_ind] += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
+
 
             ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
             elif tdiagnosis == 'SOD2':
