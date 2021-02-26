@@ -175,8 +175,21 @@ def main_diagnosis(
                 ary_prec[lat_ind,lon_ind] += dq
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
+            ## ALLPBL
+            if tdiagnosis == 'ALLPBL':
+
+                ## evaporation
+                if ( checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt) and dq>0 ):
+                    ary_evap[lat_ind,lon_ind]  += dq
+                    ary_enpart[lat_ind,lon_ind] += int(1)
+
+                ## sensible heat
+                if ( checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt) and dTH > 0):
+                    ary_heat[lat_ind,lon_ind]  += dTH
+                    ary_hnpart[lat_ind,lon_ind] += int(1)
+
             ## SOD: SODEMANN ET AL., 2008
-            if tdiagnosis == 'SOD':
+            elif tdiagnosis == 'SOD':
         
                 ## evaporation
                 if (dq > 0.0002 and  
@@ -189,7 +202,6 @@ def main_diagnosis(
                         (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
                     ary_heat[lat_ind,lon_ind] += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
-
 
             ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
             elif tdiagnosis == 'SOD2':
