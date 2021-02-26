@@ -320,142 +320,65 @@ def main_attribution(
 
                 ## - 2.3) diagnose fluxes
                 
-                ##  - ALLPBL
-                if tdiagnosis == 'ALLPBL':
+                ## (a) E2P, evaporation resulting in precipitation
+                if not mask[mlat_ind,mlon_ind]==maskval:
+                    nnevalm += 1
+                else:
+                    if ( (qv[0]-qv[1]) < cprec_dqv and 
+                         ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
 
-                    ## (a) E2P, evaporation resulting in precipitation
-                    if not mask[mlat_ind,mlon_ind]==maskval:
-                        nnevalm += 1
-                    else:
-                        if ( (qv[0]-qv[1]) < cprec_dqv and 
-                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
+                        # prec
+                        prec    = abs(qv[0]-qv[1])
+                        # log some statistics
+                        nevalp  += 1
+                        psum    += prec
 
-                            # prec
-                            prec    = abs(qv[0]-qv[1])
-                            # log some statistics
-                            nevalp  += 1
-                            psum    += prec
-
-                            # read full parcel information
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
+                        # read full parcel information
+                        lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
                             
-                            # calculate all required changes along trajectory
-                            dq          = trajparceldiff(qv[:], 'diff')
-                            # evaluate only until trajectory falls dry
-                            ihf_E = tml + 2
-                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
-                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
+                        # calculate all required changes along trajectory
+                        dq          = trajparceldiff(qv[:], 'diff')
+                        # evaluate only until trajectory falls dry
+                        ihf_E = tml + 2
+                        if fdry and np.any(qv[1:ihf_E]<= 0.00005):
+                            ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                             
-                            # identify uptake locations
+                        # identify uptake locations
+                        # ALLPBL
+                        if tdiagnosis == 'ALLPBL':
                             is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], sethpbl=cevap_hgt)
                             is_uptk     = dq[:ihf_E-1] > 0
                             evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
-
-                            # log some stats if trajectory is without any uptakes (for upscaling)
-                            if evap_idx.size==0:
-                                nnevalp     += 1
-                                pmiss       += prec
-                                if fdupscale:
-                                    ipmiss      += prec
-                            
-                            # ATTRIBUTION
-                            if evap_idx.size>0:
-                                if mattribution=="linear":
-                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                elif mattribution=="random":
-                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
-                                            nmin=crandomnit,forc_all=randatt_forcall,
-                                            verbose=verbose,veryverbose=veryverbose)
-                                # write to grid
-                                for itj in evap_idx:
-                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
-
-                                # write additional stats to csv-file (currently: ALWAYS explain="none"; also: why only linear?)
-                                if fwritestats and mattribution=="linear":
-                                    if evap_idx.size==0:
-                                        pattdata    = [pdate,str(0),str(0),str(prec)]
-                                    elif evap_idx.size>0:
-                                        etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
-                                        pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
-                                    append2csv(pattfile,pattdata)
-
-                                # log some statistics (for upscaling)
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                    ipmiss      += prec-np.sum(etop[evap_idx])
-                    
-                    ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
-                    if not mask[alat_ind,alon_ind]==maskval:
-                        nnevala += 1
-                    else:
-                        if ( ihf_H >= 2 and 
-                             hgt[0] < np.max(hpbl[:4]) ):
-                            
-                            # log some statistics
-                            nevalh  += 1
-
-                            # read full parcel information
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
-                             
-                            # calculate all required changes along trajectory
-                            dTH         = trajparceldiff(pottemp[:], 'diff')
-
-                            # identify sensible heat uptakes
-                            is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
-                            is_uptk     = dTH[:ihf_H-1] > 0
-                            heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]
-
-                            # discount uptakes linearly
-                            if heat_idx.size==0:
-                                # log some statistics
-                                nnevalh += 1
-                            if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
-
-                            # loop through sensible heat uptakes
-                            for itj in heat_idx:
-                                #NOTE: hardcoded for writing daily data 
-                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
-
-                            # update parcel log
-                            if fmemento:
-                                pidlog[ID] = ix # NOTE: double-check
-
-
-                ##  - 2.3)-SOD: Sodemann et al., 2008
-                elif tdiagnosis == 'SOD':
-         
-                    ## (a) E2P
-                    if not mask[mlat_ind,mlon_ind]==maskval:
-                        nnevalm += 1
-                    else:
-                        if ( (qv[0]-qv[1]) < 0 and 
-                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
-
-                            # prec
-                            prec    = abs(qv[0]-qv[1])
-                            # log some statistics
-                            nevalp  += 1
-                            psum    += prec
-                            
-                            # read full parcel information
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
-
-                            # calculate all required changes along trajectory
-                            dq          = trajparceldiff(qv[:], 'diff')
-                            # evaluate only until trajectory falls dry
-                            ihf_E = tml + 2
-                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
-                                ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
-
-                            # identify uptake locations
+                        # SOD
+                        elif tdiagnosis == 'SOD':
                             is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_E], 'mean')
                             is_uptk     = dq[:ihf_E-1] > 0.0002
                             evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
-                               
-                            # WRITE STATS
+                        # SOD2
+                        elif tdiagnosis == 'SOD20':
+                            is_uptk     = dq[:ihf_E-1] > 0.0001
+                            evap_idx    = np.where(is_uptk)[0]
+
+                        # log some stats if trajectory is without any uptakes (for upscaling)
+                        if evap_idx.size==0:
+                            nnevalp     += 1
+                            pmiss       += prec
+                            if fdupscale:
+                                ipmiss      += prec
+                            
+                        # ATTRIBUTION
+                        if evap_idx.size>0:
+                            if mattribution=="linear":
+                                etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
+                            elif mattribution=="random":
+                                etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
+                                        nmin=crandomnit,forc_all=randatt_forcall,
+                                        verbose=verbose,veryverbose=veryverbose)
+                            # write to grid
+                            for itj in evap_idx:
+                                ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
+
+                            # write additional stats to csv-file (currently: ALWAYS explain="none"; also: why only linear?)
                             if fwritestats and mattribution=="linear":
                                 if evap_idx.size==0:
                                     pattdata    = [pdate,str(0),str(0),str(prec)]
@@ -464,170 +387,61 @@ def main_attribution(
                                     pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
                                 append2csv(pattfile,pattdata)
 
-                            ## TRAJECTORY WITHOUT UPTAKE LOCATIONS
-                            if evap_idx.size==0:
-                                # log some statistics (for upscaling)
-                                nnevalp    += 1
-                                pmiss      += prec
-                                if fdupscale:
-                                    ipmiss      += prec
+                            # log some statistics (for upscaling)
+                            patt    += np.sum(etop[evap_idx])
+                            punatt  += prec-np.sum(etop[evap_idx])
+                            if fdupscale:
+                                ipatt       += np.sum(etop[evap_idx])
+                                ipmiss      += prec-np.sum(etop[evap_idx])
+                    
+                ## (b) H, surface sensible heat arriving in PBL (or nocturnal layer)
+                if not mask[alat_ind,alon_ind]==maskval:
+                    nnevala += 1
+                else:
+                    if ( ihf_H >= 2 and 
+                         hgt[0] < np.max(hpbl[:4]) ):
                             
-                            # ATTRIBUTION
-                            if evap_idx.size>0:
-                                if mattribution=="linear":
-                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                elif mattribution=="random":
-                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
-                                            nmin=crandomnit, forc_all=randatt_forcall,
-                                            verbose=verbose,veryverbose=veryverbose)
-                                    print("Attributed fraction: "+str(np.sum(etop[evap_idx])/prec))
-                                for itj in evap_idx:
-                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
-                                # log some statistics (for upscaling)
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                    ipmiss      += prec-np.sum(etop[evap_idx]) 
-    
-                    ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
-                    if not mask[alat_ind,alon_ind]==maskval:
-                        nnevala += 1
-                    else:
-                        if ( ihf_H >= 2 and
-                             hgt[0] < np.max(hpbl[:4]) ):
-                            
-                            # log some statistics
-                            nevalh  += 1
+                        # log some statistics
+                        nevalh  += 1
 
-                            # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                        # read full parcel information
+                        lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                             
+                        # calculate all required changes along trajectory
+                        dTH         = trajparceldiff(pottemp[:], 'diff')
 
-                            # calculate all required changes along trajectory
-                            dTH         = trajparceldiff(pottemp[:], 'diff')
-
-                            # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
+                        # identify sensible heat uptakes
+                        # ALLPBL
+                        if tdiagnosis == 'ALLPBL':
+                            is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
+                            is_uptk     = dTH[:ihf_H-1] > 0
+                            heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]
+                        # SOD / SCH19
+                        elif tdiagnosis == 'SOD':    
                             is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_H], 'mean')
                             is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                             heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
-
-                            # discount uptakes linearly
-                            if heat_idx.size==0:
-                                # log some statistics
-                                nnevalh += 1
-                            if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
-
-                            # loop through sensible heat uptakes
-                            for itj in heat_idx:
-                                #NOTE: hardcoded for writing daily data 
-                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
-
-                            # update parcel log
-                            if fmemento:
-                                pidlog[ID] = ix # NOTE: double-check
-
-
-                ##  SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
-                elif tdiagnosis == 'SOD2':
-         
-                    ## (a) E2P
-                    if not mask[mlat_ind,mlon_ind]==maskval:
-                        nnevalm += 1
-                    else:
-                        if ( (qv[0]-qv[1]) < 0 and 
-                             ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
-
-                            # prec
-                            prec    = abs(qv[0]-qv[1])
-                            # log some statistics
-                            nevalp  += 1
-                            psum    += prec
-
-                            # read full parcel information
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:tml+2,i,:])
-
-                            # calculate all required changes along trajectory
-                            dq          = trajparceldiff(qv[:], 'diff')
-                            
-                            # evaluate only until trajectory falls dry
-                            ihf_E = tml + 2
-                            if fdry and np.any(qv[1:ihf_E]<= 0.00005):
-                                ihf_E   = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
-
-                            # identify evaporative moisture uptakes
-                            is_uptk     = dq[:ihf_E-1] > 0.0001
-                            evap_idx    = np.where(is_uptk)[0] 
-
-                            # WRITE STATS
-                            if fwritestats and mattribution=="linear":
-                                if evap_idx.size==0:
-                                    pattdata    = [pdate,str(0),str(0),str(prec)]
-                                elif evap_idx.size>0:
-                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp="none")
-                                    pattdata= [pdate,str(np.sum(etop[evap_idx]/prec)),str(1-etop[-1]/prec),str(prec)]
-                                append2csv(pattfile,pattdata)
- 
-                            # TRAJECTORY WITHOUT UPTAKE LOCATIONS
-                            if evap_idx.size==0:
-                                # log some statistics (for upscaling)
-                                nnevalp    += 1
-                                pmiss      += prec
-                                if fdupscale:
-                                    ipmiss      += prec
-                            
-                            # ATTRIBUTION
-                            if evap_idx.size>0:
-                                if mattribution=="linear":
-                                    etop    = linear_attribution_p(qv[:ihf_E],iupt=evap_idx,explainp=explainp)
-                                elif mattribution=="random":
-                                    etop    = random_attribution_p(qtot=qv[:ihf_E],iupt=evap_idx,explainp=explainp,
-                                            nmin=crandomnit,forc_all=randatt_forcall,
-                                            verbose=verbose,veryverbose=veryverbose)
-                                for itj in evap_idx:
-                                    ary_etop[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=etop[itj], glon=glon, glat=glat)
-                                # log some statistics (for upscaling)
-                                patt    += np.sum(etop[evap_idx])
-                                punatt  += prec-np.sum(etop[evap_idx])
-                                if fdupscale:
-                                    ipatt       += np.sum(etop[evap_idx])
-                                    ipmiss      += prec-np.sum(etop[evap_idx]) 
-
-                    ## (b) H, surface sensible heat (not used originally; analogous to evaporation)
-                    if not mask[alat_ind,alon_ind]==maskval:
-                        nnevala += 1
-                    else:
-                        if ( ihf_H >= 2 and
-                             hgt[0] < np.max(hpbl[:4]) ):
-                            
-                            # log some statistics
-                            nevalh  += 1
-                            
-                            # read full parcel information #NOTE: redundant when parcel has also (somehow) precipitated
-                            lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
-
-                            # calculate all required changes along trajectory
-                            dTH         = trajparceldiff(pottemp[:], 'diff')
-
-                            # identify sensible heat uptakes #NOTE: same as for KAS, ihf_H not needed here (again)
+                        # SOD2
+                        elif tdiagnosis == 'SOD2':
                             is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                             heat_idx    = np.where(is_uptk)[0]     
 
-                            # discount uptakes linearly
-                            if heat_idx.size==0:
-                                # log some statistics
-                                nnevalh += 1
-                            if heat_idx.size>0:
-                                dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
+                        # discount uptakes linearly
+                        if heat_idx.size==0:
+                            # log some statistics
+                            nnevalh += 1
+                        if heat_idx.size>0:
+                            dTH_disc = linear_discounter(v=pottemp[:ihf_H], min_gain=0)
 
-                            # loop through sensible heat uptakes
-                            for itj in heat_idx:
-                                #NOTE: hardcoded for writing daily data 
-                                ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
+                        # loop through sensible heat uptakes
+                        for itj in heat_idx:
+                            #NOTE: hardcoded for writing daily data 
+                            ary_heat[ctl-(itj+3-ix%4)//4,:,:] += gridder(plon=lons[itj:itj+2], plat=lats[itj:itj+2], pval=dTH_disc[itj], glon=glon, glat=glat)/4 
 
-                            # update parcel log
-                            if fmemento:
-                                pidlog[ID] = ix # NOTE: double-check
+                        # update parcel log
+                        if fmemento:
+                            pidlog[ID] = ix # NOTE: double-check
+
 
         neval   = len(ntot)
         if verbose:
