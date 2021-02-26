@@ -169,15 +169,15 @@ def main_diagnosis(
             dTH                     = trajparceldiff(pottemp, 'diff')
             pres                    = readpres(ary[:2,i,:])
 
+            ## PRECIPITATION
+            if (dq < 0 and 
+                    ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
+                ary_prec[lat_ind,lon_ind] += dq
+                ary_pnpart[lat_ind,lon_ind] += int(1)
+            
             ## SOD: SODEMANN ET AL., 2008
             if tdiagnosis == 'SOD':
         
-                ## precipitation
-                if (dq < 0 and 
-                        ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
-                    ary_prec[lat_ind,lon_ind] += dq
-                    ary_pnpart[lat_ind,lon_ind] += int(1)
-
                 ## evaporation
                 if (dq > 0.0002 and  
                         (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
@@ -194,12 +194,6 @@ def main_diagnosis(
             ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
             elif tdiagnosis == 'SOD2':
         
-                ## precipitation
-                if (dq < 0 and 
-                        ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
-                    ary_prec[lat_ind,lon_ind] += dq
-                    ary_pnpart[lat_ind,lon_ind] += int(1)
-
                 ## evaporation
                 if (dq > 0.0001): 
                     ary_evap[lat_ind,lon_ind] += dq
