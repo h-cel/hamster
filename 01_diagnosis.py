@@ -163,19 +163,15 @@ def main_diagnosis(
             ary_npart[lat_ind,lon_ind] += int(1)
 
             ## read only necessary parcel information
-            qv, temp, hgt, hpbl    = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
+            qv, temp, hgt, hpbl     = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
             dq                      = trajparceldiff(qv, 'diff') 
             pottemp                 = readpottemp(ary[:2,i,:])
             dTH                     = trajparceldiff(pottemp, 'diff')
+            pres                    = readpres(ary[:2,i,:])
 
             ## SOD: SODEMANN ET AL., 2008
             if tdiagnosis == 'SOD':
         
-                # note: not optimized wrt runtime
-                pres            = readpres(ary[:,i,:])
-                pottemp         = readpottemp(ary[:,i,:])
-                dTH             = trajparceldiff(pottemp, 'diff')
-
                 ## precipitation
                 if (dq < 0 and 
                         ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
@@ -198,11 +194,6 @@ def main_diagnosis(
             ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
             elif tdiagnosis == 'SOD2':
         
-                # note: not optimized wrt runtime
-                pres            = readpres(ary[:,i,:])
-                pottemp         = readpottemp(ary[:,i,:])
-                dTH             = trajparceldiff(pottemp, 'diff')
-
                 ## precipitation
                 if (dq < 0 and 
                         ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
