@@ -21,6 +21,10 @@ def main_diagnosis(
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
            cprec_dqv, cprec_rh,
            cpbl_strict,
+           # pbl and height criteria
+           cpbl_method,
+           cpbl_strict,
+           cpbl_factor,
            refdate,
            fwrite_netcdf,
            precision,

@@ -22,7 +22,10 @@ def main_attribution(
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_rh,
+           # pbl and height criteria
+           cpbl_method,
            cpbl_strict,
+           cpbl_factor,
            refdate,
            fwrite_netcdf,
            precision,
@@ -347,12 +350,12 @@ def main_attribution(
                     # identify uptake locations
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], sethpbl=cevap_hgt)
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=cpbl_factor, method=cpbl_method)
                         is_uptk     = dq[:ihf_E-1] > 0
                         evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                     # SOD
                     elif tdiagnosis == 'SOD':
-                        is_inpbl    = trajparceldiff(hgt[:ihf_E], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_E], 'mean')
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=1.5, method="mean")
                         is_uptk     = dq[:ihf_E-1] > 0.0002
                         evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                     # SOD2
@@ -414,12 +417,12 @@ def main_attribution(
                     # identify sensible heat uptakes
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
                         is_uptk     = dTH[:ihf_H-1] > 0
                         heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]
                     # SOD / SCH19
                     elif tdiagnosis == 'SOD':    
-                        is_inpbl    = trajparceldiff(hgt[:ihf_H], 'mean') < 1.5*trajparceldiff(hpbl[:ihf_H], 'mean')
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=1.5, method="mean")
                         is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                         heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
                     # SOD2

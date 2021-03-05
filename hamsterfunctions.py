@@ -48,7 +48,9 @@ def read_cmdargs():
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
-    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
+    parser.add_argument('--cpbl_factor','-pblf',help = "factor for PBL relaxation",                                     metavar ="", type = float,   default = 1)
+    parser.add_argument('--cpbl_method','-pblm',help = "filter for PBL: mean, max, actual heights between 2 points",    metavar ="", type = str,     default = "max")
+    parser.add_argument('--cpbl_strict','-pbls',help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (03 only; flag)",        metavar ="", type = str2bol, default = False,     nargs='?')
@@ -295,24 +297,35 @@ def convertunits(ary_val, garea, var):
     if var in ['H']:
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
+def movingmax(x, n=2):
+   return np.array([np.max(x[i:i+n]) for i in range(len(x)-(n-1))])
 
-def pblcheck(cpbl_strict, z, hpbl, sethpbl):
-    # returns boolean vector for all change locations
-    #  (True if inside PBL), length given by z.size-1
-    hpbl[hpbl<sethpbl] = sethpbl
-    befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
-    after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
+def movingmean(x, n=2):
+   return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
+
+def pblcheck(cpbl_strict, z, hpbl, minh, fpbl=1, method="max"):
+    # returns boolean vector for all change locations (z.size-1)
+    # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
+    hpbl[hpbl<minh] = minh
+    if method=="mean":
+        before_inside = ( z[1:]  <= fpbl*movingmean(hpbl, n=2) )
+        after_inside  = ( z[:-1] <= fpbl*movingmean(hpbl, n=2) )
+    elif method=="max":
+        before_inside = ( z[1:]  <= fpbl*movingmax(hpbl, n=2) )
+        after_inside  = ( z[:-1] <= fpbl*movingmax(hpbl, n=2) )
+    elif method=="actual":
+        before_inside = ( z[1:]  <= fpbl*hpbl[1:] )
+        after_inside  = ( z[:-1] <= fpbl*hpbl[:-1] )
     if cpbl_strict == 2:
         # both inside (and)
-        change_inside = np.logical_and(befor_inside, after_inside)
+        change_inside = np.logical_and(before_inside, after_inside)
     elif cpbl_strict == 1:
         # one inside (or) 
-        change_inside = np.logical_or(befor_inside, after_inside)
+        change_inside = np.logical_or(before_inside, after_inside)
     elif cpbl_strict == 0:
         # no pbl check
-        change_inside = np.ones(dtype=bool, shape=befor_inside.size)
+        change_inside = np.ones(dtype=bool, shape=before_inside.size)
     return change_inside
-
 
 def scale_mass(ary_val, ary_part, ary_rpart):
     ary_sval    = np.zeros(shape=(ary_val.shape)) 

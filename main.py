@@ -134,7 +134,10 @@ if args.steps == 1:
               cheat_hgt=args.cheat_hgt,
               cprec_dqv=args.cprec_dqv,
               cprec_rh=args.cprec_rh,
+              # pbl and height criteria
+              cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
+              cpbl_factor=args.cpbl_factor,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
@@ -162,7 +165,10 @@ if args.steps == 2:
               cheat_hgt=args.cheat_hgt,
               cprec_dqv=args.cprec_dqv, 
               cprec_rh=args.cprec_rh,
+              # pbl and height criteria
+              cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
+              cpbl_factor=args.cpbl_factor,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
