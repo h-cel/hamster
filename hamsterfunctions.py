@@ -301,22 +301,8 @@ def convertunits(ary_val, garea, var):
 
 
 def pblcheck(cpbl_strict, z, hpbl, sethpbl):
-    """
-    INPUT
-        - PBL strictness flag; 1 (moderate), 2 (relaxed), 3 (fully relaxed)
-        - parcel altitude
-        - PBL heigt at parcel location
-        - prescribed PBL height
-    ACTION
-        - raises any hpbl below sethpbl to this value; no effect if sethpbl=0
-        - calculates whether parcel locations 'before' and 'after' each change,
-          i.e. during analysis steps, are within PBL
-        - depending on cpbl_strict, require both before & after to be
-          inside PBL (1), either (2), or none (3), for change locations
-    RETURN
-        - returns boolean vector for all change locations
-          (True if inside PBL), length given by z.size-1
-    """
+    # returns boolean vector for all change locations
+    #  (True if inside PBL), length given by z.size-1
     hpbl[hpbl<sethpbl] = sethpbl
     befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
     after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
