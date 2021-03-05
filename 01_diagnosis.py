@@ -172,7 +172,7 @@ def main_diagnosis(
                     ary_enpart[lat_ind,lon_ind] += int(1)
 
                 ## sensible heat
-                if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>0 ):
+                if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp ):
                     ary_heat[lat_ind,lon_ind]  += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
 

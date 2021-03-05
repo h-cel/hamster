@@ -419,7 +419,7 @@ def main_attribution(
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
                         is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                        is_uptk     = dTH[:ihf_H-1] > 0
+                        is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                         heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]
                     # SOD / SCH19
                     elif tdiagnosis == 'SOD':    
