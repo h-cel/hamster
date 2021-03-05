@@ -19,9 +19,9 @@ def main_attribution(
            veryverbose,
            tdiagnosis,
            ctraj_len,
-           cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
+           cheat_dtemp,
            cevap_dqv,
-           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
+           cevap_hgt, cheat_hgt,
            cprec_dqv, cprec_rh,
            # pbl and height criteria
            cpbl_method,

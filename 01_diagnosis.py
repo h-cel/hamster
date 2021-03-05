@@ -17,9 +17,9 @@ def main_diagnosis(
            verbose,
            veryverbose,
            tdiagnosis,
-           cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
+           cheat_dtemp,
            cevap_dqv,
-           cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 
+           cevap_hgt, cheat_hgt,
            cprec_dqv, cprec_rh,
            cpbl_strict,
            # pbl and height criteria
