@@ -166,12 +166,12 @@ def main_diagnosis(
             if tdiagnosis == 'ALLPBL':
 
                 ## evaporation
-                if ( checkpbl(cpbl_strict,hgt,hpbl,cevap_hgt) and dq>0 ):
+                if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>0 ):
                     ary_evap[lat_ind,lon_ind]  += dq
                     ary_enpart[lat_ind,lon_ind] += int(1)
 
                 ## sensible heat
-                if ( checkpbl(cpbl_strict,hgt,hpbl,cheat_hgt) and dTH > 0):
+                if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>0 ):
                     ary_heat[lat_ind,lon_ind]  += dTH
                     ary_hnpart[lat_ind,lon_ind] += int(1)
 
