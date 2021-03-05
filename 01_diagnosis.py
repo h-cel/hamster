@@ -158,8 +158,8 @@ def main_diagnosis(
             pres                    = readpres(ary[:2,i,:])
 
             ## PRECIPITATION
-            if (dq < 0 and 
-                    ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > 80 ):
+            if (dq < cprec_dqv and 
+                    ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                 ary_prec[lat_ind,lon_ind] += dq
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
