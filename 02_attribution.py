@@ -21,7 +21,7 @@ def main_attribution(
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
-           cprec_dqv, cprec_dtemp, cprec_rh,
+           cprec_dqv, cprec_rh,
            cpbl_strict,
            refdate,
            fwrite_netcdf,

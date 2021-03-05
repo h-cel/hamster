@@ -45,12 +45,10 @@ def read_cmdargs():
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       metavar ="", type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
-    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                metavar ="", type = float,   default = 0)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
     parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
-    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag, DEVELOPMENT)",                 metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (03 only; flag)",        metavar ="", type = str2bol, default = False,     nargs='?')
@@ -89,7 +87,6 @@ def printsettings(args,step):
     if (step == 1):
         return(str("Diagnosis with the following settings: " +
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
-        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
         "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
         "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
         ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
@@ -100,7 +97,6 @@ def printsettings(args,step):
     if (step == 2):
         return(str("Diagnosis and attribution with the following settings: "+
         "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
-        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "+
         "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
         "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
         ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
