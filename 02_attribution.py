@@ -21,8 +21,10 @@ def main_attribution(
            ctraj_len,
            cheat_dtemp,
            cevap_dqv,
+           cevap_drh,
            cevap_hgt, cheat_hgt,
            cprec_dqv, cprec_rh,
+           cheat_drh,
            # pbl and height criteria
            cpbl_method,
            cpbl_strict,

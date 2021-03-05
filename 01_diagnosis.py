@@ -19,8 +19,10 @@ def main_diagnosis(
            tdiagnosis,
            cheat_dtemp,
            cevap_dqv,
+           cevap_drh,
            cevap_hgt, cheat_hgt,
            cprec_dqv, cprec_rh,
+           cheat_drh,
            cpbl_strict,
            # pbl and height criteria
            cpbl_method,
