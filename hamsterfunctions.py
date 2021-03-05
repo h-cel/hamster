@@ -300,7 +300,7 @@ def convertunits(ary_val, garea, var):
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
 
-def PBL_check(cpbl_strict, z, hpbl, sethpbl):
+def pblcheck(cpbl_strict, z, hpbl, sethpbl):
     """
     INPUT
         - PBL strictness flag; 1 (moderate), 2 (relaxed), 3 (fully relaxed)

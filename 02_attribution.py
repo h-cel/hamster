@@ -347,7 +347,7 @@ def main_attribution(
                     # identify uptake locations
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], sethpbl=cevap_hgt)
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], sethpbl=cevap_hgt)
                         is_uptk     = dq[:ihf_E-1] > 0
                         evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                     # SOD
@@ -414,7 +414,7 @@ def main_attribution(
                     # identify sensible heat uptakes
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = PBL_check(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
+                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], sethpbl=cheat_hgt)
                         is_uptk     = dTH[:ihf_H-1] > 0
                         heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]
                     # SOD / SCH19
