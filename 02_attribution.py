@@ -229,6 +229,9 @@ def main_attribution(
         neval = nnevala = nnevalm = nevalp = nnevalp = nevalh = nnevalh = 0
 
         # grab extended trajectory data
+        ### CHECK/CLEANUP: CAN ALL OF THIS GO? 
+        # (i)  POM data not supported anymore
+        # (ii) if trajectories too short: abort (let's not fix everything right away for the user)
         if fmemento:
             # NOTE: pom data can come with duplicate IDs; remove to avoid (some) trouble
             if not np.unique(ary[0,:,0]).size == ary[0,:,0].size:
@@ -274,6 +277,7 @@ def main_attribution(
                         is_inmask = whereinmask(mask=mask, maskval=maskval, masklat=mlat, masklon=mlon,
                                                 trajlat=ary[:(tml+2),i,2], trajlon=ary[:(tml+2),i,1])
 
+                        ### CHECK/CLEANUP: CAN ALL OF THIS GO? (if only trajs > length allowed)? 
                         # check if parcel was 'in PBL'
                         hgt = ary[:(tml+2),i,3] # consistent with max traj len
                         if ary.shape[0] < tml+2+4:
