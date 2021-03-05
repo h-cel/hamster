@@ -20,6 +20,7 @@ def main_attribution(
            tdiagnosis,
            ctraj_len,
            cheat_dtemp, # used for E,H,P (if cprec_dqv==None)
+           cevap_dqv,
            cevap_hgt, cheat_hgt, # set min ABLh, disabled if 0 | NOTE: to be unified
            cprec_dqv, cprec_rh,
            # pbl and height criteria
@@ -351,7 +352,7 @@ def main_attribution(
                     # ALLPBL
                     if tdiagnosis == 'ALLPBL':
                         is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                        is_uptk     = dq[:ihf_E-1] > 0
+                        is_uptk     = dq[:ihf_E-1] > cevap_dqv
                         evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
                     # SOD
                     elif tdiagnosis == 'SOD':

@@ -45,6 +45,7 @@ def read_cmdargs():
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       metavar ="", type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
+    parser.add_argument('--cevap_dqv',  '-ceq', help = "threshold for detection of E based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
