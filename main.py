@@ -129,14 +129,17 @@ if args.steps == 1:
               verbose=args.verbose,
               veryverbose=args.veryverbose,
               tdiagnosis=args.tdiagnosis,
-              cheat_dtemp=args.cheat_dtemp,
+              # E criteria
               cevap_dqv=args.cevap_dqv,
               cevap_drh=args.cevap_drh,
-              cevap_hgt=args.cevap_hgt,
-              cheat_hgt=args.cheat_hgt,
-              cprec_dqv=args.cprec_dqv,
+              cevap_hgt=args.cevap_hgt, 
+              # P criteria
+              cprec_dqv=args.cprec_dqv, 
               cprec_rh=args.cprec_rh,
+              # H criteria
+              cheat_dtemp=args.cheat_dtemp,
               cheat_drh=args.cheat_drh,
+              cheat_hgt=args.cheat_hgt,
               # pbl and height criteria
               cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
@@ -163,14 +166,17 @@ if args.steps == 2:
               veryverbose=args.veryverbose,
               tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
-              cheat_dtemp=args.cheat_dtemp,
+              # E criteria
               cevap_dqv=args.cevap_dqv,
               cevap_drh=args.cevap_drh,
               cevap_hgt=args.cevap_hgt, 
-              cheat_hgt=args.cheat_hgt,
+              # P criteria
               cprec_dqv=args.cprec_dqv, 
               cprec_rh=args.cprec_rh,
+              # H criteria
+              cheat_dtemp=args.cheat_dtemp,
               cheat_drh=args.cheat_drh,
+              cheat_hgt=args.cheat_hgt,
               # pbl and height criteria
               cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,

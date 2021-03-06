@@ -19,12 +19,12 @@ def main_attribution(
            veryverbose,
            tdiagnosis,
            ctraj_len,
-           cheat_dtemp,
-           cevap_dqv,
-           cevap_drh,
-           cevap_hgt, cheat_hgt,
+           # E criteria
+           cevap_dqv, cevap_drh, cevap_hgt,
+           # P criteria
            cprec_dqv, cprec_rh,
-           cheat_drh,
+           # H criteria
+           cheat_dtemp, cheat_drh, cheat_hgt,
            # pbl and height criteria
            cpbl_method,
            cpbl_strict,
