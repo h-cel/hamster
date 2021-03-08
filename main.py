@@ -54,6 +54,34 @@ args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args,args.steps))
 
+# default settings
+# - to be used if tevap_diag or theat_diag are set
+# - attention: this overwrites all evap and heat related flags! 
+if theat_diag == "SCH19" or theat_diag == "SCH20":
+    # Schumacher et al., 2019/2020
+    args.cpbl_method = "max"
+    args.cpbl_strict = 2
+    args.cheat_dtemp = 1
+    args.fheat_drh   = False
+    args.fheat_rdq   = True
+    args.cheat_rdq   = 10
+    args.mattribution= "linear"
+if tevap_diag == "SOD08":
+    # Sodemann et al., 2008
+    args.cpbl_method = "mean"
+    args.cpbl_strict = 1
+    args.cpbl_factor = 1.5 # everywhere (follow. Keune & Miralles, 2019)
+    args.cevap_dqv   = 0.0002
+    args.fevap_drh   = False
+    args.mattribution= "linear"
+if tevap_diag == "SOD20":
+    # Sodemann, 2020
+    args.cpbl_strict = 0
+    args.cevap_dqv   = 0.0001
+    args.fevap_drh   = False
+    args.mattribution= "linear"
+
+
 # just waiting a random number of seconds (max. 30s)
 # to avoid overlap of path.exist and makedirs between parallel jobs (any better solution?)
 if args.waiter:
@@ -125,7 +153,6 @@ if args.steps == 1:
               gres=args.gres,
               verbose=args.verbose,
               veryverbose=args.veryverbose,
-              tdiagnosis=args.tdiagnosis,
               # E criteria
               cevap_dqv=args.cevap_dqv,
               fevap_drh=args.fevap_drh,
@@ -165,7 +192,6 @@ if args.steps == 2:
               maskval=args.maskval,
               verbose=args.verbose,
               veryverbose=args.veryverbose,
-              tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
               # E criteria
               cevap_dqv=args.cevap_dqv,

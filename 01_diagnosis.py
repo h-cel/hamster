@@ -16,7 +16,6 @@ def main_diagnosis(
            gres,
            verbose,
            veryverbose,
-           tdiagnosis,
            # E criteria
            cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
            # P criteria

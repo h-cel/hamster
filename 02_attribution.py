@@ -17,7 +17,6 @@ def main_attribution(
            maskval,
            verbose,
            veryverbose,
-           tdiagnosis,
            ctraj_len,
            # E criteria
            cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
