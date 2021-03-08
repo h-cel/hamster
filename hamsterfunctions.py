@@ -308,60 +308,6 @@ def q2rh(q_kgkg,p_Pa,T_K):
     # return relative humidity
     return(1e2*e/es)
 
-def dqsdT(p_hPa, T_degC):
-    """
-    INPUTS
-        - p_hPa : hPa,              pressure
-        - T_degC : degree Celsius,  temperature
-    
-    ACTION
-        1. CC eq approximation by Bolton (1980) differentiated by T, obtained from
-        https://www.wolframalpha.com/input/?i=differentiate+a*exp(b*x%2F(x%2Bc))
-        2. convert saturation vapor pressure to saturation specific humidity
-        NOTE: pressures (e=water vapor, p=total) must be in hPa
-        returns specific humidity in kg/kg
-        https://archive.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html
-    
-    OUTPUTS
-        - dqdT: kg kg-1 K-1     the change of specific humidity per temperature change ((kg/kg)/K)
-    """
-    ## 1. calculate des/dT 
-    dedT = (6.112*17.67*243.5*np.exp(17.67*T_degC/(T_degC+243.5))/(243.5+T_degC)**2)
-    ## 2. convert to q
-    dqdT = (0.622 * dedT)/(p_hPa - (0.378 * dedT))
-    return(dqdT)
-    
-def dTdqs(p_hPa, q_kgkg):
-    """
-    INPUTS
-        - p_hPa : hPa,          pressure
-        - q_kgkg : kg kg-1,     specific humidity
-    
-    ACTION
-        1. CC eq approximation by Bolton (1980) differentiated by T, obtained from
-        https://www.wolframalpha.com/input/?i=differentiate+a*exp(b*x%2F(x%2Bc))
-        2. convert saturation vapor pressure to saturation specific humidity
-        NOTE: pressures (e=water vapor, p=total) must be in hPa
-        returns specific humidity in kg/kg
-        https://archive.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html
-        (copied the above from dqsdT function; same thing, just the inverse.)
-    
-    OUTPUTS
-        - dTdq: K kg kg-1,      the change of temperature per specific humidity change (K/(kg/kg)
-    """
-    ## 1. convert q to e; for this, Bolton approx. q=(0.622 * e)/(p - (0.378 * e)
-    ##    was solved for e using WolframAlpha
-    ## https://www.wolframalpha.com/input/?i=q+%3D+(0.622+*+e)%2F(p+-+(0.378+*+e))+solve+for+e
-    e_hPa = 2.6455*p_hPa*q_kgkg/(q_kgkg+1.6455)
-    ## 2. now plug into this differentiated CC eq (solved for T) to find slope
-    ### MY VERSION ###
-    #dTde = 17.67*243.5/(e_hPa*(np.log(e_hPa/6.112)-17.67)**2)
-    ### DIFFERENTIATED BOLTON (1980) EQ. 11 ###
-    dTde = (243.5*19.48-440.8)/(e_hPa*(19.48-np.log(e_hPa))**2)
-    ## 3. finally, convert back to Kelvin per specific humidity...
-    dTdq = dTde*(e_hPa/((0.622 * e_hPa)/(p_hPa - (0.378 * e_hPa))))
-    return(dTdq)
-    
 def calc_pottemp_e(p_Pa, q_kgkg, T_K):
     """
     INPUTS
