@@ -22,7 +22,7 @@ def main_diagnosis(
            # P criteria
            cprec_dqv, cprec_rh,
            # H criteria
-           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt,
+           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt, fheat_rdq, cheat_rdq,
            # pbl and height criteria
            cpbl_method, cpbl_strict, cpbl_factor,
            refdate,
@@ -168,7 +168,8 @@ def main_diagnosis(
                 ary_enpart[lat_ind,lon_ind] += int(1)
 
             ## sensible heat
-            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) ):
+            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp 
+                    and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(qv, checkit=fheat_rdq, maxrdqv=cheat_rdq)):
                 ary_heat[lat_ind,lon_ind]  += dTH
                 ary_hnpart[lat_ind,lon_ind] += int(1)
 

@@ -467,6 +467,8 @@ def read_cmdargs():
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
     parser.add_argument('--fheat_drh',  '-fhr', help = "flag: check for maximum delta(RH) for detection of H",          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--cheat_drh',  '-chr', help = "threshold for detection of H using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
+    parser.add_argument('--fheat_rdq',  '-fhq', help = "flag: check for maximum relative delta(Q) for detection of H",  metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--cheat_rdq',  '-chq', help = "threshold for detection of H using a maximum relative delta(Q)",metavar ="", type = float,   default = 10)
     parser.add_argument('--cpbl_factor','-pblf',help = "factor for PBL relaxation",                                     metavar ="", type = float,   default = 1)
     parser.add_argument('--cpbl_method','-pblm',help = "filter for PBL: mean, max, actual heights between 2 points",    metavar ="", type = str,     default = "max")
     parser.add_argument('--cpbl_strict','-pbls',help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
@@ -752,6 +754,16 @@ def drhcheck(rh, checkit=False, maxdrh=15):
     elif checkit:
         drh     = trajparceldiff(rh, "diff")
         retvals = ( np.abs(drh) <= maxdrh ) 
+    return retvals    
+
+def rdqvcheck(qv, checkit=False, maxrdqv=10):
+    # checks if the absolute humidity changed by less than maxrdqv %
+    if not checkit:
+        retvals = np.ones(dtype=bool, shape=qv.size-1)
+    elif checkit:
+        dqv     = trajparceldiff(qv, "diff")
+        rdqv    = abs(dqv)/qv[:-1] # using most recent Q as a reference here
+        retvals = ( np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
 def scale_mass(ary_val, ary_part, ary_rpart):

@@ -24,7 +24,7 @@ def main_attribution(
            # P criteria
            cprec_dqv, cprec_rh,
            # H criteria
-           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt,
+           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt, fheat_rdq, cheat_rdq,
            # pbl and height criteria
            cpbl_method,
            cpbl_strict,
@@ -411,8 +411,9 @@ def main_attribution(
                     # identify sensible heat uptakes
                     is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
                     is_drh      = drhcheck(rh[:ihf_H], checkit=fheat_drh, maxdrh=cheat_drh)
+                    is_rdqv     = rdqvcheck(qv[:ihf_H], checkit=fheat_rdq, maxrdqv=cheat_rdq)
                     is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
-                    heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0]
+                    heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, np.logical_and(is_rdqv, is_uptk))))[0]
 
                     # discount uptakes linearly
                     if heat_idx.size==0:

@@ -139,6 +139,8 @@ if args.steps == 1:
               fheat_drh=args.fheat_drh,
               cheat_drh=args.cheat_drh,
               cheat_hgt=args.cheat_hgt,
+              fheat_rdq=args.fheat_rdq,
+              cheat_rdq=args.cheat_rdq,
               # pbl and height criteria
               cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
@@ -178,6 +180,8 @@ if args.steps == 2:
               fheat_drh=args.fheat_drh,
               cheat_drh=args.cheat_drh,
               cheat_hgt=args.cheat_hgt,
+              fheat_rdq=args.fheat_rdq,
+              cheat_rdq=args.cheat_rdq,
               # pbl and height criteria
               cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
