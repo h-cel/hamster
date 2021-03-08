@@ -18,11 +18,11 @@ def main_diagnosis(
            veryverbose,
            tdiagnosis,
            # E criteria
-           cevap_dqv, cevap_drh, cevap_hgt,
+           cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
            # P criteria
            cprec_dqv, cprec_rh,
            # H criteria
-           cheat_dtemp, cheat_drh, cheat_hgt,
+           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt,
            # pbl and height criteria
            cpbl_method, cpbl_strict, cpbl_factor,
            refdate,
@@ -154,6 +154,7 @@ def main_diagnosis(
             pottemp                 = readpottemp(ary[:2,i,:])
             dTH                     = trajparceldiff(pottemp, 'diff')
             pres                    = readpres(ary[:2,i,:])
+            rh                      = q2rh(qv,pres,temp)
 
             ## precipitation
             if (dq < cprec_dqv and 
@@ -162,12 +163,12 @@ def main_diagnosis(
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
             ## evaporation
-            if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv ):
+            if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) ):
                 ary_evap[lat_ind,lon_ind]  += dq
                 ary_enpart[lat_ind,lon_ind] += int(1)
 
             ## sensible heat
-            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp ):
+            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) ):
                 ary_heat[lat_ind,lon_ind]  += dTH
                 ary_hnpart[lat_ind,lon_ind] += int(1)
 

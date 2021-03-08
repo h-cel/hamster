@@ -131,6 +131,7 @@ if args.steps == 1:
               tdiagnosis=args.tdiagnosis,
               # E criteria
               cevap_dqv=args.cevap_dqv,
+              fevap_drh=args.fevap_drh,
               cevap_drh=args.cevap_drh,
               cevap_hgt=args.cevap_hgt, 
               # P criteria
@@ -138,6 +139,7 @@ if args.steps == 1:
               cprec_rh=args.cprec_rh,
               # H criteria
               cheat_dtemp=args.cheat_dtemp,
+              fheat_drh=args.fheat_drh,
               cheat_drh=args.cheat_drh,
               cheat_hgt=args.cheat_hgt,
               # pbl and height criteria
@@ -168,6 +170,7 @@ if args.steps == 2:
               ctraj_len=args.ctraj_len,
               # E criteria
               cevap_dqv=args.cevap_dqv,
+              fevap_drh=args.fevap_drh,
               cevap_drh=args.cevap_drh,
               cevap_hgt=args.cevap_hgt, 
               # P criteria
@@ -175,6 +178,7 @@ if args.steps == 2:
               cprec_rh=args.cprec_rh,
               # H criteria
               cheat_dtemp=args.cheat_dtemp,
+              fheat_drh=args.fheat_drh,
               cheat_drh=args.cheat_drh,
               cheat_hgt=args.cheat_hgt,
               # pbl and height criteria

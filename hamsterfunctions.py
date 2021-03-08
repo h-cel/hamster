@@ -47,9 +47,11 @@ def read_cmdargs():
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
     parser.add_argument('--cevap_dqv',  '-ceq', help = "threshold for detection of E based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
+    parser.add_argument('--fevap_drh',  '-fer', help = "flag: check for maximum delta(RH) for detection of E",          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--cevap_drh',  '-cer', help = "threshold for detection of E using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
+    parser.add_argument('--fheat_drh',  '-fhr', help = "flag: check for maximum delta(RH) for detection of H",          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--cheat_drh',  '-chr', help = "threshold for detection of H using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
     parser.add_argument('--cpbl_factor','-pblf',help = "factor for PBL relaxation",                                     metavar ="", type = float,   default = 1)
     parser.add_argument('--cpbl_method','-pblm',help = "filter for PBL: mean, max, actual heights between 2 points",    metavar ="", type = str,     default = "max")
@@ -329,6 +331,14 @@ def pblcheck(cpbl_strict, z, hpbl, minh, fpbl=1, method="max"):
         # no pbl check
         change_inside = np.ones(dtype=bool, shape=before_inside.size)
     return change_inside
+
+def drhcheck(rh, checkit=False, maxdrh=15):
+    if not checkit:
+        retvals = np.ones(dtype=bool, shape=rh.size-1)
+    elif checkit:
+        drh     = trajparceldiff(rh, "diff")
+        retvals = ( np.abs(drh) <= maxdrh ) 
+    return retvals    
 
 def scale_mass(ary_val, ary_part, ary_rpart):
     ary_sval    = np.zeros(shape=(ary_val.shape)) 
