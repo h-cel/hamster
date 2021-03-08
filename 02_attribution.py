@@ -352,21 +352,10 @@ def main_attribution(
                         ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                         
                     # identify uptake locations
-                    # ALLPBL
-                    if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                        is_drh      = drhcheck(rh, checkit=fevap_drh, maxdrh=cevap_drh)
-                        is_uptk     = dq[:ihf_E-1] > cevap_dqv
-                        evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0] 
-                    # SOD
-                    elif tdiagnosis == 'SOD':
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=1.5, method="mean")
-                        is_uptk     = dq[:ihf_E-1] > 0.0002
-                        evap_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0] 
-                    # SOD2
-                    elif tdiagnosis == 'SOD20':
-                        is_uptk     = dq[:ihf_E-1] > 0.0001
-                        evap_idx    = np.where(is_uptk)[0]
+                    is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=cpbl_factor, method=cpbl_method)
+                    is_drh      = drhcheck(rh, checkit=fevap_drh, maxdrh=cevap_drh)
+                    is_uptk     = dq[:ihf_E-1] > cevap_dqv
+                    evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0] 
 
                     # log some stats if trajectory is without any uptakes (for upscaling)
                     if evap_idx.size==0:
@@ -420,21 +409,10 @@ def main_attribution(
                     dTH         = trajparceldiff(pottemp[:], 'diff')
 
                     # identify sensible heat uptakes
-                    # ALLPBL
-                    if tdiagnosis == 'ALLPBL':
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                        is_drh      = drhcheck(rh, checkit=fheat_drh, maxdrh=cheat_drh)
-                        is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
-                        heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0]
-                    # SOD / SCH19
-                    elif tdiagnosis == 'SOD':    
-                        is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=1.5, method="mean")
-                        is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
-                        heat_idx    = np.where(np.logical_and(is_inpbl, is_uptk))[0]     
-                    # SOD2
-                    elif tdiagnosis == 'SOD2':
-                        is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
-                        heat_idx    = np.where(is_uptk)[0]     
+                    is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
+                    is_drh      = drhcheck(rh, checkit=fheat_drh, maxdrh=cheat_drh)
+                    is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
+                    heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0]
 
                     # discount uptakes linearly
                     if heat_idx.size==0:
