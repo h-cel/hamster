@@ -403,6 +403,7 @@ def main_attribution(
 
                     # read full parcel information
                     lons, lats, temp, hgt, qv, hpbl, dens, pres, pottemp, epottemp = readparcel(ary[:ihf_H,i,:])
+                    rh          = q2rh(qv, pres, temp)
                          
                     # calculate all required changes along trajectory
                     dTH         = trajparceldiff(pottemp[:], 'diff')

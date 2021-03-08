@@ -57,7 +57,7 @@ print(printsettings(args,args.steps))
 # default settings
 # - to be used if tevap_diag or theat_diag are set
 # - attention: this overwrites all evap and heat related flags! 
-if theat_diag == "SCH19" or theat_diag == "SCH20":
+if args.theat_diag == "SCH19" or theat_diag == "SCH20":
     # Schumacher et al., 2019/2020
     args.cpbl_method = "max"
     args.cpbl_strict = 2
@@ -66,7 +66,7 @@ if theat_diag == "SCH19" or theat_diag == "SCH20":
     args.fheat_rdq   = True
     args.cheat_rdq   = 10
     args.mattribution= "linear"
-if tevap_diag == "SOD08":
+if args.tevap_diag == "SOD08":
     # Sodemann et al., 2008
     args.cpbl_method = "mean"
     args.cpbl_strict = 1
@@ -74,7 +74,7 @@ if tevap_diag == "SOD08":
     args.cevap_dqv   = 0.0002
     args.fevap_drh   = False
     args.mattribution= "linear"
-if tevap_diag == "SOD20":
+if args.tevap_diag == "SOD20":
     # Sodemann, 2020
     args.cpbl_strict = 0
     args.cevap_dqv   = 0.0001
