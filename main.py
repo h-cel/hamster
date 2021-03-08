@@ -42,14 +42,11 @@ import re
 ###########################################################################
 
 ## (1) LOADING FUNCTIONS
-exec(open("disclaimer.py").read())
-exec(open("constants.py").read())
-exec(open("metfunctions.py").read())
+exec(open("hamsterfunctions.py").read())
 exec(open("00_flex2traj.py").read())
 exec(open("01_diagnosis.py").read())
 exec(open("02_attribution.py").read())
 exec(open("03_biascorrection.py").read())
-exec(open("hamsterfunctions.py").read())
 
 ## (2) COMMAND LINE ARGUMENTS
 # read command line arguments (dates, thresholds and other flags)
