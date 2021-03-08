@@ -138,8 +138,7 @@ def main_diagnosis(
 
         #smalltic = timeit.default_timer()
        
-        # log variables
-       
+        
         ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
         for i in ntot:
 
@@ -156,53 +155,22 @@ def main_diagnosis(
             dTH                     = trajparceldiff(pottemp, 'diff')
             pres                    = readpres(ary[:2,i,:])
 
-            ## PRECIPITATION
+            ## precipitation
             if (dq < cprec_dqv and 
                     ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                 ary_prec[lat_ind,lon_ind] += dq
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
-            ## ALLPBL
-            if tdiagnosis == 'ALLPBL':
+            ## evaporation
+            if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv ):
+                ary_evap[lat_ind,lon_ind]  += dq
+                ary_enpart[lat_ind,lon_ind] += int(1)
 
-                ## evaporation
-                if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv ):
-                    ary_evap[lat_ind,lon_ind]  += dq
-                    ary_enpart[lat_ind,lon_ind] += int(1)
+            ## sensible heat
+            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp ):
+                ary_heat[lat_ind,lon_ind]  += dTH
+                ary_hnpart[lat_ind,lon_ind] += int(1)
 
-                ## sensible heat
-                if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp ):
-                    ary_heat[lat_ind,lon_ind]  += dTH
-                    ary_hnpart[lat_ind,lon_ind] += int(1)
-
-            ## SOD: SODEMANN ET AL., 2008
-            elif tdiagnosis == 'SOD':
-        
-                ## evaporation
-                if (dq > 0.0002 and  
-                        (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
-                    ary_evap[lat_ind,lon_ind] += dq
-                    ary_enpart[lat_ind,lon_ind] += int(1)
-    
-                ## sensible heat (not used originally; analogous to evaporation)
-                if ((dTH > cheat_dtemp) and 
-                        (hgt[0]+hgt[1])/2 < 1.5*(hpbl[0]+hpbl[1])/2):
-                    ary_heat[lat_ind,lon_ind] += dTH
-                    ary_hnpart[lat_ind,lon_ind] += int(1)
-
-            ## SOD2: SODEMANN, 2020; FREMME & SODEMANN, 2019
-            elif tdiagnosis == 'SOD2':
-        
-                ## evaporation
-                if (dq > 0.0001): 
-                    ary_evap[lat_ind,lon_ind] += dq
-                    ary_enpart[lat_ind,lon_ind] += int(1)
-    
-                ## sensible heat (not used originally; analogous to evaporation)
-                if (dTH > cheat_dtemp):
-                    ary_heat[lat_ind,lon_ind] += dTH
-                    ary_hnpart[lat_ind,lon_ind] += int(1)
-        
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 
