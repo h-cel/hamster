@@ -353,7 +353,7 @@ def main_attribution(
                         
                     # identify uptake locations
                     is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_E], hpbl=hpbl[:ihf_E], minh=cevap_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                    is_drh      = drhcheck(rh, checkit=fevap_drh, maxdrh=cevap_drh)
+                    is_drh      = drhcheck(rh[:ihf_E], checkit=fevap_drh, maxdrh=cevap_drh)
                     is_uptk     = dq[:ihf_E-1] > cevap_dqv
                     evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0] 
 
@@ -410,7 +410,7 @@ def main_attribution(
 
                     # identify sensible heat uptakes
                     is_inpbl    = pblcheck(cpbl_strict, z=hgt[:ihf_H], hpbl=hpbl[:ihf_H], minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
-                    is_drh      = drhcheck(rh, checkit=fheat_drh, maxdrh=cheat_drh)
+                    is_drh      = drhcheck(rh[:ihf_H], checkit=fheat_drh, maxdrh=cheat_drh)
                     is_uptk     = dTH[:ihf_H-1] > cheat_dtemp
                     heat_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0]
 
