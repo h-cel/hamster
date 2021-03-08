@@ -764,7 +764,7 @@ def rdqvcheck(qv, checkit=False, maxrdqv=10):
     elif checkit:
         dqv     = trajparceldiff(qv, "diff")
         rdqv    = abs(dqv)/qv[:-1] # using most recent Q as a reference here
-        retvals = ( np.abs(rdqv) <= maxrdqv ) 
+        retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
 def scale_mass(ary_val, ary_part, ary_rpart):
