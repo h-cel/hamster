@@ -468,7 +468,7 @@ def read_cmdargs():
     parser.add_argument('--fheat_drh',  '-fhr', help = "flag: check for maximum delta(RH) for detection of H",          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--cheat_drh',  '-chr', help = "threshold for detection of H using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
     parser.add_argument('--fheat_rdq',  '-fhq', help = "flag: check for maximum relative delta(Q) for detection of H",  metavar ="", type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--cheat_rdq',  '-chq', help = "threshold for detection of H using a maximum relative delta(Q)",metavar ="", type = float,   default = 10)
+    parser.add_argument('--cheat_rdq',  '-chq', help = "threshold for detection of H using a maximum relative d(Q) [%]",metavar ="", type = float,   default = 10)
     parser.add_argument('--theat_diag', '-thd', help = "diagnosis method for H (SCH19 for Schumacher et al., 2019)",    metavar ="", type = str,     default = "none")
     parser.add_argument('--cpbl_factor','-pblf',help = "factor for PBL relaxation",                                     metavar ="", type = float,   default = 1)
     parser.add_argument('--cpbl_method','-pblm',help = "filter for PBL: mean, max, actual heights between 2 points",    metavar ="", type = str,     default = "max")
