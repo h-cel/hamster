@@ -315,7 +315,7 @@ def main_biascorrection(
         
     if fwrite_netcdf:
         # get attributes from attribution file and modify
-        attrdesc    = getattr(nc4.Dataset(attrfile),"description") + strargs
+        attrdesc    = getattr(nc4.Dataset(attrfile),"description") + "; " + strargs
         biasdesc    = attrdesc.replace("02_attribution","03_biascorrection") 
 
         # write to netcdf

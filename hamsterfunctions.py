@@ -508,7 +508,7 @@ def read_cmdargs():
 
 def printsettings(args):
 
-    str0 = str("[[DATES]] ayyyy = "+str(args.ayyyy)+ ", am = " +str(args.am) + ", ad = " +str(args.ad) + ", ryyyy = "+str(args.ryyyy) +
+    str0 = str("[[DATES]] ayyyy = "+str(args.ayyyy)+ ", am = " +str(args.am) + ", ad = " +str(args.ad) + ", ryyyy = "+str(args.ryyyy) + " " +
     "[[GRID]] gres = "+str(args.gres)+ " " +
     "[[PATHS & MASK]] pathfile = "+ str(args.pathfile) + ", maskval = "+str(args.maskval) + " " +
     "[[EXPERIMENT ID]] expid = "+str(args.expid))
@@ -1067,7 +1067,7 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
@@ -1140,7 +1140,7 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.long_name    = 'Difference between uptake and arrival time, in days'
@@ -1306,7 +1306,7 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     if not np.any(np.isnan(udate_seq)):    
@@ -1748,7 +1748,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     utimes.units        = 'hours since 1900-01-01 00:00:00'
