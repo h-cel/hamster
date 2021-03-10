@@ -506,26 +506,35 @@ def read_cmdargs():
         args.refdate = str(args.ryyyy)+"123118"
     return args
 
-def printsettings(args,step):
-    ## 01_DIAGNOSIS
-    if (step == 1):
-        return(str("Diagnosis with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
-        "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
-        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+
-        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
-    
-    ## 02_ATTRIBUTION
-    if (step == 2):
-        return(str("Diagnosis and attribution with the following settings: "+
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
-        "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt)+
-        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
+def printsettings(args):
+        
+        str0 = str("[[DATES]] ayyyy = "+str(args.ayyyy)+ ", am = " +str(args.am) + ", ad = " +str(args.ad) + ", ryyyy = "+str(args.ryyyy) +
+        "[[GRID]] gres = "+str(args.gres)+ 
+        "[[PATHS & MASK]] pathfile = "+ str(args.pathfile) + ", maskval = "+str(args.maskval) +
+        "[[EXPERIMENT ID]] expid = "+str(args.expid))
+
+        str1 = str("Diagnosis with the following settings: " +
+        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) +
+        "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", cevap_dqv = " +str(args.cevap_dqv) + 
+        ", fevap_drh = " +str(args.fevap_drh) + ", cevap_drh = " +str(args.cevap_drh) +
+        "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt) + ", cheat_dtemp = " +str(args.cheat_dtemp) + 
+        ", fheat_drh = " +str(args.fheat_drh) + ", cheat_drh = " +str(args.chea_drh) +
+        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict) +
+        ", cpbl_method = "+str(args.cpbl_method) + ", cpbl_factor = "+str(args.cpbl_factor) + 
+        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))
+
+        str2 = str("Attribution with the following settings: "+
         "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)))
+        ", memento (H) = "+str(args.memento) + ", attribution = "+str(args.mattribution) +
+        ", explainp (P) = "+str(args.explainp) +
+        ", dupscale (P) = "+str(args.dupscale) + ", mupscale (P) = "+str(args.mupscale))
+            if args.mattribution=="random":
+                str2 = str2 + str("[random attribution settings] ratt_nit = "+str(args.ratt_nit)+ ", ratt_forcall = "+str(agrs.ratt_forcall))
+   
+        if args.steps==1:
+            return(str0+"; "+str1)
+        if args.steps==2:
+            return(str0+"; "+str1+"; "+str2)
 
 
 def readtraj(idate, # date as string [YYYYMMDDHH]
