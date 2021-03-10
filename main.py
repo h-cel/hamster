@@ -52,7 +52,7 @@ exec(open("03_biascorrection.py").read())
 # read command line arguments (dates, thresholds and other flags)
 args    = read_cmdargs()
 verbose = args.verbose
-print(printsettings(args,args.steps))
+print(printsettings(args))
 
 # default settings
 # - to be used if tevap_diag or theat_diag are set
@@ -177,7 +177,7 @@ if args.steps == 1:
               precision=args.precision,
               ftimethis=args.timethis,
               fvariable_mass=args.variable_mass,
-              strargs=printsettings(args,1))
+              strargs=printsettings(args))
 
 if args.steps == 2:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
@@ -226,7 +226,7 @@ if args.steps == 2:
               fmupscale=args.mupscale,
               fvariable_mass=args.variable_mass,
               fwritestats=args.writestats,
-              strargs=printsettings(args,2))
+              strargs=printsettings(args))
 
 if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
@@ -248,4 +248,4 @@ if args.steps == 3:
                fwrite_month=args.write_month,
                fwritestats=args.writestats,
                precision=args.precision,
-               strargs=printsettings(args,3))
+               strargs=printsettings(args))
