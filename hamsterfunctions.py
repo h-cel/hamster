@@ -1038,13 +1038,13 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     times               = nc_f.createVariable('time', 'f8', 'time')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('time','lat','lon'))
-    evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'))
-    precs               = nc_f.createVariable('P', precision, ('time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'))
-    pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'))
-    enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'))
-    hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'))
+    heats               = nc_f.createVariable('H', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    precs               = nc_f.createVariable('P', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
     
     # set attributes
     nc_f.title          = "Diagnosis (01) of FLEXPART fluxes"
@@ -1116,8 +1116,8 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
     utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('Had', precision, ('time','level','lat','lon'))
-    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'))
+    heats               = nc_f.createVariable('Had', precision, ('time','level','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'), fill_value=nc4.default_fillvals[precision])
     
     # set attributes
     nc_f.title          = "Attribution (02) of sources using FLEXPART output"
@@ -1278,12 +1278,12 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
 
     # create variables
-    heats               = nc_f.createVariable('Had', precision, checkdim(Had))
-    heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs))
-    evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P))
-    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es))
-    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps))
-    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs))
+    heats               = nc_f.createVariable('Had', precision, checkdim(Had), fill_value=nc4.default_fillvals[precision])
+    heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs), fill_value=nc4.default_fillvals[precision])
+    evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P), fill_value=nc4.default_fillvals[precision])
+    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es), fill_value=nc4.default_fillvals[precision])
+    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps), fill_value=nc4.default_fillvals[precision])
+    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -1707,25 +1707,25 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
     # Variables
-    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'))
-    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'))
-    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'))
-    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'))
-    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'))
-    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'))
-    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'))
-    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
-    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
-    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
-    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
-    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'))
-    nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'))
-    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
-    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
-    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'))
-    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'))
-    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
-    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
+    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'), fill_value=nc4.default_fillvals[precision])
+    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1955,7 +1955,7 @@ def writemasknc(mask, mlat, mlon, ofile="mask.nc",currentversion="v0.4"):
     # create variables
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'), fill_value=nc4.default_fillvals['i4'])
     # set attributes
     nc_f.title          = "HAMSTER: mask"
     today               = datetime.datetime.now()
