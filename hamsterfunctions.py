@@ -531,10 +531,16 @@ def printsettings(args):
         if args.mattribution=="random":
             str2 = str2 + str("[random attribution settings] ratt_nit = "+str(args.ratt_nit)+ ", ratt_forcall = "+str(agrs.ratt_forcall))
    
+    str3 = str("Bias correction with the following settings: "+
+    "[[BIAS CORRECTION]]: bc_time = "+str(args.bc_time)+", bc_useattp = "+str(args.bc_useattp)+
+    ", bc_aggbwtime = "+str(args.bc_aggbwtime) + ", write_month = "+str(args.write_month))
+
     if args.steps==1:
         return(str0+"; "+str1)
     if args.steps==2:
         return(str0+"; "+str1+"; "+str2)
+    if args.steps==3:
+        return(str3) # copying ncdf description from 2 in step 3; thus only passing BC info
 
 
 def readtraj(idate, # date as string [YYYYMMDDHH]
