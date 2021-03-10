@@ -57,7 +57,7 @@ print(printsettings(args))
 # default settings
 # - to be used if tevap_diag or theat_diag are set
 # - attention: this overwrites all evap and heat related flags! 
-if args.theat_diag == "SCH19" or theat_diag == "SCH20":
+if args.theat_diag == "SCH19" or args.theat_diag == "SCH20":
     # Schumacher et al., 2019/2020
     args.cpbl_method = "max"
     args.cpbl_strict = 2
