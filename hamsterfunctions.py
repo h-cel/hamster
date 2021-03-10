@@ -509,16 +509,16 @@ def read_cmdargs():
 def printsettings(args):
 
     str0 = str("[[DATES]] ayyyy = "+str(args.ayyyy)+ ", am = " +str(args.am) + ", ad = " +str(args.ad) + ", ryyyy = "+str(args.ryyyy) +
-    "[[GRID]] gres = "+str(args.gres)+ 
-    "[[PATHS & MASK]] pathfile = "+ str(args.pathfile) + ", maskval = "+str(args.maskval) +
+    "[[GRID]] gres = "+str(args.gres)+ " " +
+    "[[PATHS & MASK]] pathfile = "+ str(args.pathfile) + ", maskval = "+str(args.maskval) + " " +
     "[[EXPERIMENT ID]] expid = "+str(args.expid))
 
     str1 = str("Diagnosis with the following settings: " +
-    "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) +
+    "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + " " +
     "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", cevap_dqv = " +str(args.cevap_dqv) + 
-    ", fevap_drh = " +str(args.fevap_drh) + ", cevap_drh = " +str(args.cevap_drh) +
+    ", fevap_drh = " +str(args.fevap_drh) + ", cevap_drh = " +str(args.cevap_drh) + " " +
     "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt) + ", cheat_dtemp = " +str(args.cheat_dtemp) + 
-    ", fheat_drh = " +str(args.fheat_drh) + ", cheat_drh = " +str(args.cheat_drh) +
+    ", fheat_drh = " +str(args.fheat_drh) + ", cheat_drh = " +str(args.cheat_drh) + " " +
     "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict) +
     ", cpbl_method = "+str(args.cpbl_method) + ", cpbl_factor = "+str(args.cpbl_factor) + 
     ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))
@@ -529,7 +529,7 @@ def printsettings(args):
     ", explainp (P) = "+str(args.explainp) +
     ", dupscale (P) = "+str(args.dupscale) + ", mupscale (P) = "+str(args.mupscale))
     if args.mattribution=="random":
-        str2 = str2 + str("[random attribution settings] ratt_nit = "+str(args.ratt_nit)+ ", ratt_forcall = "+str(agrs.ratt_forcall))
+        str2 = str2 + str(" [random attribution settings] ratt_nit = "+str(args.ratt_nit)+ ", ratt_forcall = "+str(args.ratt_forcall))
 
     str3 = str("Bias correction with the following settings: "+
     "[[BIAS CORRECTION]]: bc_time = "+str(args.bc_time)+", bc_useattp = "+str(args.bc_useattp)+
