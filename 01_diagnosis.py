@@ -30,18 +30,15 @@ def main_diagnosis(
            ftimethis,fvariable_mass,
            strargs):
 
-    
-    # Consistency checks
+    ## Perform consistency checks
     if mode=="oper" and precision=="f4":
         precision = "f8"
         print("Single precision should only be used for testing. Reset to double-precision.")
 
-    ## construct precise input and storage paths
+    ## Construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
     ofilename = str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
-
-    ########### LOG W/IN PYTHON SCRIPT by redirecting output #############
     
     if verbose:
         disclaimer()
@@ -60,14 +57,14 @@ def main_diagnosis(
         print("\n============================================================================================================")
         print("\n============================================================================================================")
 
-    ## start timer
+    ## Start timer
     if ftimethis:
         megatic = timeit.default_timer()
 
-    ## -- GRID
+    ## Prepare grid
     glon, glat, garea = makegrid(resolution=gres)
 
-    ## -- DATES
+    ## Handle dates
     date_bgn        = datetime.datetime.strptime(str(ayyyy)+"-"+str(am).zfill(2)+"-"+str(ad).zfill(2), "%Y-%m-%d")
     # get end date (always 00 UTC of the 1st of the next month)
     nayyyy          = (date_bgn + relativedelta(months=1)).strftime('%Y')
@@ -85,27 +82,23 @@ def main_diagnosis(
         idate   += timestep
     ntime           = len(date_seq)
 
-    # TESTMODE
+    ##-- TESTMODE
     if mode == "test":
         ntime       = 12
         date_seq    = date_seq[0:ntime]
         fdate_seq   = fdate_seq[0:ntime]
         mfdate_seq  = mfdate_seq[0:ntime]
 
-    ## -- WRITE NETCDF OUTPUT (empty, to be filled)
+    ## Create empty netcdf file (to be filled)
     if fwrite_netcdf:
         writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision)
 
-    # read in reference distribution of parcels
+    # Read in reference distribution of parcels
     if fvariable_mass:
         print(" \n !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet! \n")
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
     
-    ## ------- LOOP OVER DATES (FILES) 
-    if verbose:
-        print("\n=== \t Start main program: 01_diagnosis...\n")
-
-    # pre-allocate arrays
+    ## Pre-allocate arrays
     ary_heat     = np.zeros(shape=(glat.size,glon.size))
     ary_evap     = np.zeros(shape=(glat.size,glon.size))
     ary_prec     = np.zeros(shape=(glat.size,glon.size))
@@ -114,13 +107,17 @@ def main_diagnosis(
     ary_enpart   = np.zeros(shape=(glat.size,glon.size))
     ary_hnpart   = np.zeros(shape=(glat.size,glon.size))
 
+    ##-- LOOP THROUGH FILES
+    if verbose:
+        print("\n=== \t Start main program: 01_diagnosis...\n")
+
     for ix in range(ntime):
         
         if verbose:
             print("--------------------------------------------------------------------------------------")
             print("Processing "+str(fdate_seq[ix]))
 
-        ## READ DATE RELATED TRAJECTORIES -> ary is of dimension (ntrajlen x nparticles x nvars)
+        ## Read date related trajectories -> ary is of dimension (ntrajlen x nparticles x nvars)
         ary         = readtraj(idate        = date_seq[ix], 
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
@@ -129,7 +126,7 @@ def main_diagnosis(
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
 
-        ## TEST mode: less parcels
+        ## TESTMODE: less parcels
         if mode == "test":
             ntot    = range(10000,10100)
         else:
@@ -138,7 +135,7 @@ def main_diagnosis(
         #smalltic = timeit.default_timer()
        
         
-        ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
+        ##-- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid
         for i in ntot:
 
             ## get midpoint at the very beginning
@@ -155,18 +152,18 @@ def main_diagnosis(
             pres                    = readpres(ary[:2,i,:])
             rh                      = q2rh(qv,pres,temp)
 
-            ## precipitation
+            ## Precipitation
             if (dq < cprec_dqv and 
                     ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
                 ary_prec[lat_ind,lon_ind] += dq
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
-            ## evaporation
+            ## Evaporation
             if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) ):
                 ary_evap[lat_ind,lon_ind]  += dq
                 ary_enpart[lat_ind,lon_ind] += int(1)
 
-            ## sensible heat
+            ## Sensible heat
             if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp 
                     and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(qv, checkit=fheat_rdq, maxrdqv=cheat_rdq)):
                 ary_heat[lat_ind,lon_ind]  += dTH
@@ -175,14 +172,14 @@ def main_diagnosis(
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 
-        # Convert units
+        ## Convert units
         if verbose:
             print(" * Converting units...")
         ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
         ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
         ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
 
-        # Scale with parcel mass
+        ## Scale with parcel mass
         if fvariable_mass:
             print(" !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet!")
             if verbose: 
@@ -194,7 +191,7 @@ def main_diagnosis(
         if fwrite_netcdf:
             writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:],ary_pnpart[:,:],ary_enpart[:,:],ary_hnpart[:,:])
 
-        # re-init. arrays
+        ## re-init. arrays
         ary_npart[:,:]  = 0
         ary_pnpart[:,:] = 0
         ary_enpart[:,:] = 0
@@ -211,5 +208,3 @@ def main_diagnosis(
     if verbose:
         if fwrite_netcdf:
             print("\n Successfully written: "+ofile+" !")
-
-        
