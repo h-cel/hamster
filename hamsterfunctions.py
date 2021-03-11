@@ -595,6 +595,17 @@ def readparcel(parray):
 
     return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
 
+def calc_allvars(parray):
+    # calculate all additional variables required for heat + moisture analysis; for all parcels! 
+    # hardcoded on 3D array and variable structure...
+    # pressure (10th variable, index 9)
+    parray  = np.dstack((parray, calc_pres(parray[:,:,6],parray[:,:,5],parray[:,:,8])))
+    # relative humidity (11th variable, index 10)
+    parray  = np.dstack((parray, q2rh(parray[:,:,5],parray[:,:,9],parray[:,:,8])))
+    # potential temperature (12th variable, index 11)
+    parray  = np.dstack((parray, calc_pottemp(parray[:,:,9],parray[:,:,5],parray[:,:,8])))
+    return(parray)
+
 def readmidpoint(parray):
     lats    = parray[:,2]                   # latitude
     lons    = parray[:,1]                   # longitude

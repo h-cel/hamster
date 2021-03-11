@@ -122,14 +122,13 @@ def main_diagnosis(
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
                                verbose      = verbose)
-        ary         = np.dstack((ary, calc_pres(ary[:,:,6],ary[:,:,5],ary[:,:,8])))        # pres = 10th variable (index 9) 
-        ary         = np.dstack((ary, q2rh(ary[:,:,5],ary[:,:,9],ary[:,:,8])))             # rh   = 11th variable (index 10) 
-        ary         = np.dstack((ary, calc_pottemp(ary[:,:,9],ary[:,:,5],ary[:,:,8])))     # pottemp = 12th variable (index 11)
+        ary         = calc_allvars(ary)
+        # calculate all the differences...
+        dary        = np.apply_along_axis(trajparceldiff, 0, ary, "diff")
+        # extract necessary variables by name for better data handling
         rh          = ary[:,:,10]
         hgt         = ary[:,:,3]
         hpbl        = ary[:,:,7]
-        # all the differences...
-        dary        = np.apply_along_axis(trajparceldiff, 0, ary, "diff")
         dq          = dary[:,:,5]
         drh         = dary[:,:,10]
         dTH         = dary[:,:,11]
