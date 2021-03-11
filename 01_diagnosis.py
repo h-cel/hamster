@@ -125,6 +125,18 @@ def main_diagnosis(
                                ipath        = ipath+"/"+str(ryyyy), 
                                ifile_base   = ifile_base,
                                verbose      = verbose)
+        ary         = np.dstack((ary, calc_pres(ary[:,:,6],ary[:,:,5],ary[:,:,8])))        # pres = 10th variable (index 9) 
+        ary         = np.dstack((ary, q2rh(ary[:,:,5],ary[:,:,9],ary[:,:,8])))             # rh   = 11th variable (index 10) 
+        ary         = np.dstack((ary, calc_pottemp(ary[:,:,9],ary[:,:,5],ary[:,:,8])))     # pottemp = 12th variable (index 11)
+        rh          = ary[:,:,10]
+        hgt         = ary[:,:,3]
+        hpbl        = ary[:,:,7]
+        # all the differences...
+        dary        = np.apply_along_axis(trajparceldiff, 0, ary, "diff")
+        dq          = dary[:,:,5]
+        drh         = dary[:,:,10]
+        dTH         = dary[:,:,11]
+
         nparticle   = ary.shape[1]
         if verbose:
             print(" TOTAL: " + str(date_seq[ix]) + " has " + str(nparticle) + " parcels")
@@ -136,7 +148,6 @@ def main_diagnosis(
             ntot    = range(nparticle)
 
         #smalltic = timeit.default_timer()
-       
         
         ## ------- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid 
         for i in ntot:
@@ -147,29 +158,21 @@ def main_diagnosis(
             ## log number of parcels
             ary_npart[lat_ind,lon_ind] += int(1)
 
-            ## read only necessary parcel information
-            qv, temp, hgt, hpbl     = readsparcel(ary[:2,i,:]) # load only ('last') 2 steps
-            dq                      = trajparceldiff(qv, 'diff') 
-            pottemp                 = readpottemp(ary[:2,i,:])
-            dTH                     = trajparceldiff(pottemp, 'diff')
-            pres                    = readpres(ary[:2,i,:])
-            rh                      = q2rh(qv,pres,temp)
-
             ## precipitation
-            if (dq < cprec_dqv and 
-                    ( (q2rh(qv[0],pres[0],temp[0]) + q2rh(qv[1],pres[1],temp[1]))/2 ) > cprec_rh ):
-                ary_prec[lat_ind,lon_ind] += dq
+            if (dq[:,i][0] < cprec_dqv and 
+                    ( (rh[0,i]+ rh[1,i])/2 ) > cprec_rh ):
+                ary_prec[lat_ind,lon_ind] += dq[:,i][0]
                 ary_pnpart[lat_ind,lon_ind] += int(1)
             
             ## evaporation
-            if ( pblcheck(cpbl_strict,hgt,hpbl,cevap_hgt,cpbl_factor,cpbl_method) and dq>cevap_dqv and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) ):
-                ary_evap[lat_ind,lon_ind]  += dq
+            if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cevap_hgt,cpbl_factor,cpbl_method)[0] and (dq[:,i]>cevap_dqv)[0] and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh)[0] ):
+                ary_evap[lat_ind,lon_ind]  += dq[:,i][0]
                 ary_enpart[lat_ind,lon_ind] += int(1)
 
             ## sensible heat
-            if ( pblcheck(cpbl_strict,hgt,hpbl,cheat_hgt,cpbl_factor,cpbl_method) and dTH>cheat_dtemp 
-                    and drhcheck(rh,checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(qv, checkit=fheat_rdq, maxrdqv=cheat_rdq)):
-                ary_heat[lat_ind,lon_ind]  += dTH
+            if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cheat_hgt,cpbl_factor,cpbl_method) and dTH[:,i]>cheat_dtemp 
+                    and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(ary[:,i,5], checkit=fheat_rdq, maxrdqv=cheat_rdq)):
+                ary_heat[lat_ind,lon_ind]  += dTH[:,i]
                 ary_hnpart[lat_ind,lon_ind] += int(1)
 
         #smalltoc = timeit.default_timer()
