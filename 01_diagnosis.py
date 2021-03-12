@@ -135,7 +135,6 @@ def main_diagnosis(
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         res         = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-        ##ary =np.dstack((ary, np.moveaxis(test,2, 0))) # mlat (13th variable, index 12), mlon (14th variable, index 13)
         lat_ind     = res[:,0]
         lon_ind     = res[:,1]
 
