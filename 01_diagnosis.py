@@ -132,6 +132,12 @@ def main_diagnosis(
         dq          = dary[:,:,5]
         drh         = dary[:,:,10]
         dTH         = dary[:,:,11]
+        # get midpoint indices on grid from ary
+        lary        = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+        res         = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+        ##ary =np.dstack((ary, np.moveaxis(test,2, 0))) # mlat (13th variable, index 12), mlon (14th variable, index 13)
+        lat_ind     = res[:,0]
+        lon_ind     = res[:,1]
 
         nparticle   = ary.shape[1]
         if verbose:
@@ -143,36 +149,35 @@ def main_diagnosis(
         else:
             ntot    = range(nparticle)
 
-        #smalltic = timeit.default_timer()
+        smalltic = timeit.default_timer()
+
+        #def map_to_grid()
         
         ##-- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid
         for i in ntot:
 
-            ## get midpoint at the very beginning
-            #lat_mid, lon_mid = readmidpoint(ary[:,i,:])
-            lat_ind, lon_ind = midpindex(ary[:2,i,:],glon=glon,glat=glat) # :2 for clarity, not needed
             ## log number of parcels
-            ary_npart[lat_ind,lon_ind] += int(1)
+            ary_npart[lat_ind[i],lon_ind[i]] += int(1)
 
             ## Precipitation
             if (dq[:,i][0] < cprec_dqv and 
                     ( (rh[0,i]+ rh[1,i])/2 ) > cprec_rh ):
-                ary_prec[lat_ind,lon_ind] += dq[:,i][0]
-                ary_pnpart[lat_ind,lon_ind] += int(1)
+                ary_prec[lat_ind[i],lon_ind[i]] += dq[:,i][0]
+                ary_pnpart[lat_ind[i],lon_ind[i]] += int(1)
             
             ## Evaporation
             if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cevap_hgt,cpbl_factor,cpbl_method)[0] and (dq[:,i]>cevap_dqv)[0] and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh)[0] ):
-                ary_evap[lat_ind,lon_ind]  += dq[:,i][0]
-                ary_enpart[lat_ind,lon_ind] += int(1)
+                ary_evap[lat_ind[i],lon_ind[i]]  += dq[:,i][0]
+                ary_enpart[lat_ind[i],lon_ind[i]] += int(1)
 
             ## Sensible heat
             if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cheat_hgt,cpbl_factor,cpbl_method) and dTH[:,i]>cheat_dtemp 
                     and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(ary[:,i,5], checkit=fheat_rdq, maxrdqv=cheat_rdq)):
-                ary_heat[lat_ind,lon_ind]  += dTH[:,i]
-                ary_hnpart[lat_ind,lon_ind] += int(1)
+                ary_heat[lat_ind[i],lon_ind[i]]  += dTH[:,i]
+                ary_hnpart[lat_ind[i],lon_ind[i]] += int(1)
 
-        #smalltoc = timeit.default_timer()
-        #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
+        smalltoc = timeit.default_timer()
+        print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 
         ## Convert units
         if verbose:
