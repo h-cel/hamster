@@ -115,7 +115,8 @@ def main_diagnosis(
     if verbose:
         print("\n=== \t Start main program: 01_diagnosis...\n")
 
-    for ix in range(ntime):
+    for ix in range(1):
+    #for ix in range(ntime):
         
         if verbose:
             print("--------------------------------------------------------------------------------------")
@@ -133,9 +134,10 @@ def main_diagnosis(
         rh          = ary[:,:,10]
         hgt         = ary[:,:,3]
         hpbl        = ary[:,:,7]
-        dq          = dary[:,:,5]
-        drh         = dary[:,:,10]
-        dTH         = dary[:,:,11]
+        dq          = dary[:,:,5]   #np.apply_over_axes(np.diff, ary[::-1,:,5], 0)
+        mrh         = np.apply_over_axes(np.mean, ary[:,:,10], 0)
+        drh         = dary[:,:,10]  #np.apply_over_axes(np.diff, ary[::-1,:,10], 0)
+        dTH         = dary[:,:,11]  #np.apply_over_axes(np.diff, ary[::-1,:,11], 0)
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         res         = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
@@ -154,34 +156,33 @@ def main_diagnosis(
 
         smalltic = timeit.default_timer()
 
-        #def map_to_grid()
-        
         ##-- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid
-        for i in ntot:
-            
-            if fproc_npart:
+        if fproc_npart:
+            for i in ntot:
                 ## log number of parcels
                 ary_npart[lat_ind[i],lon_ind[i]] += int(1)
-
-            ## Precipitation
-            if (dq[:,i][0] < cprec_dqv and 
-                    ( (rh[0,i]+ rh[1,i])/2 ) > cprec_rh ):
-                ary_prec[lat_ind[i],lon_ind[i]] += dq[:,i][0]
-                ary_pnpart[lat_ind[i],lon_ind[i]] += int(1)
+        
+        ## Precipitation
+        for i in np.intersect1d(np.where(dq<cprec_dqv),np.where(mrh>cprec_rh)):
+            ary_prec[lat_ind[i],lon_ind[i]] += dq[:,i][0]
+            ary_pnpart[lat_ind[i],lon_ind[i]] += int(1)
             
-            ## Evaporation
+        ## Evaporation
+        for i in prefilter_e_for_dqv(dary,cevap_dqv):
+
             if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cevap_hgt,cpbl_factor,cpbl_method)[0] and (dq[:,i]>cevap_dqv)[0] and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh)[0] ):
                 ary_evap[lat_ind[i],lon_ind[i]]  += dq[:,i][0]
                 ary_enpart[lat_ind[i],lon_ind[i]] += int(1)
 
-            ## Sensible heat
+        ## Sensible heat
+        for i in prefilter_h_for_dtemp(dary,cheat_dtemp):
             if ( pblcheck(cpbl_strict,hgt[:,i],hpbl[:,i],cheat_hgt,cpbl_factor,cpbl_method) and dTH[:,i]>cheat_dtemp 
                     and drhcheck(rh[:,i],checkit=fevap_drh,maxdrh=cevap_drh) and rdqvcheck(ary[:,i,5], checkit=fheat_rdq, maxrdqv=cheat_rdq)):
                 ary_heat[lat_ind[i],lon_ind[i]]  += dTH[:,i]
                 ary_hnpart[lat_ind[i],lon_ind[i]] += int(1)
 
-        smalltoc = timeit.default_timer()
-        print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
+        #smalltoc = timeit.default_timer()
+        #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
 
         ## Convert units
         if verbose:

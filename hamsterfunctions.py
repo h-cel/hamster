@@ -1046,6 +1046,15 @@ def arrpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-lons))
     return ind_lat, ind_lon
 
+def prefilter_p_for_dqv(dary2D,thresh):
+    return np.where(dary2D[0,:,5]<thresh)[0]
+
+def prefilter_e_for_dqv(dary2D,thresh):
+    return np.where(dary2D[0,:,5]>thresh)[0]
+    
+def prefilter_h_for_dtemp(dary2D,thresh):
+    return np.where(dary2D[0,:,11]>thresh)[0]
+
 def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.4"):
     # delete nc file if it is present (avoiding error message)
     try:
