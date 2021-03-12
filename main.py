@@ -153,6 +153,7 @@ if args.steps == 1:
               gres=args.gres,
               verbose=args.verbose,
               veryverbose=args.veryverbose,
+              fproc_npart=args.fproc_npart,
               # E criteria
               cevap_dqv=args.cevap_dqv,
               fevap_drh=args.fevap_drh,

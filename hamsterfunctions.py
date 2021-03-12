@@ -497,6 +497,7 @@ def read_cmdargs():
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
     parser.add_argument('--waiter',     '-wt',  help = "random waiter to avoid simulatenous access to files",           metavar ="", type = str2bol, default = True, nargs='?')
+    parser.add_argument('--fproc_npart','-fpn', help = "01: process all parcels (n parcel evaluation)",                 metavar ="", type = str2bol, default = True, nargs='?')
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already

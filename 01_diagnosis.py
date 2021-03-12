@@ -16,6 +16,7 @@ def main_diagnosis(
            gres,
            verbose,
            veryverbose,
+           fproc_npart,
            # E criteria
            cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
            # P criteria
@@ -34,6 +35,9 @@ def main_diagnosis(
     if mode=="oper" and precision=="f4":
         precision = "f8"
         print("Single precision should only be used for testing. Reset to double-precision.")
+    if fvariable_mass and not fproc_npart:
+        fproc_npart = True
+        print("Have to process all parcels for variable mass...")
 
     ## Construct precise input and storage paths
     mainpath  = ipath+str(ryyyy)+"/"
@@ -154,9 +158,10 @@ def main_diagnosis(
         
         ##-- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid
         for i in ntot:
-
-            ## log number of parcels
-            ary_npart[lat_ind[i],lon_ind[i]] += int(1)
+            
+            if fproc_npart:
+                ## log number of parcels
+                ary_npart[lat_ind[i],lon_ind[i]] += int(1)
 
             ## Precipitation
             if (dq[:,i][0] < cprec_dqv and 
