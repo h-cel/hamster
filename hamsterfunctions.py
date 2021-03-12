@@ -776,6 +776,32 @@ def pblcheck(cpbl_strict, z, hpbl, minh, fpbl=1, method="max"):
         change_inside = np.ones(dtype=bool, shape=before_inside.size)
     return change_inside
 
+def pblcheck2(ary, cpbl_strict, minh, fpbl=1, method="max"):
+    # returns boolean vector for all change locations (z.size-1)
+    # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
+    z  = ary[:,0]
+    hpbl = ary[:,1]
+    hpbl[hpbl<minh] = minh
+    if method=="mean":
+        before_inside = ( z[1:]  <= fpbl*movingmean(hpbl, n=2) )
+        after_inside  = ( z[:-1] <= fpbl*movingmean(hpbl, n=2) )
+    elif method=="max":
+        before_inside = ( z[1:]  <= fpbl*movingmax(hpbl, n=2) )
+        after_inside  = ( z[:-1] <= fpbl*movingmax(hpbl, n=2) )
+    elif method=="actual":
+        before_inside = ( z[1:]  <= fpbl*hpbl[1:] )
+        after_inside  = ( z[:-1] <= fpbl*hpbl[:-1] )
+    if cpbl_strict == 2:
+        # both inside (and)
+        change_inside = np.logical_and(before_inside, after_inside)
+    elif cpbl_strict == 1:
+        # one inside (or) 
+        change_inside = np.logical_or(before_inside, after_inside)
+    elif cpbl_strict == 0:
+        # no pbl check
+        change_inside = np.ones(dtype=bool, shape=before_inside.size)
+    return change_inside
+
 def drhcheck(rh, checkit=False, maxdrh=15):
     if not checkit:
         retvals = np.ones(dtype=bool, shape=rh.size-1)
