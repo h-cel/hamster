@@ -102,15 +102,6 @@ def main_diagnosis(
         print(" \n !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet! \n")
         ary_rnpart   = get_refnpart(refdate=refdate, ryyyy=ryyyy, glon=glon, glat=glat)
     
-    ## Pre-allocate arrays
-    ary_heat     = np.zeros(shape=(glat.size,glon.size))
-    ary_evap     = np.zeros(shape=(glat.size,glon.size))
-    ary_prec     = np.zeros(shape=(glat.size,glon.size))
-    ary_npart    = np.zeros(shape=(glat.size,glon.size))
-    ary_pnpart   = np.zeros(shape=(glat.size,glon.size))
-    ary_enpart   = np.zeros(shape=(glat.size,glon.size))
-    ary_hnpart   = np.zeros(shape=(glat.size,glon.size))
-
     ##-- LOOP THROUGH FILES
     if verbose:
         print("\n=== \t Start main program: 01_diagnosis...\n")
@@ -146,31 +137,25 @@ def main_diagnosis(
         ##-- LOOP OVER PARCELS TO DIAGNOSE P, E, H (and npart) and assign to grid
         if fproc_npart:
             # get midpoint indices on grid from ary
-            lary        = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-            res         = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-            lat_ind     = res[:,0]
-            lon_ind     = res[:,1]
-            for i in ntot:
-                ## log number of parcels
-                ary_npart[lat_ind[i],lon_ind[i]] += int(1)
+            lary            = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+            imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+            _, ary_npart    = gridall(imidi[:,1], imidi[:,0], np.repeat(1,nparticle), glon=glon, glat=glat)
+        elif not fproc_npart:
+            # currently just writing empty array ... to be changed
+            ary_npart       = np.zeros(shape=(glat.size,glon.size))
         
         ## Precipitation
-        # filter for P
         fdqv        = np.where(dq[0,:]<cprec_dqv)
         frh         = np.where(mrh[0,:]>cprec_rh)
         isprec      = np.intersect1d(fdqv,frh)
         p_ary       = ary[:,isprec,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(p_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        pres        = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-        plat_ind    = pres[:,0]
-        plon_ind    = pres[:,1]
-        for i in range(p_ary.shape[1]):
-            ary_prec[plat_ind[i],plon_ind[i]]   += dq[:,isprec[i]][0]
-            ary_pnpart[plat_ind[i],plon_ind[i]] += int(1)
+        pmidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+        # grid
+        ary_prec, ary_pnpart = gridall(pmidi[:,1], pmidi[:,0], dq[:,isprec][0], glon=glon, glat=glat)
             
         ## Evaporation
-        # filter for E
         fdqv        = np.where(dq[0,:]>cevap_dqv)
         lary        = [y for y in (np.moveaxis(ary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         fpbl        = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
@@ -180,15 +165,11 @@ def main_diagnosis(
         e_ary       = ary[:,isevap,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(e_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        eres        = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-        elat_ind    = eres[:,0]
-        elon_ind    = eres[:,1]
-        for i in range(e_ary.shape[1]):
-                ary_evap[elat_ind[i],elon_ind[i]]   += dq[:,isevap[i]][0]
-                ary_enpart[elat_ind[i],elon_ind[i]] += int(1)
+        emidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+        # grid
+        ary_evap, ary_enpart = gridall(emidi[:,1], emidi[:,0], dq[:,isevap][0], glon=glon, glat=glat)
 
         ## Sensible heat
-        # filter for H
         fdTH        = np.where(dTH[0,:]>cheat_dtemp)
         lary        = [y for y in (np.moveaxis(ary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         fpbl        = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
@@ -200,12 +181,9 @@ def main_diagnosis(
         h_ary       = ary[:,isheat,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(h_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        hres        = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-        hlat_ind    = hres[:,0]
-        hlon_ind    = hres[:,1]
-        for i in range(h_ary.shape[1]):
-                ary_heat[hlat_ind[i],hlon_ind[i]]   += dTH[:,isheat[i]][0]
-                ary_hnpart[hlat_ind[i],hlon_ind[i]] += int(1)
+        hmidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+        # grid
+        ary_heat, ary_hnpart = gridall(hmidi[:,1], hmidi[:,0], dTH[:,isheat][0], glon=glon, glat=glat)
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
