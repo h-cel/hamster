@@ -139,7 +139,7 @@ def main_diagnosis(
             # get midpoint indices on grid from ary
             lary            = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
             imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
-            _, ary_npart    = gridall(imidi[:,1], imidi[:,0], np.repeat(1,nparticle), glon=glon, glat=glat)
+            ary_npart       = gridall(imidi[:,1], imidi[:,0], np.repeat(1,nparticle), glon=glon, glat=glat)
         elif not fproc_npart:
             # currently just writing empty array ... to be changed
             ary_npart       = np.zeros(shape=(glat.size,glon.size))
@@ -153,7 +153,8 @@ def main_diagnosis(
         lary        = [y for y in (np.moveaxis(p_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         pmidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
         # grid
-        ary_prec, ary_pnpart = gridall(pmidi[:,1], pmidi[:,0], dq[:,isprec][0], glon=glon, glat=glat)
+        ary_prec    = gridall(pmidi[:,1], pmidi[:,0], dq[:,isprec][0], glon=glon, glat=glat)
+        ary_pnpart  = gridall(pmidi[:,1], pmidi[:,0], np.repeat(1,isprec.size), glon=glon, glat=glat)
             
         ## Evaporation
         fdqv        = np.where(dq[0,:]>cevap_dqv)
@@ -167,7 +168,8 @@ def main_diagnosis(
         lary        = [y for y in (np.moveaxis(e_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         emidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
         # grid
-        ary_evap, ary_enpart = gridall(emidi[:,1], emidi[:,0], dq[:,isevap][0], glon=glon, glat=glat)
+        ary_evap    = gridall(emidi[:,1], emidi[:,0], dq[:,isevap][0], glon=glon, glat=glat)
+        ary_enpart  = gridall(emidi[:,1], emidi[:,0], np.repeat(1,isevap.size), glon=glon, glat=glat)
 
         ## Sensible heat
         fdTH        = np.where(dTH[0,:]>cheat_dtemp)
@@ -183,7 +185,8 @@ def main_diagnosis(
         lary        = [y for y in (np.moveaxis(h_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
         hmidi       = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
         # grid
-        ary_heat, ary_hnpart = gridall(hmidi[:,1], hmidi[:,0], dTH[:,isheat][0], glon=glon, glat=glat)
+        ary_heat    = gridall(hmidi[:,1], hmidi[:,0], dTH[:,isheat][0], glon=glon, glat=glat)
+        ary_hnpart  = gridall(hmidi[:,1], hmidi[:,0], np.repeat(1,isheat.size), glon=glon, glat=glat)
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")

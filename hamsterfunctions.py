@@ -1029,18 +1029,19 @@ def gridder(plon, plat, pval,
 def gridall(lon,lat,val,glon,glat):
     # create pandas data frame to sum up over each grid cell
     mydf = pd.DataFrame({"lon":lon, "lat":lat, "v":val})
-    uniq = mydf.groupby(["lon","lat"]).agg(['sum','count'])
+    uniq = mydf.groupby(["lon","lat"]).sum()
+    #uniq = mydf.groupby(["lon","lat"]).agg(['sum','count'])
     # extract values from pandas df (all 1D vectors; unique x,y combin.)
-    v = np.asarray(uniq["v"])[:,0]
-    c = np.asarray(uniq["v"])[:,1]
+    v = np.asarray(uniq["v"])#[:,0]
+    #c = np.asarray(uniq["v"])[:,1]
     x = np.asarray(uniq.index.get_level_values(0))
     y = np.asarray(uniq.index.get_level_values(1))
     # write into field
     gvalues = np.zeros(shape=(glat.size,glon.size))
     gvalues[y,x] = v
-    gcounts = np.zeros(shape=(glat.size,glon.size))
-    gcounts[y,x] = c
-    return gvalues, gcounts
+    #gcounts = np.zeros(shape=(glat.size,glon.size))
+    #gcounts[y,x] = c
+    return gvalues#, gcounts
 
 def mgridder(mlon, mlat, pval,
             glat, glon):
