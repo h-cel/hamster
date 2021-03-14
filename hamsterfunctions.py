@@ -820,6 +820,39 @@ def rdqvcheck(qv, checkit=False, maxrdqv=10):
         retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
+def get_evap_indices(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv):
+    # check for dq > cevap_dqv
+    fdqv    = np.where(dq[0,:]>cevap_dqv)
+    eary    = eary[:,fdqv[0],:]
+    # check for drh
+    lary    = [y for y in (np.moveaxis(eary[:,:,[10]], 1, 0))]
+    fdrh    = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fevap_drh, maxdrh=cevap_drh), lary)))[:,0])
+    eary    = eary[:,fdrh[0],:]
+    # check for pbl
+    lary    = [y for y in (np.moveaxis(eary[:,:,[3,7]], 1, 0))]
+    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    return fdqv[0][fdrh[0][fpbl[0]]]
+
+def get_heat_indices(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
+    # check for dTH > cheat_dtemp 
+    fdTH    = np.where(dTH[0,:]>cheat_dtemp)
+    hary    = hary[:,fdTH[0],:]
+    print(hary.shape)
+    # check for drh
+    lary    = [y for y in (np.moveaxis(hary[:,:,[10]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+    print(len(lary))
+    print((lary[0].shape))
+    fdrh    = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fheat_drh, maxdrh=cheat_drh), lary)))[:,0])
+    hary    = hary[:,fdrh[0],:]
+    # check for rdq
+    lary    = [y for y in (np.moveaxis(hary[:,:,[5]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+    frdq    = np.where(np.asarray(list(map(lambda p: rdqvcheck(p, checkit=fheat_rdq, maxrdqv=cheat_rdq), lary)))[:,0])
+    hary    = hary[:,frdq[0],:]
+    # check for pbl
+    lary    = [y for y in (np.moveaxis(hary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    return fdTH[0][fdrh[0][frdq[0][fpbl[0]]]]
+
 def scale_mass(ary_val, ary_part, ary_rpart):
     ary_sval    = np.zeros(shape=(ary_val.shape)) 
     #for itime in range(ary_val.shape[0]):  

@@ -157,12 +157,7 @@ def main_diagnosis(
         ary_pnpart  = gridall(pmidi[:,1], pmidi[:,0], np.repeat(1,isprec.size), glon=glon, glat=glat)
             
         ## Evaporation
-        fdqv        = np.where(dq[0,:]>cevap_dqv)
-        lary        = [y for y in (np.moveaxis(ary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        fpbl        = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
-        lary        = [y for y in (np.moveaxis(ary[:,:,[10]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        fdrh        = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fevap_drh, maxdrh=cevap_drh), lary)))[:,0])
-        isevap      = reduce(np.intersect1d, (fdqv, fpbl, fdrh))
+        isevap      = get_evap_indices(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
         e_ary       = ary[:,isevap,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(e_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
@@ -172,14 +167,7 @@ def main_diagnosis(
         ary_enpart  = gridall(emidi[:,1], emidi[:,0], np.repeat(1,isevap.size), glon=glon, glat=glat)
 
         ## Sensible heat
-        fdTH        = np.where(dTH[0,:]>cheat_dtemp)
-        lary        = [y for y in (np.moveaxis(ary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        fpbl        = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
-        lary        = [y for y in (np.moveaxis(ary[:,:,[10]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        fdrh        = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fheat_drh, maxdrh=cheat_drh), lary)))[:,0])
-        lary        = [y for y in (np.moveaxis(ary[:,:,[5]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-        frdq        = np.where(np.asarray(list(map(lambda p: rdqvcheck(p, checkit=fheat_rdq, maxrdqv=cheat_rdq), lary)))[:,0])
-        isheat      = reduce(np.intersect1d, (fdTH, fpbl, fdrh, frdq))
+        isheat      = get_heat_indices(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
         h_ary       = ary[:,isheat,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(h_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
