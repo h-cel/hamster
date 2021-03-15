@@ -1119,6 +1119,12 @@ def arrpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-lons))
     return ind_lat, ind_lon
 
+def get_all_midpindices(ary, glon, glat):
+    # gets midpoint indices for all parcels from 3D array of dimension nsteps x nparcels x nvars
+    lary            = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+    imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+    return imidi
+
 def prefilter_p_for_dqv(dary2D,thresh):
     return np.where(dary2D[0,:,5]<thresh)[0]
 
