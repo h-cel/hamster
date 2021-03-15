@@ -18,11 +18,11 @@ def main_diagnosis(
            veryverbose,
            fproc_npart,
            # E criteria
-           cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
+           fevap, cevap_dqv, fevap_drh, cevap_drh, cevap_hgt,
            # P criteria
-           cprec_dqv, cprec_rh,
+           fprec, cprec_dqv, cprec_rh,
            # H criteria
-           cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt, fheat_rdq, cheat_rdq,
+           fheat, cheat_dtemp, fheat_drh, cheat_drh, cheat_hgt, fheat_rdq, cheat_rdq,
            # pbl and height criteria
            cpbl_method, cpbl_strict, cpbl_factor,
            refdate,
@@ -95,7 +95,7 @@ def main_diagnosis(
 
     ## Create empty netcdf file (to be filled)
     if fwrite_netcdf:
-        writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision)
+        writeemptync(ofile,mfdate_seq,glon,glat,strargs,precision,fproc_npart,fprec,fevap,fheat)
 
     # Read in reference distribution of parcels
     if fvariable_mass:
@@ -144,30 +144,33 @@ def main_diagnosis(
             ary_npart       = np.zeros(shape=(glat.size,glon.size))
         
         ## Precipitation
-        fdqv        = np.where(dq[0,:]<cprec_dqv)
-        frh         = np.where(mrh[0,:]>cprec_rh)
-        isprec      = np.intersect1d(fdqv,frh)
-        p_ary       = ary[:,isprec,:]
-        pmidi       = get_all_midpindices(p_ary, glon, glat)
-        # grid
-        ary_prec    = gridall(pmidi[:,1], pmidi[:,0], dq[:,isprec][0], glon=glon, glat=glat)
-        ary_pnpart  = gridall(pmidi[:,1], pmidi[:,0], np.repeat(1,isprec.size), glon=glon, glat=glat)
+        if fprec:
+            fdqv        = np.where(dq[0,:]<cprec_dqv)
+            frh         = np.where(mrh[0,:]>cprec_rh)
+            isprec      = np.intersect1d(fdqv,frh)
+            p_ary       = ary[:,isprec,:]
+            pmidi       = get_all_midpindices(p_ary, glon, glat)
+            # grid
+            ary_prec    = gridall(pmidi[:,1], pmidi[:,0], dq[:,isprec][0], glon=glon, glat=glat)
+            ary_pnpart  = gridall(pmidi[:,1], pmidi[:,0], np.repeat(1,isprec.size), glon=glon, glat=glat)
             
         ## Evaporation
-        isevap      = filter_for_evap_parcels(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
-        e_ary       = ary[:,isevap,:]
-        emidi       = get_all_midpindices(e_ary, glon, glat)
-        # grid
-        ary_evap    = gridall(emidi[:,1], emidi[:,0], dq[:,isevap][0], glon=glon, glat=glat)
-        ary_enpart  = gridall(emidi[:,1], emidi[:,0], np.repeat(1,isevap.size), glon=glon, glat=glat)
+        if fevap:
+            isevap      = filter_for_evap_parcels(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
+            e_ary       = ary[:,isevap,:]
+            emidi       = get_all_midpindices(e_ary, glon, glat)
+            # grid
+            ary_evap    = gridall(emidi[:,1], emidi[:,0], dq[:,isevap][0], glon=glon, glat=glat)
+            ary_enpart  = gridall(emidi[:,1], emidi[:,0], np.repeat(1,isevap.size), glon=glon, glat=glat)
 
         ## Sensible heat
-        isheat      = filter_for_heat_parcels(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
-        h_ary       = ary[:,isheat,:]
-        hmidi       = get_all_midpindices(h_ary, glon, glat)
-        # grid
-        ary_heat    = gridall(hmidi[:,1], hmidi[:,0], dTH[:,isheat][0], glon=glon, glat=glat)
-        ary_hnpart  = gridall(hmidi[:,1], hmidi[:,0], np.repeat(1,isheat.size), glon=glon, glat=glat)
+        if fheat:
+            isheat      = filter_for_heat_parcels(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
+            h_ary       = ary[:,isheat,:]
+            hmidi       = get_all_midpindices(h_ary, glon, glat)
+            # grid
+            ary_heat    = gridall(hmidi[:,1], hmidi[:,0], dTH[:,isheat][0], glon=glon, glat=glat)
+            ary_hnpart  = gridall(hmidi[:,1], hmidi[:,0], np.repeat(1,isheat.size), glon=glon, glat=glat)
 
         #smalltoc = timeit.default_timer()
         #print("=== \t All parcels: ",str(round(smalltoc-smalltic, 2)),"seconds \n")
@@ -175,30 +178,52 @@ def main_diagnosis(
         ## Convert units
         if verbose:
             print(" * Converting units...")
-        ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
-        ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
-        ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
+        if fprec:    
+            ary_prec[:,:] = convertunits(ary_prec[:,:], garea, "P")
+        if fevap:
+            ary_evap[:,:] = convertunits(ary_evap[:,:], garea, "E")
+        if fheat:
+            ary_heat[:,:] = convertunits(ary_heat[:,:], garea, "H")
 
         ## Scale with parcel mass
         if fvariable_mass:
             print(" !!! WARNING !!! With this version, variable mass can only be applied to 01_diagnosis -- it cannot be used consistently for all steps yet!")
             if verbose: 
                 print(" * Applying variable mass...")
-            ary_prec[:,:]         = scale_mass(ary_prec[:,:], ary_npart[:,:], ary_rnpart)
-            ary_evap[:,:]         = scale_mass(ary_evap[:,:], ary_npart[:,:], ary_rnpart)
-            ary_heat[:,:]         = scale_mass(ary_heat[:,:], ary_npart[:,:], ary_rnpart)
+            if fprec:    
+                ary_prec[:,:]         = scale_mass(ary_prec[:,:], ary_npart[:,:], ary_rnpart)
+            if fevap:
+                ary_evap[:,:]         = scale_mass(ary_evap[:,:], ary_npart[:,:], ary_rnpart)
+            if fheat:
+                ary_heat[:,:]         = scale_mass(ary_heat[:,:], ary_npart[:,:], ary_rnpart)
 
+        # write to netcdf file
         if fwrite_netcdf:
-            writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:],ary_pnpart[:,:],ary_enpart[:,:],ary_hnpart[:,:])
+            #writenc(ofile,ix,ary_prec[:,:],ary_evap[:,:],ary_heat[:,:],ary_npart[:,:],ary_pnpart[:,:],ary_enpart[:,:],ary_hnpart[:,:])
+            if fproc_npart:
+                writenc(ofile,ix,ary_npart[:,:],'n_part')
+            if fprec:
+                writenc(ofile,ix,ary_prec[:,:],'P')
+                writenc(ofile,ix,ary_pnpart[:,:],'P_n_part')
+            if fevap:
+                writenc(ofile,ix,ary_evap[:,:],'E')
+                writenc(ofile,ix,ary_enpart[:,:],'E_n_part')
+            if fheat:
+                writenc(ofile,ix,ary_heat[:,:],'H')
+                writenc(ofile,ix,ary_hnpart[:,:],'H_n_part')
 
         ## re-init. arrays
-        ary_npart[:,:]  = 0
-        ary_pnpart[:,:] = 0
-        ary_enpart[:,:] = 0
-        ary_hnpart[:,:] = 0
-        ary_prec[:,:]   = 0
-        ary_evap[:,:]   = 0
-        ary_heat[:,:]   = 0
+        if fproc_npart:
+            ary_npart[:,:]  = 0
+        if fprec:
+            ary_pnpart[:,:] = 0
+            ary_prec[:,:]   = 0
+        if fevap:
+            ary_enpart[:,:] = 0
+            ary_evap[:,:]   = 0
+        if fheat:    
+            ary_hnpart[:,:] = 0
+            ary_heat[:,:]   = 0
 
     if ftimethis:
         megatoc = timeit.default_timer()

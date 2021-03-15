@@ -128,14 +128,17 @@ if args.steps == 1:
               veryverbose=args.veryverbose,
               fproc_npart=args.fproc_npart,
               # E criteria
+              fevap=args.fevap,
               cevap_dqv=args.cevap_dqv,
               fevap_drh=args.fevap_drh,
               cevap_drh=args.cevap_drh,
               cevap_hgt=args.cevap_hgt, 
               # P criteria
+              fprec=args.fprec,
               cprec_dqv=args.cprec_dqv, 
               cprec_rh=args.cprec_rh,
               # H criteria
+              fheat=args.fheat,
               cheat_dtemp=args.cheat_dtemp,
               fheat_drh=args.fheat_drh,
               cheat_drh=args.cheat_drh,

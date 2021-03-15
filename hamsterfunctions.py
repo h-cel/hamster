@@ -457,11 +457,14 @@ def read_cmdargs():
     parser.add_argument('--maskval',    '-mv',  help = "use <value> from maskfile for masking",                         metavar ="", type = int,     default = 1)
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       metavar ="", type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
+    parser.add_argument('--fprec',      '-fp',  help = "flag: filter for P (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
+    parser.add_argument('--fevap',      '-fe',  help = "flag: filter for E (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--cevap_dqv',  '-ceq', help = "threshold for detection of E based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--fevap_drh',  '-fer', help = "flag: check for maximum delta(RH) for detection of E",          metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--cevap_drh',  '-cer', help = "threshold for detection of E using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
+    parser.add_argument('--fheat',      '-fh',  help = "flag: filter for H (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
     parser.add_argument('--fheat_drh',  '-fhr', help = "flag: check for maximum delta(RH) for detection of H",          metavar ="", type = str2bol, default = False,    nargs='?')
@@ -1073,7 +1076,7 @@ def get_all_midpindices(ary, glon, glat):
     imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
     return imidi
 
-def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.4"):
+def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,fproc_npart,fprec,fevap,fheat,currentversion="v0.4"):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -1092,13 +1095,17 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     times               = nc_f.createVariable('time', 'f8', 'time')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
-    evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
-    precs               = nc_f.createVariable('P', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
-    nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
-    pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
-    enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
-    hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fheat:
+        heats               = nc_f.createVariable('H', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fevap:
+        evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fprec:
+        precs               = nc_f.createVariable('P', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fproc_npart:
+        nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
     
     # set attributes
     nc_f.title          = "Diagnosis (01) of FLEXPART fluxes"
@@ -1111,20 +1118,24 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
-    heats.units         = 'W m-2'
-    heats.long_name	    = 'surface sensible heat flux'
-    evaps.units         = 'mm'
-    evaps.long_name	    = 'evaporation'
-    precs.units         = 'mm'
-    precs.long_name	    = 'precipitation'
-    nparts.units        = 'int'
-    nparts.long_name    = 'number of parcels (mid pos.)'
-    pnparts.units       = 'int'
-    pnparts.long_name   = 'number of P parcels (mid pos.)'
-    enparts.units       = 'int'
-    enparts.long_name   = 'number of E parcels (mid pos.)'
-    hnparts.units       = 'int'
-    hnparts.long_name   = 'number of H parcels (mid pos.)'
+    if fheat:
+        heats.units         = 'W m-2'
+        heats.long_name	    = 'surface sensible heat flux'
+        hnparts.units       = 'int'
+        hnparts.long_name   = 'number of H parcels (mid pos.)'
+    if fevap:
+        evaps.units         = 'mm'
+        evaps.long_name	    = 'evaporation'
+        enparts.units       = 'int'
+        enparts.long_name   = 'number of E parcels (mid pos.)'
+    if fprec:
+        precs.units         = 'mm'
+        precs.long_name	    = 'precipitation'
+        pnparts.units       = 'int'
+        pnparts.long_name   = 'number of P parcels (mid pos.)'
+    if fproc_npart:
+        nparts.units        = 'int'
+        nparts.long_name    = 'number of parcels (mid pos.)'
     
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -1134,18 +1145,11 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     nc_f.close()
     print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
 
-def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
+def writenc(ofile,ix,iarray,ivar,verbose=True):
     if verbose:
-        print(" * Writing to netcdf...")
-
+        print(" * Writing "+ivar+" to netcdf...")
     nc_f = nc4.Dataset(ofile, 'r+')
-    nc_f['P'][ix,:,:]       = ary_prec
-    nc_f['E'][ix,:,:]       = ary_evap
-    nc_f['H'][ix,:,:]       = ary_heat
-    nc_f['n_part'][ix,:,:]  = ary_npart
-    nc_f['P_n_part'][ix,:,:]  = ary_pnpart
-    nc_f['E_n_part'][ix,:,:]  = ary_enpart
-    nc_f['H_n_part'][ix,:,:]  = ary_hnpart
+    nc_f[ivar][ix,:,:]       = iarray
     nc_f.close()
 
 def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentversion="v0.4"):
