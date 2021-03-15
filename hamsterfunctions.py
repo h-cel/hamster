@@ -1866,6 +1866,12 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     # print info
     print("\n * Created and wrote to file: "+ofile+" !")
 
+def append_attrfrac_netcdf(ofile,attrfrac):
+    nc_f                = nc4.Dataset(ofile, 'r+')
+    attrdesc            = getattr(nc_f,"description") + "; [[STATS]] attributed fraction (P) = " + attrfrac
+    nc_f.description    = attrdesc
+    nc_f.close()
+
 def maskbymaskval(mask,maskval):
     mymask  = np.copy(mask)
     mymask[np.where(mask!=maskval)]=0
