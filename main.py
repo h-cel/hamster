@@ -55,34 +55,6 @@ args    = read_cmdargs()
 verbose = args.verbose
 print(printsettings(args))
 
-# default settings
-# - to be used if tevap_diag or theat_diag are set
-# - attention: this overwrites all evap and heat related flags! 
-if args.theat_diag == "SCH19" or args.theat_diag == "SCH20":
-    # Schumacher et al., 2019/2020
-    args.cpbl_method = "max"
-    args.cpbl_strict = 2
-    args.cheat_dtemp = 1
-    args.fheat_drh   = False
-    args.fheat_rdq   = True
-    args.cheat_rdq   = 10
-    args.mattribution= "linear"
-if args.tevap_diag == "SOD08":
-    # Sodemann et al., 2008
-    args.cpbl_method = "mean"
-    args.cpbl_strict = 1
-    args.cpbl_factor = 1.5 # everywhere (follow. Keune & Miralles, 2019)
-    args.cevap_dqv   = 0.0002
-    args.fevap_drh   = False
-    args.mattribution= "linear"
-if args.tevap_diag == "SOD20":
-    # Sodemann, 2020
-    args.cpbl_strict = 0
-    args.cevap_dqv   = 0.0001
-    args.fevap_drh   = False
-    args.mattribution= "linear"
-
-
 # just waiting a random number of seconds (max. 30s)
 # to avoid overlap of path.exist and makedirs between parallel jobs (any better solution?)
 if args.waiter:

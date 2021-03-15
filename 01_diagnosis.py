@@ -106,7 +106,8 @@ def main_diagnosis(
     if verbose:
         print("\n=== \t Start main program: 01_diagnosis...\n")
 
-    for ix in range(ntime):
+    for ix in range(1):
+    #for ix in range(ntime):
         
         if verbose:
             print("--------------------------------------------------------------------------------------")
