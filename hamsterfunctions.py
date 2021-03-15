@@ -1061,18 +1061,14 @@ def gridall(lon,lat,val,glon,glat):
     # create pandas data frame to sum up over each grid cell
     mydf = pd.DataFrame({"lon":lon, "lat":lat, "v":val})
     uniq = mydf.groupby(["lon","lat"]).sum()
-    #uniq = mydf.groupby(["lon","lat"]).agg(['sum','count'])
     # extract values from pandas df (all 1D vectors; unique x,y combin.)
-    v = np.asarray(uniq["v"])#[:,0]
-    #c = np.asarray(uniq["v"])[:,1]
+    v = np.asarray(uniq["v"])
     x = np.asarray(uniq.index.get_level_values(0))
     y = np.asarray(uniq.index.get_level_values(1))
     # write into field
     gvalues = np.zeros(shape=(glat.size,glon.size))
     gvalues[y,x] = v
-    #gcounts = np.zeros(shape=(glat.size,glon.size))
-    #gcounts[y,x] = c
-    return gvalues#, gcounts
+    return gvalues
 
 def mgridder(mlon, mlat, pval,
             glat, glon):
@@ -1124,15 +1120,6 @@ def get_all_midpindices(ary, glon, glat):
     lary            = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
     imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
     return imidi
-
-def prefilter_p_for_dqv(dary2D,thresh):
-    return np.where(dary2D[0,:,5]<thresh)[0]
-
-def prefilter_e_for_dqv(dary2D,thresh):
-    return np.where(dary2D[0,:,5]>thresh)[0]
-    
-def prefilter_h_for_dtemp(dary2D,thresh):
-    return np.where(dary2D[0,:,11]>thresh)[0]
 
 def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.4"):
     # delete nc file if it is present (avoiding error message)
