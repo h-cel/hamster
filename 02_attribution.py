@@ -351,7 +351,7 @@ def main_attribution(
                         ihf_E = np.min(np.where(qv[1:ihf_E]<= 0.00005)[0] + 1)
                         
                     # identify uptake locations
-                    is_inpbl    = pblcheck2(np.dstack((hgt[:ihf_E],hpbl[:ihf_E]))[0,:,:], cpbl_strict, minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
+                    is_inpbl    = pblcheck(np.dstack((hgt[:ihf_E],hpbl[:ihf_E]))[0,:,:], cpbl_strict, minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
                     is_drh      = drhcheck(rh[:ihf_E], checkit=fevap_drh, maxdrh=cevap_drh)
                     is_uptk     = dq[:ihf_E-1] > cevap_dqv
                     evap_idx    = np.where(np.logical_and(is_inpbl, np.logical_and(is_drh, is_uptk)))[0] 
@@ -409,7 +409,7 @@ def main_attribution(
                     dTH         = trajparceldiff(pottemp[:], 'diff')
 
                     # identify sensible heat uptakes
-                    is_inpbl    = pblcheck2(np.dstack((hgt[:ihf_H],hpbl[:ihf_H]))[0,:,:], cpbl_strict, minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
+                    is_inpbl    = pblcheck(np.dstack((hgt[:ihf_H],hpbl[:ihf_H]))[0,:,:], cpbl_strict, minh=cheat_hgt, fpbl=cpbl_factor, method=cpbl_method)
                     is_drh      = drhcheck(rh[:ihf_H], checkit=fheat_drh, maxdrh=cheat_drh)
                     is_rdqv     = rdqvcheck(qv[:ihf_H], checkit=fheat_rdq, maxrdqv=cheat_rdq)
                     is_uptk     = dTH[:ihf_H-1] > cheat_dtemp

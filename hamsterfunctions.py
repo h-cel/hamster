@@ -750,31 +750,7 @@ def movingmax(x, n=2):
 def movingmean(x, n=2):
    return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
 
-def pblcheck(cpbl_strict, z, hpbl, minh, fpbl=1, method="max"):
-    # returns boolean vector for all change locations (z.size-1)
-    # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
-    hpbl[hpbl<minh] = minh
-    if method=="mean":
-        before_inside = ( z[1:]  <= fpbl*movingmean(hpbl, n=2) )
-        after_inside  = ( z[:-1] <= fpbl*movingmean(hpbl, n=2) )
-    elif method=="max":
-        before_inside = ( z[1:]  <= fpbl*movingmax(hpbl, n=2) )
-        after_inside  = ( z[:-1] <= fpbl*movingmax(hpbl, n=2) )
-    elif method=="actual":
-        before_inside = ( z[1:]  <= fpbl*hpbl[1:] )
-        after_inside  = ( z[:-1] <= fpbl*hpbl[:-1] )
-    if cpbl_strict == 2:
-        # both inside (and)
-        change_inside = np.logical_and(before_inside, after_inside)
-    elif cpbl_strict == 1:
-        # one inside (or) 
-        change_inside = np.logical_or(before_inside, after_inside)
-    elif cpbl_strict == 0:
-        # no pbl check
-        change_inside = np.ones(dtype=bool, shape=before_inside.size)
-    return change_inside
-
-def pblcheck2(ary, cpbl_strict, minh, fpbl=1, method="max"):
+def pblcheck(ary, cpbl_strict, minh, fpbl=1, method="max"):
     # returns boolean vector for all change locations (z.size-1)
     # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
     z  = ary[:,0]
@@ -828,7 +804,7 @@ def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cev
     eary    = eary[:,fdrh[0],:]
     # check for pbl
     lary    = [y for y in (np.moveaxis(eary[:,:,[3,7]], 1, 0))]
-    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
     return fdqv[0][fdrh[0][fpbl[0]]]
 
 def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
@@ -848,7 +824,7 @@ def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, ch
     hary    = hary[:,frdq[0],:]
     # check for pbl
     lary    = [y for y in (np.moveaxis(hary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
     return fdTH[0][fdrh[0][frdq[0][fpbl[0]]]]
 
 def scale_mass(ary_val, ary_part, ary_rpart):
