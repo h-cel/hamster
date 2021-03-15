@@ -1070,27 +1070,6 @@ def gridall(lon,lat,val,glon,glat):
     gvalues[y,x] = v
     return gvalues
 
-def mgridder(mlon, mlat, pval,
-            glat, glon):
-    """
-    INPUT
-        - plon, plat: parcel longitutde and latitude
-        - glon, glat: grid longitude and latitutde
-        - pval      : parcel value to be assigned to grid
-    ACTION
-        1. calculated midpoint of two coordinates
-        2. assigns val to gridcell corresponding to midpoint
-    RETURN
-        - array of dimension (glat.size x glon.size) with 0's and one value assigned
-    """
-    # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
-    # and assign pval to gridcell (init. with 0's)
-    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
-    gval[ind_lat,ind_lon]    += pval
-    return(gval)
-
 def midpindex(parray,glon,glat):
     lats    = parray[:,2]                   # latitude
     lons    = parray[:,1]                   # longitude
