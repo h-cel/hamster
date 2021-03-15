@@ -106,8 +106,7 @@ def main_diagnosis(
     if verbose:
         print("\n=== \t Start main program: 01_diagnosis...\n")
 
-    for ix in range(1):
-    #for ix in range(ntime):
+    for ix in range(ntime):
         
         if verbose:
             print("--------------------------------------------------------------------------------------")
@@ -158,7 +157,7 @@ def main_diagnosis(
         ary_pnpart  = gridall(pmidi[:,1], pmidi[:,0], np.repeat(1,isprec.size), glon=glon, glat=glat)
             
         ## Evaporation
-        isevap      = get_evap_indices(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
+        isevap      = filter_for_evap_parcels(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
         e_ary       = ary[:,isevap,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(e_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
@@ -168,7 +167,7 @@ def main_diagnosis(
         ary_enpart  = gridall(emidi[:,1], emidi[:,0], np.repeat(1,isevap.size), glon=glon, glat=glat)
 
         ## Sensible heat
-        isheat      = get_heat_indices(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
+        isheat      = filter_for_heat_parcels(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
         h_ary       = ary[:,isheat,:]
         # get midpoint indices on grid from ary
         lary        = [y for y in (np.moveaxis(h_ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map

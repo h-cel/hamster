@@ -818,7 +818,7 @@ def rdqvcheck(qv, checkit=False, maxrdqv=10):
         retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
-def get_evap_indices(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv):
+def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv):
     # check for dq > cevap_dqv
     fdqv    = np.where(dq[0,:]>cevap_dqv)
     eary    = eary[:,fdqv[0],:]
@@ -831,7 +831,7 @@ def get_evap_indices(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt,
     fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck2(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
     return fdqv[0][fdrh[0][fpbl[0]]]
 
-def get_heat_indices(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
+def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
     # check for dTH > cheat_dtemp 
     fdTH    = np.where(dTH[0,:]>cheat_dtemp)
     hary    = hary[:,fdTH[0],:]
