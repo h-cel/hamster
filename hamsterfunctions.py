@@ -811,11 +811,8 @@ def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, ch
     # check for dTH > cheat_dtemp 
     fdTH    = np.where(dTH[0,:]>cheat_dtemp)
     hary    = hary[:,fdTH[0],:]
-    print(hary.shape)
     # check for drh
     lary    = [y for y in (np.moveaxis(hary[:,:,[10]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-    print(len(lary))
-    print((lary[0].shape))
     fdrh    = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fheat_drh, maxdrh=cheat_drh), lary)))[:,0])
     hary    = hary[:,fdrh[0],:]
     # check for rdq
