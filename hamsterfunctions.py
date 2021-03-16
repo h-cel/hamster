@@ -748,10 +748,16 @@ def convertunits(ary_val, garea, var):
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
 def movingmax(x, n=2):
-   return np.array([np.max(x[i:i+n]) for i in range(len(x)-(n-1))])
+    if len(x)==2:
+        return max(x[0],x[1])
+    else:
+        return np.array([np.max(x[i:i+n]) for i in range(len(x)-(n-1))])
 
 def movingmean(x, n=2):
-   return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
+    if len(x)==2:
+        return mean(x[0],x[1])
+    else:
+        return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
 
 def pblcheck(ary, cpbl_strict, minh, fpbl=1, method="max"):
     # returns boolean vector for all change locations (z.size-1)
