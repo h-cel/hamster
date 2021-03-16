@@ -785,6 +785,24 @@ def pblcheck(ary, cpbl_strict, minh, fpbl=1, method="max"):
             # one inside (or) 
             return np.logical_or(before_inside, after_inside)
 
+def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl=1, method="max"):
+    hpbl[hpbl<minh] = minh
+    if method=="actual":
+        fpbl1   = z[0,:]<=fpbl*hpbl[0,:]
+        fpbl2   = z[1,:]<=fpbl*hpbl[1,:]
+        fpbl    = np.where((fpbl1+fpbl2)>=cpbl_strict)
+    elif method=="mean":    
+        mpbl     = np.apply_over_axes(np.mean, hpbl[:,:], 0)[0,:]
+        fpbl1    = z[0,:]<=fpbl*mpbl
+        fpbl2    = z[1,:]<=fpbl*mpbl
+        fpbl     = np.where((fpbl1+fpbl2)>=cpbl_strict)
+    elif method=="max":    
+        mpbl     = np.apply_over_axes(np.max, hpbl[:,:], 0)[0,:]
+        fpbl1    = z[0,:]<=fpbl*mpbl
+        fpbl2    = z[1,:]<=fpbl*mpbl
+        fpbl     = np.where((fpbl1+fpbl2)>=cpbl_strict)
+    return fpbl
+
 def drhcheck(rh, checkit=False, maxdrh=15):
     if not checkit:
         retvals = np.ones(dtype=bool, shape=rh.size-1)
@@ -812,8 +830,7 @@ def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cev
     fdrh    = np.where(np.asarray(list(map(lambda p: drhcheck(p, checkit=fevap_drh, maxdrh=cevap_drh), lary)))[:,0])
     eary    = eary[:,fdrh[0],:]
     # check for pbl
-    lary    = [y for y in (np.moveaxis(eary[:,:,[3,7]], 1, 0))]
-    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck(p, cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    fpbl    = pblcheck_diag(eary[:,:,3],eary[:,:,7],cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method)
     return fdqv[0][fdrh[0][fpbl[0]]]
 
 def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
@@ -829,8 +846,7 @@ def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, ch
     frdq    = np.where(np.asarray(list(map(lambda p: rdqvcheck(p, checkit=fheat_rdq, maxrdqv=cheat_rdq), lary)))[:,0])
     hary    = hary[:,frdq[0],:]
     # check for pbl
-    lary    = [y for y in (np.moveaxis(hary[:,:,[3,7]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-    fpbl    = np.where(np.asarray(list(map(lambda p: pblcheck(p, cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method), lary)))[:,0])
+    fpbl    = pblcheck_diag(hary[:,:,3],hary[:,:,7], cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method)
     return fdTH[0][fdrh[0][frdq[0][fpbl[0]]]]
 
 def scale_mass(ary_val, ary_part, ary_rpart):
