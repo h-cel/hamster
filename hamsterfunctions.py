@@ -828,6 +828,15 @@ def rdqvcheck(qv, checkit=False, maxrdqv=10):
         retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
+def rdqcheck_diag(ary2d, checkit=False, maxrdqv=10):
+    # checks if the absolute humidity changed by less than maxrdqv %
+    if not checkit:
+        frdq    = np.asarray([range(len(ary2d[0,:]))])
+    elif checkit:
+        pchange = 100*abs(ary2d[0,:]-ary2d[1,:])/ary2d[0,:] # %
+        frdq    = np.where(pchange<=maxrdqv)
+    return frdq
+
 def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv):
     # check for dq > cevap_dqv
     fdqv    = np.where(dq[0,:]>cevap_dqv)
@@ -847,8 +856,7 @@ def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, ch
     fdrh    = drhcheck_diag(hary[:,:,10], checkit=fheat_drh, maxdrh=cheat_drh)
     hary    = hary[:,fdrh[0],:]
     # check for rdq
-    lary    = [y for y in (np.moveaxis(hary[:,:,[5]], 1, 0))] # convert to list for first dimension (parcels) to be able to use map
-    frdq    = np.where(np.asarray(list(map(lambda p: rdqvcheck(p, checkit=fheat_rdq, maxrdqv=cheat_rdq), lary)))[:,0])
+    frdq    = rdqcheck_diag(hary[:,:,5], checkit=fheat_rdq, maxrdqv=cheat_rdq)
     hary    = hary[:,frdq[0],:]
     # check for pbl
     fpbl    = pblcheck_diag(hary[:,:,3],hary[:,:,7], cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method)
