@@ -759,7 +759,7 @@ def movingmean(x, n=2):
     else:
         return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
 
-def pblcheck(ary, cpbl_strict, minh, fpbl=1, method="max"):
+def pblcheck(ary, cpbl_strict, minh, fpbl, method):
     # returns boolean vector for all change locations (z.size-1)
     # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
     z  = ary[:,0]
@@ -785,7 +785,7 @@ def pblcheck(ary, cpbl_strict, minh, fpbl=1, method="max"):
             # one inside (or) 
             return np.logical_or(before_inside, after_inside)
 
-def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl=1, method="max"):
+def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl, method):
     hpbl[hpbl<minh] = minh
     if method=="actual":
         fpbl1   = z[0,:]<=fpbl*hpbl[0,:]
@@ -803,7 +803,7 @@ def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl=1, method="max"):
         fpbl     = np.where((fpbl1+fpbl2)>=cpbl_strict)
     return fpbl
 
-def drhcheck(rh, checkit=False, maxdrh=15):
+def drhcheck(rh, checkit, maxdrh):
     if not checkit:
         retvals = np.ones(dtype=bool, shape=rh.size-1)
     elif checkit:
@@ -811,14 +811,14 @@ def drhcheck(rh, checkit=False, maxdrh=15):
         retvals = ( np.abs(drh) <= maxdrh ) 
     return retvals    
 
-def drhcheck_diag(ary2d, checkit=False, maxdrh=15):
+def drhcheck_diag(ary2d, checkit, maxdrh):
     if not checkit:
         fdrh = np.asarray([range(len(ary2d[0,:]))])
     else:
         fdrh = np.where(abs(ary2d[0,:]-ary2d[1,:])<=maxdrh)
     return fdrh
 
-def rdqvcheck(qv, checkit=False, maxrdqv=10):
+def rdqvcheck(qv, checkit, maxrdqv):
     # checks if the absolute humidity changed by less than maxrdqv %
     if not checkit:
         retvals = np.ones(dtype=bool, shape=qv.size-1)
@@ -828,7 +828,7 @@ def rdqvcheck(qv, checkit=False, maxrdqv=10):
         retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
     return retvals    
 
-def rdqcheck_diag(ary2d, checkit=False, maxrdqv=10):
+def rdqcheck_diag(ary2d, checkit, maxrdqv):
     # checks if the absolute humidity changed by less than maxrdqv %
     if not checkit:
         frdq    = np.asarray([range(len(ary2d[0,:]))])
