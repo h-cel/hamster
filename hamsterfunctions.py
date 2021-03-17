@@ -813,10 +813,8 @@ def drhcheck(rh, checkit=False, maxdrh=15):
 
 def drhcheck_diag(ary2d, checkit=False, maxdrh=15):
     if not checkit:
-        #fdrh = np.asarray([range(len(fdqv[0]))])
         fdrh = np.asarray([range(len(ary2d[0,:]))])
     else:
-        #fdrh = np.where(abs(eary[0,:,10]-eary[1,:,10])<=maxdrh)
         fdrh = np.where(abs(ary2d[0,:]-ary2d[1,:])<=maxdrh)
     return fdrh
 
