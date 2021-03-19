@@ -840,7 +840,7 @@ def rdqcheck_diag(ary2d, checkit, maxrdqv):
         frdq    = np.where(pchange<=maxrdqv)
     return frdq
 
-def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv):
+def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv, veryverbose):
     # check for dq > cevap_dqv
     fdqv    = np.where(dq[0,:]>cevap_dqv)
     eary    = eary[:,fdqv[0],:]
@@ -849,9 +849,13 @@ def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cev
     eary    = eary[:,fdrh[0],:]
     # check for pbl
     fpbl    = pblcheck_diag(eary[:,:,3],eary[:,:,7],cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method)
+    if veryverbose:
+        print(" * Filter for E: "+str(fdqv[0].size)+" parcels after dqv-filter")
+        print("                 "+str(fdrh[0].size)+" parcels after drh-filter")
+        print("                 "+str(fpbl[0].size)+" parcels after pbl-filter")
     return fdqv[0][fdrh[0][fpbl[0]]]
 
-def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq):
+def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq, veryverbose):
     # check for dTH > cheat_dtemp 
     fdTH    = np.where(dTH[0,:]>cheat_dtemp)
     hary    = hary[:,fdTH[0],:]
@@ -863,6 +867,11 @@ def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, ch
     hary    = hary[:,frdq[0],:]
     # check for pbl
     fpbl    = pblcheck_diag(hary[:,:,3],hary[:,:,7], cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method)
+    if veryverbose:
+        print(" * Filter for H: "+str(fdTH[0].size)+" parcels after dTH-filter")
+        print("                 "+str(fdrh[0].size)+" parcels after drh-filter")
+        print("                 "+str(frdq[0].size)+" parcels after rdq-filter")
+        print("                 "+str(fpbl[0].size)+" parcels after pbl-filter")
     return fdTH[0][fdrh[0][frdq[0][fpbl[0]]]]
 
 def scale_mass(ary_val, ary_part, ary_rpart):

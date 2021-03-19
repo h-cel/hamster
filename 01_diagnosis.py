@@ -156,7 +156,7 @@ def main_diagnosis(
             
         ## Evaporation
         if fevap:
-            isevap      = filter_for_evap_parcels(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv)
+            isevap      = filter_for_evap_parcels(ary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv, veryverbose)
             e_ary       = ary[:,isevap,:]
             emidi       = get_all_midpindices(e_ary, glon, glat)
             # grid
@@ -165,7 +165,7 @@ def main_diagnosis(
 
         ## Sensible heat
         if fheat:
-            isheat      = filter_for_heat_parcels(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq)
+            isheat      = filter_for_heat_parcels(ary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq, veryverbose)
             h_ary       = ary[:,isheat,:]
             hmidi       = get_all_midpindices(h_ary, glon, glat)
             # grid
