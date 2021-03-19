@@ -787,20 +787,23 @@ def pblcheck(ary, cpbl_strict, minh, fpbl, method):
 
 def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl, method):
     hpbl[hpbl<minh] = minh
+    if cpbl_strict==0:
+        return np.asarray([range(z.shape[1])])
     if method=="actual":
-        fpbl1   = z[0,:]<=fpbl*hpbl[0,:]
-        fpbl2   = z[1,:]<=fpbl*hpbl[1,:]
-        fpbl    = np.where((fpbl1+fpbl2)>=cpbl_strict)
-    elif method=="mean":    
-        mpbl     = np.apply_over_axes(np.mean, hpbl[:,:], 0)[0,:]
-        fpbl1    = z[0,:]<=fpbl*mpbl
-        fpbl2    = z[1,:]<=fpbl*mpbl
-        fpbl     = np.where((fpbl1+fpbl2)>=cpbl_strict)
-    elif method=="max":    
-        mpbl     = np.apply_over_axes(np.max, hpbl[:,:], 0)[0,:]
-        fpbl1    = z[0,:]<=fpbl*mpbl
-        fpbl2    = z[1,:]<=fpbl*mpbl
-        fpbl     = np.where((fpbl1+fpbl2)>=cpbl_strict)
+        fpbl1  = z[0,:]<=fpbl*hpbl[0,:]
+        fpbl2  = z[1,:]<=fpbl*hpbl[1,:]
+    elif method=="mean":
+        mpbl   = np.apply_over_axes(np.mean, hpbl[:,:], 0)[0,:]
+        fpbl1  = z[0,:]<=fpbl*mpbl
+        fpbl2  = z[1,:]<=fpbl*mpbl
+    elif method=="max":
+        mpbl   = np.apply_over_axes(np.max, hpbl[:,:], 0)[0,:]
+        fpbl1  = z[0,:]<=fpbl*mpbl
+        fpbl2  = z[1,:]<=fpbl*mpbl
+    if cpbl_strict==1:
+        fpbl   = np.where(np.logical_or(fpbl1,fpbl2))
+    if cpbl_strict==2:
+        fpbl   = np.where(np.logical_and(fpbl1,fpbl2))
     return fpbl
 
 def drhcheck(rh, checkit, maxdrh):
