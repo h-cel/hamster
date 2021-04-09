@@ -114,23 +114,36 @@ for more details on setting dates, thresholds and other options. All user-specif
 
 - `--steps` to select the part of hamster that is being executed (e.g., `--steps 0` runs flex2traj, `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
 - `--ayyyy` and `--am` to select the analysis year and month (e.g., `--ayyyy 2002 --am 1`)
-- `--tdiagnosis` to select a diagnosis methodology with (default) criteria (e.g., `--tdiagnosis SOD` for constant thresholds of moisture for evaporation and potential temperature for sensible heat, restricted to the planetary boundary layer (PBL), following Sodemann et al. (2008) and Schumacher et al. (2019); `--tdiagnosis SOD2` to use all moisture uptakes above a threshold to detect and quantify evaporation, following Sodemann (2020); `--tdiagnosis KAS` to select a Clausius-Clapeyron dependent threshold for evaporation and sensible heat fluxes, i.e. define moisture thresholds based on the temperature and temperature-thresholds based on the moisture)
 - `--expid` to name a setting (e.g., `--expid Ghent_SOD`)
 - `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days)
 - `--mattribution` to determine the attribution method for precipitation (e.g., `--mattribution random` uses the random attribution to attribute moisture for precipitation along trajectories – it keeps linear discounting for heat though)
 - `--maskval` to filter for a value other than 1 using the maskfile from `paths.txt`(e.g., `--maskval 5001`)
 
+#### The detection of fluxes (P, E and H) is set via a set of flags.
 
-#### Fine-tuning of detection criteria can be done using, e.g., 
-- `--cpbl_strict` to determine the 'strictness' of the PBL criteria (`--cpbl_strict 2` requires both instances to be within the maximum PBL, `--cpbl_strict 1` requires only one instance to be within the maximum PBL; `--cpbl_strict 0` does not filter for the PBL at all)
-- `-–cprec_dqv` and `–-cprec_rh` to adjust the detection of preciptation
-- `--cevap_c` and `--cheat_cc` to adjust the Clausius-Clapeyron criteria for evaporation and sensible heat, respectively
-- `--cevap_hgt`, etc., to filter for specific heights
-- ... among a lot of other options. 
+The detection of **precipitation** is set via `-–cprec_dqv` and `–-cprec_rh`:
+- `-–cprec_dqv` to set the minimum loss of specific humidity (unit: kg kg-1; default: 0 kg kg-1)
+- `–-cprec_rh` to the minimum average relative humidity (unit: %; default: 80% following the convection scheme from Emanuel, 1991)
+
+The detection of **evaporation** is set via `--cevap_dqv`, `--fevap_drh`, `--cevap_drh`, `--cevap_hgt`:
+- `--cevap_dqv` to set a minimum increase in specific humidity (unit: kg kg-1; default: 0.2 kg kg-1)
+- `--cevap_hgt` to filter for specific heights (unit: m; default:)
+- `--fevap_drh` to filter for relative humidity changes (False/True; default: False) employing a maximum change of `--cevap_drh` (unit: %, default: 15%)
+
+The detection of **sensible heat fluxes** is set via `--cheat_dtemp`, `--cheat_hgt`, `--fheat_drh`, `--cheat_drh`, `--fheat_rdq` and `--cheat_rdq`:
+- `--cheat_dtemp` to set a minimum increase in potential temperature (unit: K; default: 1 K)
+- `--cheat_hgt` to filter for specific heights (unit: m; default:)
+- `--fheat_drh` to filter for relative humidity changes (False/True; default: False) employing a maximum change of `--cheat_drh` (unit: %, default: 15%)
+- `--fheat_rdq` to filter for relative specific humidity changes (False/True; default: False) employing a maximum change of `--cheat_rdq` (expressed as delta(qv)/qv; unit: %; default: 10%)
+
+For E and H, the detection of fluxes can be limited to the atmospheric boundary layer (ABL):
+- `--cpbl_method` describes the method used to determine the ABL height between two instances. Options are `actual`, `mean` and `max` (default: `max`).
+- `--cpbl_factor` sets a factor that is used to increase (>1) or decrease (<1) the ABL heights (default: 1). 
+- `--cpbl_strict` determines the 'strictness' of the ABL criteria (`--cpbl_strict 2` requires both instances to be within the actual/maximum/mean ABL, `--cpbl_strict 1` requires only one instance to be within the actual/mean/maximum ABL; `--cpbl_strict 0` does not filter for the ABL at all).
 
 
 #### A few more notes on flags...
-- Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` and `--tdiagnosis` can be replaced with `-dgn`). 
+- Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` etc.)
 - Analysis is performed on a monthly basis: for an independent analysis of months, the flag `--memento` is incorporated (default: True). This flag requires additional data of the previous month, that is extracted from the trajectories or, if not available from the trajectories, read in from the binary FLEXPART files in a preloop. Hence, the smoothest workflow is obtained if flex2traj dumps trajectories that are one day longer than what is needed in 02_attribution (e.g., run `python main.py --steps 0 --ctraj_len 16` but `python main.py --steps 0 --ctraj_len 15` -- the preloop is not needed in this case). 
 - The `expid` has to be used consistently for the settings between steps 1-2-3. Otherwise, source-sink relationships may be bias-corrected with other criteria (DANGER!). There is no proper check for this – the user has to make sure they are using everything correctly. Various regions or attribution methods can be run using separate directories. 
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
@@ -148,19 +161,19 @@ for more details on setting dates, thresholds and other options. All user-specif
   ```
 4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria (using the already available global data set on the VO), e.g.,  
   ```python
-  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis SOD --cprec_rh 70 --expid "SOD_prh-70"
+  python main.py --steps 1 --ayyyy 2000 --am 6 --expid "DEFAULT"
   ...
-  python main.py --steps 1 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 1 --cevap_cc 0.9 --expid "KAS_prh70_cpbl1_cevapcc0.9"
+  python main.py --steps 1 --ayyyy 2000 --am 6 --cpbl_strict 2 --cpbl_method "max" --cevap_dqv 0 --cheat_dtemp 0 --expid "ALL-ABL"
   ```
 5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
   ```python
-  python main.py --steps 2 --ayyyy 2000 --am 6 --tdiagnosis KAS --cprec_rh 70 --cpbl_strict 1 --cevap_cc 0.9 --ctraj_len 15 --expid "KAS_prh70_cpbl1_cevapcc0.9"
+  python main.py --steps 2 --ayyyy 2000 --am 6 --ctraj_len 15 --cpbl_strict 2 --cpbl_method "max" --cevap_dqv 0 --cheat_dtemp 0 --expid "ALL-ABL"
   ```
 6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
-  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "KAS_prh70_cpbl1_cevapcc0.9" --bc_aggbwtime True
+  python main.py --steps 3 --ayyyy 2000 --am 6 --expid "ALL-ABL" --bc_aggbwtime True
   ```
-  The final netcdf file, `KAS_prh70_cpbl1_cevapcc0.9_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
+  The final netcdf file, `ALL-ABL_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
 
 
 ## Miscellaneous notes
