@@ -20,7 +20,9 @@ def main_biascorrection(
            veryverbose,
            fuseattp,
            bcscale,
-           bcdata,
+           pref_data,
+           eref_data,
+           href_data,
            faggbwtime,
            fdebug,
            fwrite_netcdf,
@@ -143,14 +145,14 @@ def main_biascorrection(
         print(" * Reading reference data...")
     
     print("Reading E")
-    if bcdata == "eraint":
+    if eref_data == "eraint":
         Eref, reflats, reflons = eraloader_12hourly(var='e',
                      datapath=ipathR+"/evap_12hourly/E_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
-    elif bcdata == "others":    
+    elif eref_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
         Eref, reflats, reflons = get_reference_data(ipathR+"/gleam+oaflux+eraint_merge_1deg_e/", "evaporation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
@@ -159,27 +161,27 @@ def main_biascorrection(
     Eref = convert_mm_m3(Eref, areas)
         
     print("Reading H")
-    if bcdata == "eraint":
+    if href_data == "eraint":
         Href, reflats, reflons = eraloader_12hourly(var='sshf',
                      datapath=ipathR+"/sshf_12hourly/H_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
-    elif bcdata == "others":    
+    elif href_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
         Href, reflats, reflons = get_reference_data(ipathR+"/oaflux+eraint_merge_1deg_h/", "sensible heat flux", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
     
     print("Reading P")
-    if bcdata == "eraint":
+    if pref_data == "eraint":
         Pref, reflats, reflons = eraloader_12hourly(var='tp',
                      datapath=ipathR+"/tp_12hourly/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
-    elif bcdata == "others":
+    elif pref_data == "others":
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
         Pref, reflats, reflons = get_reference_data(ipathR+"/mswep_1deg_p/", "precipitation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
