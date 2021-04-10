@@ -141,6 +141,7 @@ For E and H, the detection of fluxes can be limited to the atmospheric boundary 
 - `--cpbl_factor` sets a factor that is used to increase (>1) or decrease (<1) the ABL heights (default: 1). 
 - `--cpbl_strict` determines the 'strictness' of the ABL criteria (`--cpbl_strict 2` requires both instances to be within the actual/maximum/mean ABL, `--cpbl_strict 1` requires only one instance to be within the actual/mean/maximum ABL; `--cpbl_strict 0` does not filter for the ABL at all).
 
+Note that the ABL criteria are set consistently for E and H. 
 
 #### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` etc.)
