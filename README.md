@@ -127,13 +127,13 @@ The detection of **precipitation** is set via `-–cprec_dqv` and `–-cprec_rh`
 
 The detection of **evaporation** is set via `--cevap_dqv`, `--fevap_drh`, `--cevap_drh`, `--cevap_hgt`:
 - `--cevap_dqv` to set a minimum increase in specific humidity (unit: kg kg-1; default: 0.2 kg kg-1)
-- `--cevap_hgt` to filter for specific heights (unit: m; default:)
+- `--cevap_hgt` to filter for specific heights (unit: m; default: 0)
 - `--fevap_drh` to filter for relative humidity changes (False/True; default: False) employing a maximum change of `--cevap_drh` (unit: %, default: 15%)
 - `--fallingdry` to shorten the trajectory length if a parcel *falls dry* (q<0.00005 kg kg-1; default: False)
 
 The detection of **sensible heat fluxes** is set via `--cheat_dtemp`, `--cheat_hgt`, `--fheat_drh`, `--cheat_drh`, `--fheat_rdq` and `--cheat_rdq`:
 - `--cheat_dtemp` to set a minimum increase in potential temperature (unit: K; default: 1 K)
-- `--cheat_hgt` to filter for specific heights (unit: m; default:)
+- `--cheat_hgt` to filter for specific heights (unit: m; default: 0)
 - `--fheat_drh` to filter for relative humidity changes (False/True; default: False) employing a maximum change of `--cheat_drh` (unit: %, default: 15%)
 - `--fheat_rdq` to filter for relative specific humidity changes (False/True; default: False) employing a maximum change of `--cheat_rdq` (expressed as delta(qv)/qv; unit: %; default: 10%)
 
