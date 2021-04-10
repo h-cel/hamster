@@ -142,7 +142,22 @@ For E and H, the detection of fluxes can be limited to the atmospheric boundary 
 - `--cpbl_factor` sets a factor that is used to increase (>1) or decrease (<1) the ABL heights (default: 1). 
 - `--cpbl_strict` determines the 'strictness' of the ABL criteria (`--cpbl_strict 2` requires both instances to be within the actual/maximum/mean ABL, `--cpbl_strict 1` requires only one instance to be within the actual/mean/maximum ABL; `--cpbl_strict 0` does not filter for the ABL at all).
 
-Note that the ABL criteria are set consistently for E and H. 
+Note that the ABL criteria are set consistently for E and H.
+
+Using these flags, a lot of the settings used in FLEXPART publications can be mimicked. 
+- **Sodemann et al., 2008** for the detection of E (minimum threshold for dqv/dt; parcel has be reside in the vicinity of the ABL; note, however, that minor differences exists, e.g. through the application of the ABL factor 1.5 everywhere, etc.): 
+    ```
+    --cevap_dqv 0.0002 --fallingdry True --fevap_drh False --cpbl_method "mean" --cpbl_factor 1.5
+    ``` 
+- **Fremme and Sodemann, 2019** and **Sodemann, 2020** (minimum threshold for dqv/dt; parcel does not have to reside in the ABL):
+    ```
+    --cevap_dqv 0.0001 --fevap_drh False --cpbl_strict 0
+    ``` 
+- **Schumacher et al., 2019** for the detection of H (minimum potential temperature increase; limitation by change in specific humidity content; parcel has to be within the maximum ABL at both time steps):
+    ```
+    --cheat_dtemp 1 --cheat_rdq 10 --fheat_rdq True --fheat_drh False --cpbl_strict 2 --cpbl_method "max" 
+    ```
+
 
 #### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` etc.)
