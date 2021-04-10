@@ -219,6 +219,7 @@ if args.steps == 3:
                veryverbose=args.veryverbose,
                fuseattp=args.bc_useattp,
                bcscale=args.bc_time,
+               bcdata=args.bc_data,
                faggbwtime=args.bc_aggbwtime,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,

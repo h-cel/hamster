@@ -476,6 +476,7 @@ def read_cmdargs():
     parser.add_argument('--cpbl_strict','-pbls',help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--bc_data',    '-bcd', help = "bias correction data set (eraint/others)",                      metavar ="", type = str,     default = "eraint")
     parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (03 only; flag)",        metavar ="", type = str2bol, default = False,     nargs='?')
     parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           metavar ="", type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         metavar ="", type = str2bol, default = True,     nargs='?')
@@ -1261,6 +1262,49 @@ def writenc4D(ofile,ix,ary_etop,ary_heat):
     nc_f['E2P'][ix,:,:,:]     = ary_etop[:,:,:]
     nc_f['Had'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
+
+def get_reference_data(refpath, ivar, idates):
+    # ATTENTION: this function assumes that
+    # (i)   all data is already on the correct grid (resolution, orientation!)
+    # (ii)  all data comes at daily (or subdaily) time steps; in case it's subdaily, these are *summed up* to daily (likely works for E and P, but not for H!)
+    # (iii) there are no duplicate files and dates in the refpath folder
+    # (iv)  the units HAVE to be as follows: E [mm]; P [mm]; H [W m-2] !
+
+    seldates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in idates])
+    selyears = np.unique([dft.strftime('%Y') for dft in idates])
+
+    # get files from refpath that have selyears in the filename
+    ifiles   = [fnmatch.filter(os.listdir(refpath), "*"+str(iyear)+"*.nc") for iyear in selyears]
+    
+    # read grid
+    with nc4.Dataset(os.path.join(refpath,str(ifiles[0][0])), mode='r') as f: 
+        reflats  = np.asarray(f['lat'][:])
+        reflons  = np.asarray(f['lon'][:])
+
+    # initialize empty array of correct size (seldates x latitude x longitude)
+    refdata     = np.zeros(shape=(len(seldates), len(reflats), len(reflons)))
+    dcounter    = np.zeros(shape=(len(seldates)))
+    
+    for ifile in ifiles:
+        reffile   = os.path.join(refpath,ifile[0])
+        print("     * Reading "+str(reffile))
+        with nc4.Dataset(reffile, mode='r') as f:
+            reftime  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+            refdates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
+            idata    = np.asarray(f[ivar][:,:,:])
+            ifiledates = np.intersect1d(refdates,seldates)
+        for i in range(len(ifiledates)):
+            isel     = np.where(seldates == ifiledates[i])[0][0]
+            iref     = np.where(refdates == ifiledates[i])[0][0]
+            dcounter[isel] += 1 
+            refdata[isel,:,:] += idata[iref,:,:]
+    
+    if np.any(dcounter==0):
+        print(" * The following dates are missing in the reference data set (for variable "+str(ivar)+"): "+str(seldates[np.where(dcounter==0)[0]]) )
+        raise SystemExit("---------- FATAL ERROR: DATES MISSING IN THE REFERENCES DATA SET!!!")
+    
+    return refdata, reflats, reflons
+
 
 def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):
     """
