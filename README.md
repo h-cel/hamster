@@ -129,6 +129,7 @@ The detection of **evaporation** is set via `--cevap_dqv`, `--fevap_drh`, `--cev
 - `--cevap_dqv` to set a minimum increase in specific humidity (unit: kg kg-1; default: 0.2 kg kg-1)
 - `--cevap_hgt` to filter for specific heights (unit: m; default:)
 - `--fevap_drh` to filter for relative humidity changes (False/True; default: False) employing a maximum change of `--cevap_drh` (unit: %, default: 15%)
+- `--fallingdry` to shorten the trajectory length if a parcel *falls dry* (q<0.00005 kg kg-1; default: False)
 
 The detection of **sensible heat fluxes** is set via `--cheat_dtemp`, `--cheat_hgt`, `--fheat_drh`, `--cheat_drh`, `--fheat_rdq` and `--cheat_rdq`:
 - `--cheat_dtemp` to set a minimum increase in potential temperature (unit: K; default: 1 K)
@@ -151,7 +152,6 @@ Note that the ABL criteria are set consistently for E and H.
 - While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - Use `--maskval -999` (or set maskfile=None in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
-- To filter for all PBL processes without any thresholds, set `--fallingdry False`and a high value for the CC criterion, e.g. `--cevap_cc 1000`. If, in addition `--cpbl_strict 0`, then also above PBL parcels are evaluated.
 
 #### A very basic example. 
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 

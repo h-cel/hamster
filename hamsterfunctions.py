@@ -483,7 +483,7 @@ def read_cmdargs():
     parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           metavar ="", type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    metavar ="", type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (02 only - needed for Had; flag)", metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         metavar ="", type = str,     default = "linear")
     parser.add_argument('--ratt_nit',   '-rnit',help = "minimum number of iterations for random attribution",           metavar ="", type = int,     default = 10)
