@@ -365,3 +365,6 @@ def main_biascorrection(
         wfile = opath+"/"+str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_WARNING.csv"
         writewarning(wfile)
 
+    if os.path.exists(ofile):
+        print("Removing "+str(attrfile)+" ...")
+        os.remove(attrfile)
