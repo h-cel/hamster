@@ -9,8 +9,8 @@ MAIN FUNCTION FOR 03_biascorrection
 
 def main_biascorrection(
            ryyyy, ayyyy, am,
-           opathA, # attribution (output)
-           opathD, # diagnosis (output)
+           opath_attr, # attribution (output)
+           opath_diag, # diagnosis (output)
            ipath_refp,
            ipath_refe,
            ipath_refh,
@@ -43,7 +43,7 @@ def main_biascorrection(
     fwritewarning = False
 
     ## construct precise input and storage paths
-    attrfile  = opathA+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
+    attrfile  = opath_attr+"/"+str(ofile_base)+"_attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofilename = str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc"
     ofile     = opath+"/"+ofilename
     ## additional statistic output files includes P validation data (*.csv)
@@ -61,8 +61,8 @@ def main_biascorrection(
         print(" ! Single precision should only be used for testing. Reset to double-precision.")
     if verbose:
         print(" ! using input paths: \t")
-        print("\t"+str(opathD))
-        print("\t"+str(opathA))
+        print("\t"+str(opath_diag))
+        print("\t"+str(opath_attr))
         print(" ! using reference data from: \t")
         print("\t"+str(ipath_refp))
         print("\t"+str(ipath_refe))
@@ -108,13 +108,13 @@ def main_biascorrection(
         print(" * Reading diagnosis data...")
     
     # read concatenated data
-    totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="grid")
+    totlats, totlons    = read_diagdata(opath_diag,ofile_base,ryyyy,uptake_time,var="grid")
     gridcheck(lats,totlats,lons,totlons)
-    ftime               = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="time")
+    ftime               = read_diagdata(opath_diag,ofile_base,ryyyy,uptake_time,var="time")
     fdays               = np.unique(cal2date(ftime))
-    E                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="E")
-    P                   = -read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="P")
-    H                   = read_diagdata(opathD,ofile_base,ryyyy,uptake_time,var="H")
+    E                   = read_diagdata(opath_diag,ofile_base,ryyyy,uptake_time,var="E")
+    P                   = -read_diagdata(opath_diag,ofile_base,ryyyy,uptake_time,var="P")
+    H                   = read_diagdata(opath_diag,ofile_base,ryyyy,uptake_time,var="H")
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     E                   = convert_mm_m3(E, areas)
     P                   = convert_mm_m3(P, areas)

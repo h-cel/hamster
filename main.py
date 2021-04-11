@@ -209,8 +209,8 @@ if args.steps == 2:
 
 if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               opathA=path_attr, 
-               opathD=path_diag, 
+               opath_attr=path_attr, 
+               opath_diag=path_diag, 
                ipath_refp=path_refp,
                ipath_refe=path_refe,
                ipath_refh=path_refh,

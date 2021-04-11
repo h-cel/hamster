@@ -197,7 +197,7 @@ def write_to_netcdf(ofile,vals,var="P"):
 
 def main_validation(
            ryyyy, ayyyy, am,
-           opathD, # diagnosis (output)
+           opath_diag, # diagnosis (output)
            ipath_refp,
            ipath_refe,
            ipath_refh,
@@ -220,7 +220,7 @@ def main_validation(
     ## Resets & consistency checks
     if verbose:
         print(" ! using input paths: \t")
-        print("\t"+str(opathD))
+        print("\t"+str(opath_diag))
         print(" ! using reference data from: \t")
         print("\t"+str(ipath_refp))
         print("\t"+str(ipath_refe))
@@ -235,23 +235,23 @@ def main_validation(
         print(" * Reading diagnosis data...")
     
     # read concatenated data
-    ifilename           = str(opathD)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc" 
+    ifilename           = str(opath_diag)+"/"+str(ofile_base)+"_diag_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+".nc" 
     with nc4.Dataset(ifilename, mode="r") as f:
         idate_seq       = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
-    totlats, totlons    = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="grid")
+    totlats, totlons    = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="grid")
     glon, glat, garea   = makegrid(resolution=abs(totlats[0]-totlats[1]))
-    ftime               = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="time")
+    ftime               = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="time")
     fdays               = np.unique(cal2date(ftime))
     fyears              = np.unique(date2year(ftime))
     if fevap:
-        E                   = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="E")
-        E_npart             = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="E_n_part")
+        E                   = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="E")
+        E_npart             = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="E_n_part")
     if fprec:
-        P                   = -read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="P")
-        P_npart             = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="P_n_part")
+        P                   = -read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="P")
+        P_npart             = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="P_n_part")
     if fheat:
-        H                   = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="H")
-        H_npart             = read_diagdata(opathD,ofile_base,ryyyy,idate_seq,var="H_n_part")
+        H                   = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="H")
+        H_npart             = read_diagdata(opath_diag,ofile_base,ryyyy,idate_seq,var="H_n_part")
 
     # make sure we use daily aggregates
     if fdays.size != ftime.size:
@@ -336,7 +336,7 @@ def main_validation(
 ##--- run main script
 ###########################################################################
 main_validation(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               opathD=path_diag, 
+               opath_diag=path_diag, 
                ipath_refp=path_refp,
                ipath_refe=path_refe,
                ipath_refh=path_refh,
