@@ -78,7 +78,10 @@ path_orig = "./flexpart_data/orig"
 
 # location of the reference data used for bias correction (e.g., ERA-Interim)
 ## (available on the VSC Tier-2 HPC clusters)
-path_ref  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1"
+## for each variable (P, E, H)
+path_ref_p  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/tp_12hourly"
+path_ref_e  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/evap_12hourly"
+path_ref_h  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/sshf_12hourly"
 
 # path and base name for global parcel diag data (t2)
 ## (available on the VSC Tier-2 HPC clusters)

@@ -72,7 +72,9 @@ os.chdir(wpath)
 ## load input and output paths & input file name base(s)
 print("Using paths from: "+ wpath+"/"+args.pathfile)
 content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
-path_ref = content.path_ref
+path_refp = content.path_ref_p
+path_refe = content.path_ref_e
+path_refh = content.path_ref_h
 path_orig = content.path_orig
 path_diag = content.path_diag
 path_attr = content.path_attr
@@ -209,7 +211,9 @@ if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
                opathA=path_attr, 
                opathD=path_diag, 
-               ipathR=path_ref,
+               ipath_refp=path_refp,
+               ipath_refe=path_refe,
+               ipath_refh=path_refh,
                opath=path_bias, 
                ofile_base=args.expid, # output
                mode=args.mode,

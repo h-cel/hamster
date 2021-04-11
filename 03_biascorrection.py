@@ -11,7 +11,9 @@ def main_biascorrection(
            ryyyy, ayyyy, am,
            opathA, # attribution (output)
            opathD, # diagnosis (output)
-           ipathR, # reference data (input)
+           ipath_refp,
+           ipath_refe,
+           ipath_refh,
            opath, ofile_base,           # output
            mode,
            maskfile,
@@ -62,7 +64,9 @@ def main_biascorrection(
         print("\t"+str(opathD))
         print("\t"+str(opathA))
         print(" ! using reference data from: \t")
-        print("\t"+str(ipathR))
+        print("\t"+str(ipath_refp))
+        print("\t"+str(ipath_refe))
+        print("\t"+str(ipath_refh))
         print(" ! using mode: \t" +str(mode))
         print(" ! using attribution data to bias-correct P: \t" +str(fuseattp))
         print(" ! writing netcdf output: \t")
@@ -147,14 +151,14 @@ def main_biascorrection(
     print("Reading E")
     if eref_data == "eraint":
         Eref, reflats, reflons = eraloader_12hourly(var='e',
-                     datapath=ipathR+"/evap_12hourly/E_1deg_",
+                     datapath=ipath_refe+"/E_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif eref_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Eref, reflats, reflons = get_reference_data(ipathR+"/gleam+oaflux+eraint_merge_1deg_e/", "evaporation", uptake_dates)
+        Eref, reflats, reflons = get_reference_data(ipath_refe, "evaporation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
 
     # convert water fluxes from mm-->m3 to avoid area weighting in between
@@ -163,27 +167,27 @@ def main_biascorrection(
     print("Reading H")
     if href_data == "eraint":
         Href, reflats, reflons = eraloader_12hourly(var='sshf',
-                     datapath=ipathR+"/sshf_12hourly/H_1deg_",
+                     datapath=ipath_refh+"/H_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif href_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Href, reflats, reflons = get_reference_data(ipathR+"/oaflux+eraint_merge_1deg_h/", "sensible heat flux", uptake_dates)
+        Href, reflats, reflons = get_reference_data(ipath_refh, "sensible heat flux", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
     
     print("Reading P")
     if pref_data == "eraint":
         Pref, reflats, reflons = eraloader_12hourly(var='tp',
-                     datapath=ipathR+"/tp_12hourly/P_1deg_",
+                     datapath=ipath_refp+"/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
                      uptake_years=uyears,
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif pref_data == "others":
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Pref, reflats, reflons = get_reference_data(ipathR+"/mswep_1deg_p/", "precipitation", uptake_dates)
+        Pref, reflats, reflons = get_reference_data(ipath_refp, "precipitation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
 
     # convert water fluxes from mm-->m3 to avoid area weighting in between
