@@ -302,14 +302,6 @@ def main_attribution(
                         else:
                             raise RuntimeError('--- FATAL ERROR: Schrödingers cat situation; is parcel inside and in PBL, or not?')
 
-#                        ## checking mode
-#                        ihf_H_orig = min((ix-pidlog[ID]+1), tml + 2)
-#                        if not ihf_H == ihf_H_orig:
-#                            print("DISCREPANCIES DETECTED!!!!!!! if ID < 3'000 and using pom data, this is to be expected..")
-#                            print("ihf_H, ihf_H_orig=", ihf_H, ihf_H_orig)
-#                            print("ID=",ID)
-#                            _ = input("proceed?")
-
                     else: # fully rely on log from now
                         istep = pidlog[ID]
                         ihf_H = min((ix-istep+1), tml + 2)
