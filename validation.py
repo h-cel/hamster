@@ -63,7 +63,9 @@ os.chdir(wpath)
 ## load input and output paths & input file name base(s)
 print("Using paths from: "+ wpath+"/"+args.pathfile)
 content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
-path_ref = content.path_ref
+path_refp = content.path_ref_p
+path_refe = content.path_ref_e
+path_refh = content.path_ref_h
 path_diag = content.path_diag
 
 ###########################################################################
@@ -196,7 +198,9 @@ def write_to_netcdf(ofile,vals,var="P"):
 def main_validation(
            ryyyy, ayyyy, am,
            opathD, # diagnosis (output)
-           ipathR, # reference data (input)
+           ipath_refp,
+           ipath_refe,
+           ipath_refh,
            opath, ofile_base,           # output
            fprec,
            fevap,
@@ -218,7 +222,9 @@ def main_validation(
         print(" ! using input paths: \t")
         print("\t"+str(opathD))
         print(" ! using reference data from: \t")
-        print("\t"+str(ipathR))
+        print("\t"+str(ipath_refp))
+        print("\t"+str(ipath_refe))
+        print("\t"+str(ipath_refh))
         print(" ! writing netcdf output: \t")
         print("\t"+str(ofile))
         print("\n============================================================================================================")
@@ -279,7 +285,7 @@ def main_validation(
    
     if fevap:
         Eref, reflats, reflons = eraloader_12hourly(var='e',
-                     datapath=ipathR+"/evap_12hourly/E_1deg_",
+                     datapath=ipath_refe+"/E_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=fyears,
@@ -288,7 +294,7 @@ def main_validation(
     
     if fheat:
         Href, reflats, reflons = eraloader_12hourly(var='sshf',
-                     datapath=ipathR+"/sshf_12hourly/H_1deg_",
+                     datapath=ipath_refh+"/H_1deg_",
                      maskpos=True,
                      maskneg=False,
                      uptake_years=fyears,
@@ -297,7 +303,7 @@ def main_validation(
     
     if fprec:
         Pref, reflats, reflons = eraloader_12hourly(var='tp',
-                     datapath=ipathR+"/tp_12hourly/P_1deg_",
+                     datapath=ipath_refp+"/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
                      uptake_years=fyears,
@@ -331,7 +337,9 @@ def main_validation(
 ###########################################################################
 main_validation(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
                opathD=path_diag, 
-               ipathR=path_ref,
+               ipath_refp=path_refp,
+               ipath_refe=path_refe,
+               ipath_refh=path_refh,
                opath=path_diag, 
                ofile_base=args.expid,
                fprec=args.fprec,
