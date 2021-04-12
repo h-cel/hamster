@@ -1403,6 +1403,7 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  E2P, E2P_Es, E2P_Ps, E2P_EPs,
                  strargs,precision,
                  fwrite_month,
+                 fbc_e2p_p, fbc_e2p_e, fbc_e2p_ep,
                  currentversion="v0.4"):
     
     # delete nc file if it is present (avoiding error message)
@@ -1435,9 +1436,12 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     heats               = nc_f.createVariable('Had', precision, checkdim(Had), fill_value=nc4.default_fillvals[precision])
     heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs), fill_value=nc4.default_fillvals[precision])
     evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P), fill_value=nc4.default_fillvals[precision])
-    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es), fill_value=nc4.default_fillvals[precision])
-    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps), fill_value=nc4.default_fillvals[precision])
-    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_e:
+        evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_p:
+        evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_ep:
+        evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -1459,12 +1463,15 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     heats_Hs.long_name  = 'advected surface sensible heat, H-scaled' # this is garbage, I know
     evaps.units         = 'mm'
     evaps.long_name     = 'evaporation resulting in precipitation'
-    evaps_Es.units      = 'mm'
-    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
-    evaps_Ps.units      = 'mm'
-    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
-    evaps_EPs.units     = 'mm'
-    evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
+    if fbc_e2p_e:
+        evaps_Es.units      = 'mm'
+        evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
+    if fbc_e2p_p:
+        evaps_Ps.units      = 'mm'
+        evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
+    if fbc_e2p_ep:
+        evaps_EPs.units     = 'mm'
+        evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
 
     # write data
     if fwrite_month:
@@ -1480,16 +1487,22 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
         heats[:]            = np.nanmean(Had,axis=0,keepdims=True)[:]
         heats_Hs[:]         = np.nanmean(Had_Hs,axis=0,keepdims=True)[:]
         evaps[:]            = np.nansum(E2P,axis=0,keepdims=True)[:]
-        evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
-        evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
-        evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+        if fbc_e2p_e:
+            evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
+        if fbc_e2p_p:
+            evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
+        if fbc_e2p_ep:
+            evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
     else:
         heats[:]            = Had[:]
         heats_Hs[:]         = Had_Hs[:]
         evaps[:]            = E2P[:]
-        evaps_Es[:]         = E2P_Es[:]
-        evaps_Ps[:]         = E2P_Ps[:]
-        evaps_EPs[:]        = E2P_EPs[:]
+        if fbc_e2p_e:
+            evaps_Es[:]         = E2P_Es[:]
+        if fbc_e2p_p:
+            evaps_Ps[:]         = E2P_Ps[:]
+        if fbc_e2p_ep:
+            evaps_EPs[:]        = E2P_EPs[:]
 
     myshape=nc_f['E2P'].shape
     # close file

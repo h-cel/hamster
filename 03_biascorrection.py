@@ -354,7 +354,8 @@ def main_biascorrection(
                         E2P_EPs=aE2P_EPcorrtd, 
                         strargs=biasdesc, 
                         precision=precision,
-                        fwrite_month=fwrite_month)
+                        fwrite_month=fwrite_month,
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep)
         if not faggbwtime:
             writefinalnc(ofile=ofile, 
                         fdate_seq=arrival_time, udate_seq=utime_srt, 
@@ -367,7 +368,8 @@ def main_biascorrection(
                         E2P_EPs=reduce4Darray(E2P_EPcorrtd,veryverbose), 
                         strargs=biasdesc, 
                         precision=precision,
-                        fwrite_month=fwrite_month)
+                        fwrite_month=fwrite_month,
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep)
     if fwritewarning:
         wfile = opath+"/"+str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_WARNING.csv"
         writewarning(wfile)
