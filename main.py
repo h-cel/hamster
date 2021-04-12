@@ -74,6 +74,7 @@ print("Using paths from: "+ wpath+"/"+args.pathfile)
 content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
 path_refp = content.path_ref_p
 path_refe = content.path_ref_e
+path_reft = content.path_ref_t
 path_refh = content.path_ref_h
 path_orig = content.path_orig
 path_diag = content.path_diag
@@ -213,6 +214,7 @@ if args.steps == 3:
                opath_diag=path_diag, 
                ipath_refp=path_refp,
                ipath_refe=path_refe,
+               ipath_reft=path_reft,
                ipath_refh=path_refh,
                opath=path_bias, 
                ofile_base=args.expid, # output
@@ -230,6 +232,7 @@ if args.steps == 3:
                fbc_e2p_p=args.bc_e2p_p,
                fbc_e2p_e=args.bc_e2p_e,
                fbc_e2p_ep=args.bc_e2p_ep,
+               fbc_t2p=args.bc_t2p,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwrite_month=args.write_month,

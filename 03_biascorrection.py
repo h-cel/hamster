@@ -13,6 +13,7 @@ def main_biascorrection(
            opath_diag, # diagnosis (output)
            ipath_refp,
            ipath_refe,
+           ipath_reft,
            ipath_refh,
            opath, ofile_base,           # output
            mode,
@@ -29,6 +30,7 @@ def main_biascorrection(
            fbc_e2p_p,
            fbc_e2p_e,
            fbc_e2p_ep,
+           fbc_t2p,
            fdebug,
            fwrite_netcdf,
            fwrite_month,
@@ -70,6 +72,8 @@ def main_biascorrection(
         print("\t"+str(ipath_refp))
         print("\t"+str(ipath_refe))
         print("\t"+str(ipath_refh))
+        if fbc_t2p:
+            print("\t"+str(ipath_reft))
         print(" ! using mode: \t" +str(mode))
         print(" ! using attribution data to bias-correct P: \t" +str(fuseattp))
         print(" ! writing netcdf output: \t")
@@ -195,6 +199,21 @@ def main_biascorrection(
 
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     Pref = convert_mm_m3(Pref, areas)
+    
+    if fbc_t2p:
+        print("Reading T")
+        # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
+        Tref, reflats, reflons = get_reference_data(ipath_reft, "transpiration", uptake_dates)
+        gridcheck(totlats,reflats,totlons,reflons)
+        # convert water fluxes from mm-->m3 to avoid area weighting in between
+        Tref = convert_mm_m3(Tref, areas)
+
+        # calculate T/E
+        t_over_e = Tref/Eref
+        # requires adjustments...
+        t_over_e[t_over_e>1]         = 1
+        t_over_e[t_over_e=="inf"]    = 1
+        t_over_e[np.isnan(t_over_e)] = 0
      
     ##--4. biascorrection #########################################################
     if verbose: 
@@ -289,6 +308,12 @@ def main_biascorrection(
     if fdebug:
         frac_E2P = calc_alpha(E2P,Etot)
         frac_Had = calc_alpha(Had,Htot)
+
+    # T2P; transpiration fraction
+    if fbc_t2p:
+        t2p_epcorrtd = t_over_e * E2P_EPcorrtd
+    else:
+        t2p_epcorrtd = np.zeros(shape=E2P_EPcorrtd.shape)
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
@@ -298,9 +323,10 @@ def main_biascorrection(
     aE2P_Ecorrtd  = np.nansum(E2P_Ecorrtd, axis=1)
     aE2P_Pcorrtd  = np.nansum(E2P_Pcorrtd, axis=1)
     aE2P_EPcorrtd = np.nansum(E2P_EPcorrtd, axis=1)
+    at2p_epcorrtd = np.nansum(t2p_epcorrtd, axis=1)
     # free up memory if backward time not needed anymore... 
     if faggbwtime:
-        del(Had,Had_Hcorrtd,E2P,E2P_Ecorrtd,E2P_Pcorrtd,E2P_EPcorrtd)
+        del(Had,Had_Hcorrtd,E2P,E2P_Ecorrtd,E2P_Pcorrtd,E2P_EPcorrtd,t2p_epcorrtd)
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
@@ -313,11 +339,13 @@ def main_biascorrection(
         E2P_Ecorrtd   = convert_m3_mm(E2P_Ecorrtd,areas)
         E2P_Pcorrtd   = convert_m3_mm(E2P_Pcorrtd,areas)
         E2P_EPcorrtd  = convert_m3_mm(E2P_EPcorrtd,areas)
+        t2p_epcorrtd  = convert_m3_mm(t2p_epcorrtd,areas)
     if fdebug or faggbwtime:    
         aE2P          = convert_m3_mm(aE2P,areas)
         aE2P_Ecorrtd  = convert_m3_mm(aE2P_Ecorrtd,areas)
         aE2P_Pcorrtd  = convert_m3_mm(aE2P_Pcorrtd,areas)
         aE2P_EPcorrtd = convert_m3_mm(aE2P_EPcorrtd,areas)
+        at2p_epcorrtd = convert_m3_mm(at2p_epcorrtd,areas)
     
     ##--7. debugging needed? ######################################################
     if fdebug:
@@ -352,10 +380,11 @@ def main_biascorrection(
                         E2P_Es=aE2P_Ecorrtd, 
                         E2P_Ps=aE2P_Pcorrtd, 
                         E2P_EPs=aE2P_EPcorrtd, 
+                        T2P_EPs=at2p_epcorrtd, 
                         strargs=biasdesc, 
                         precision=precision,
                         fwrite_month=fwrite_month,
-                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep)
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p)
         if not faggbwtime:
             writefinalnc(ofile=ofile, 
                         fdate_seq=arrival_time, udate_seq=utime_srt, 
@@ -366,10 +395,11 @@ def main_biascorrection(
                         E2P_Es=reduce4Darray(E2P_Ecorrtd,veryverbose), 
                         E2P_Ps=reduce4Darray(E2P_Pcorrtd,veryverbose), 
                         E2P_EPs=reduce4Darray(E2P_EPcorrtd,veryverbose), 
+                        T2P_EPs=reduce4Darray(t2p_epcorrtd,veryverbose), 
                         strargs=biasdesc, 
                         precision=precision,
                         fwrite_month=fwrite_month,
-                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep)
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p)
     if fwritewarning:
         wfile = opath+"/"+str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_WARNING.csv"
         writewarning(wfile)

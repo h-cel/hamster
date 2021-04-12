@@ -497,8 +497,9 @@ def read_cmdargs():
     parser.add_argument('--writestats', '-ws',  help = "write additional stats to file (02 and 03 only; flag)",         metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--bc_aggbwtime','-aggbt',help = "aggregate backward time (03 only; flag)",                     metavar ="", type = str2bol, default = True,    nargs='?')
     parser.add_argument('--bc_e2p_p',   '-e2pp',help = "bias correction: correct E2P with P only (E2P_Ps, flag)",       metavar ="", type = str2bol, default = True,    nargs='?')
-    parser.add_argument('--bc_e2p_e',   '-e2pe',help = "bias correction: correct E2P with E only (E2P_Es, flag)",       metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_e2p_e',   '-e2pe',help = "bias correction: correct E2P with E only (E2P_Es, flag)",       metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--bc_e2p_ep',  '-e2pep',help= "bias correction: correct E2P with E and P (E2P_EPs, flag)",     metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_t2p',     '-t2p', help= "bias correction: calculate transpiration to P (T2P_EPs, flag)",  metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
@@ -1400,10 +1401,10 @@ def checkdim(var):
 
 def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
-                 E2P, E2P_Es, E2P_Ps, E2P_EPs,
+                 E2P, E2P_Es, E2P_Ps, E2P_EPs, T2P_EPs,
                  strargs,precision,
                  fwrite_month,
-                 fbc_e2p_p, fbc_e2p_e, fbc_e2p_ep,
+                 fbc_e2p_p, fbc_e2p_e, fbc_e2p_ep, fbc_t2p_ep,
                  currentversion="v0.4"):
     
     # delete nc file if it is present (avoiding error message)
@@ -1442,6 +1443,8 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
         evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps), fill_value=nc4.default_fillvals[precision])
     if fbc_e2p_ep:
         evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs), fill_value=nc4.default_fillvals[precision])
+    if fbc_t2p_ep:
+        trans_EPs           = nc_f.createVariable('T2P_EPs', precision, checkdim(T2P_EPs), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -1472,6 +1475,9 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     if fbc_e2p_ep:
         evaps_EPs.units     = 'mm'
         evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
+    if fbc_t2p_ep:
+        trans_EPs.units     = 'mm'
+        trans_EPs.long_name = 'transpiration resulting in precipitation, E-and-P-corrected'
 
     # write data
     if fwrite_month:
@@ -1493,6 +1499,8 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
             evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
         if fbc_e2p_ep:
             evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+        if fbc_t2p_ep:
+            trans_EPs[:]        = np.nansum(T2P_EPs,axis=0,keepdims=True)[:]
     else:
         heats[:]            = Had[:]
         heats_Hs[:]         = Had_Hs[:]
@@ -1503,6 +1511,8 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
             evaps_Ps[:]         = E2P_Ps[:]
         if fbc_e2p_ep:
             evaps_EPs[:]        = E2P_EPs[:]
+        if fbc_t2p_ep:
+            trans_EPs[:]        = T2P_EPs[:]
 
     myshape=nc_f['E2P'].shape
     # close file
