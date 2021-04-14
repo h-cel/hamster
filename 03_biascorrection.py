@@ -30,7 +30,7 @@ def main_biascorrection(
            fbc_e2p_p,
            fbc_e2p_e,
            fbc_e2p_ep,
-           fbc_t2p,
+           fbc_t2p_ep,
            fdebug,
            fwrite_netcdf,
            fwrite_month,
@@ -72,7 +72,7 @@ def main_biascorrection(
         print("\t"+str(ipath_refp))
         print("\t"+str(ipath_refe))
         print("\t"+str(ipath_refh))
-        if fbc_t2p:
+        if fbc_t2p_ep:
             print("\t"+str(ipath_reft))
         print(" ! using mode: \t" +str(mode))
         print(" ! using attribution data to bias-correct P: \t" +str(fuseattp))
@@ -200,7 +200,7 @@ def main_biascorrection(
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     p_ref = convert_mm_m3(p_ref, areas)
     
-    if fbc_t2p:
+    if fbc_t2p_ep:
         print("Reading T")
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
         t_ref, reflats, reflons = get_reference_data(ipath_reft, "transpiration", uptake_dates)
@@ -310,7 +310,7 @@ def main_biascorrection(
         frac_had = calc_alpha(had,h_tot)
 
     # T2P; transpiration fraction
-    if fbc_t2p:
+    if fbc_t2p_ep:
         t2p_epcorrtd = t_over_e * e2p_epcorrtd
     else:
         t2p_epcorrtd = np.zeros(shape=e2p_epcorrtd.shape)
@@ -384,7 +384,7 @@ def main_biascorrection(
                         strargs=biasdesc, 
                         precision=precision,
                         fwrite_month=fwrite_month,
-                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p)
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p_ep)
         if not faggbwtime:
             writefinalnc(ofile=ofile, 
                         fdate_seq=arrival_time, udate_seq=utime_srt, 
@@ -399,7 +399,7 @@ def main_biascorrection(
                         strargs=biasdesc, 
                         precision=precision,
                         fwrite_month=fwrite_month,
-                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p)
+                        fbc_e2p_p=fbc_e2p_p, fbc_e2p_e=fbc_e2p_e, fbc_e2p_ep=fbc_e2p_ep, fbc_t2p_ep=fbc_t2p_ep)
     if fwritewarning:
         wfile = opath+"/"+str(ofile_base)+"_biascor-attr_r"+str(ryyyy)[-2:]+"_"+str(ayyyy)+"-"+str(am).zfill(2)+"_WARNING.csv"
         writewarning(wfile)

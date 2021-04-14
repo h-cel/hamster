@@ -232,7 +232,7 @@ if args.steps == 3:
                fbc_e2p_p=args.bc_e2p_p,
                fbc_e2p_e=args.bc_e2p_e,
                fbc_e2p_ep=args.bc_e2p_ep,
-               fbc_t2p=args.bc_t2p,
+               fbc_t2p_ep=args.bc_t2p_ep,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwrite_month=args.write_month,
