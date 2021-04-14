@@ -495,8 +495,9 @@ def main_attribution(
     
     if verbose:
         if fwrite_netcdf:
-            # adding attributed fraction to netcdf file description
-            append_attrfrac_netcdf(ofile,"{:.2f}".format(patt/psum))
+            if psum!=0:
+                # adding attributed fraction to netcdf file description
+                append_attrfrac_netcdf(ofile,"{:.2f}".format(patt/psum))
             print("\n Successfully written: "+ofile+" !\n")
 
     writestats_02(statfile,tneval,tnnevala,tnevalh,tnnevalh,tnnevalm,tnevalp,tnnevalp,patt,psum,punatt,pmiss) 
