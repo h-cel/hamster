@@ -102,10 +102,10 @@ def main_biascorrection(
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))[:,0]
     # expand uptake dimension to dates (instead of backward days)
-    E2P = expand4Darray(e2psrt,arrival_time,utime_srt,veryverbose)
+    e2p = expand4Darray(e2psrt,arrival_time,utime_srt,veryverbose)
     Had = expand4Darray(hadsrt,arrival_time,utime_srt,veryverbose)
     # convert water fluxes from mm-->m3
-    E2P = convert_mm_m3(E2P, areas)
+    e2p = convert_mm_m3(e2p, areas)
 
     # clean up
     del(e2psrt, hadsrt)
@@ -230,7 +230,7 @@ def main_biascorrection(
     ## preliminary checks
     if not fuseattp:
         # re-evaluate precip. data to check if it can be used (need daily data here because of upscaling in 02)
-        fuseattp = check_attributedp(pdiag=p_tot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
+        fuseattp = check_attributedp(pdiag=p_tot[ibgn:,xla,xlo],pattr=e2p,veryverbose=veryverbose)
     
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
@@ -239,13 +239,13 @@ def main_biascorrection(
         print("   --- Bias correction using source data...")
     # quick consistency check
     consistencycheck(Had, h_tot, bcscale, fdebug)
-    consistencycheck(E2P, e_tot, bcscale, fdebug)
+    consistencycheck(e2p, e_tot, bcscale, fdebug)
     # calculate bias correction factor
     alpha_H     = calc_sourcebcf(ref=h_ref, diag=h_tot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=e_ref, diag=e_tot, tscale=bcscale)
     # apply bias correction factor
     had_hcorrtd = np.multiply(alpha_H, Had)
-    e2p_ecorrtd = np.multiply(alpha_E, E2P)
+    e2p_ecorrtd = np.multiply(alpha_E, e2p)
     
     #******************************************************************************
     ## (ii) BIAS CORRECTING THE SINK (P only)
@@ -254,11 +254,11 @@ def main_biascorrection(
         print("   --- Bias correction using sink data...")
     # calculate (daily) bias correction factor
     if fuseattp:
-        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P, tscale=bcscale)
+        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=e2p, tscale=bcscale)
         # perform monthly bias correction if necessary
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
-            alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
+            alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=e2p, tscale='monthly')
             fwritewarning= True
     else:    
         alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale=bcscale)
@@ -268,7 +268,7 @@ def main_biascorrection(
             alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale='monthly')
             fwritewarning= True
     # apply bias correction factor
-    e2p_pcorrtd     = np.swapaxes(alpha_P * np.swapaxes(E2P, 0, 3), 0, 3) 
+    e2p_pcorrtd     = np.swapaxes(alpha_P * np.swapaxes(e2p, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
     if not checkpsum(p_ref[ibgn:,xla,xlo], e2p_pcorrtd, verbose=False):
@@ -283,8 +283,8 @@ def main_biascorrection(
     #******************************************************************************
     if verbose: 
         print("   --- Bias correction using source and sink data...")
-    # step 1: check how much E2P changed due to source-correction already
-    alpha_P_Ecor    = calc_sinkbcf(ref=e2p_ecorrtd, att=E2P, tscale=bcscale)
+    # step 1: check how much e2p changed due to source-correction already
+    alpha_P_Ecor    = calc_sinkbcf(ref=e2p_ecorrtd, att=e2p, tscale=bcscale)
     # step 2: calculate how much more correction is needed to match sink 
     alpha_P         = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=e2p_pcorrtd, tscale=bcscale)
     # perform monthly bias correction if necessary
@@ -306,7 +306,7 @@ def main_biascorrection(
 
     # save some data in case debugging is needed
     if fdebug:
-        frac_E2P = calc_alpha(E2P,e_tot)
+        frac_e2p = calc_alpha(e2p,e_tot)
         frac_Had = calc_alpha(Had,h_tot)
 
     # T2P; transpiration fraction
@@ -319,14 +319,14 @@ def main_biascorrection(
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
     ahad          = np.nansum(Had, axis=1)
     ahad_hcorrtd  = np.nansum(had_hcorrtd, axis=1)
-    ae2p          = np.nansum(E2P, axis=1)
+    ae2p          = np.nansum(e2p, axis=1)
     ae2p_ecorrtd  = np.nansum(e2p_ecorrtd, axis=1)
     ae2p_pcorrtd  = np.nansum(e2p_pcorrtd, axis=1)
     ae2p_epcorrtd = np.nansum(e2p_epcorrtd, axis=1)
     at2p_epcorrtd = np.nansum(t2p_epcorrtd, axis=1)
     # free up memory if backward time not needed anymore... 
     if faggbwtime:
-        del(Had,had_hcorrtd,E2P,e2p_ecorrtd,e2p_pcorrtd,e2p_epcorrtd,t2p_epcorrtd)
+        del(Had,had_hcorrtd,e2p,e2p_ecorrtd,e2p_pcorrtd,e2p_epcorrtd,t2p_epcorrtd)
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
@@ -335,7 +335,7 @@ def main_biascorrection(
     ##--6. unit conversion ##############################################################
     # and convert water fluxes back from m3 --> mm
     if not faggbwtime:
-        E2P           = convert_m3_mm(E2P,areas)
+        e2p           = convert_m3_mm(e2p,areas)
         e2p_ecorrtd   = convert_m3_mm(e2p_ecorrtd,areas)
         e2p_pcorrtd   = convert_m3_mm(e2p_pcorrtd,areas)
         e2p_epcorrtd  = convert_m3_mm(e2p_epcorrtd,areas)
@@ -354,7 +354,7 @@ def main_biascorrection(
                 mask3darray(p_ref[ibgn:,:,:],xla,xlo),mask3darray(p_tot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(ae2p,areas),convert_mm_m3(ae2p_ecorrtd,areas),
                 convert_mm_m3(ae2p_pcorrtd,areas),convert_mm_m3(ae2p_epcorrtd,areas),
-                np.nan_to_num(frac_E2P),
+                np.nan_to_num(frac_e2p),
                 np.nan_to_num(frac_Had),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
@@ -391,7 +391,7 @@ def main_biascorrection(
                         glon=lons, glat=lats, 
                         Had=reduce4Darray(Had,veryverbose), 
                         Had_Hs=reduce4Darray(had_hcorrtd,veryverbose), 
-                        E2P=reduce4Darray(E2P,veryverbose), 
+                        E2P=reduce4Darray(e2p,veryverbose), 
                         E2P_Es=reduce4Darray(e2p_ecorrtd,veryverbose), 
                         E2P_Ps=reduce4Darray(e2p_pcorrtd,veryverbose), 
                         E2P_EPs=reduce4Darray(e2p_epcorrtd,veryverbose), 
