@@ -157,7 +157,7 @@ def main_biascorrection(
     
     print("Reading E")
     if eref_data == "eraint":
-        Eref, reflats, reflons = eraloader_12hourly(var='e',
+        e_ref, reflats, reflons = eraloader_12hourly(var='e',
                      datapath=ipath_refe+"/E_1deg_",
                      maskpos=True,
                      maskneg=False,
@@ -165,15 +165,15 @@ def main_biascorrection(
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif eref_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Eref, reflats, reflons = get_reference_data(ipath_refe, "evaporation", uptake_dates)
+        e_ref, reflats, reflons = get_reference_data(ipath_refe, "evaporation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
 
     # convert water fluxes from mm-->m3 to avoid area weighting in between
-    Eref = convert_mm_m3(Eref, areas)
+    e_ref = convert_mm_m3(e_ref, areas)
         
     print("Reading H")
     if href_data == "eraint":
-        Href, reflats, reflons = eraloader_12hourly(var='sshf',
+        h_ref, reflats, reflons = eraloader_12hourly(var='sshf',
                      datapath=ipath_refh+"/H_1deg_",
                      maskpos=True,
                      maskneg=False,
@@ -181,12 +181,12 @@ def main_biascorrection(
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif href_data == "others":    
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Href, reflats, reflons = get_reference_data(ipath_refh, "sensible heat flux", uptake_dates)
+        h_ref, reflats, reflons = get_reference_data(ipath_refh, "sensible heat flux", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
     
     print("Reading P")
     if pref_data == "eraint":
-        Pref, reflats, reflons = eraloader_12hourly(var='tp',
+        p_ref, reflats, reflons = eraloader_12hourly(var='tp',
                      datapath=ipath_refp+"/P_1deg_",
                      maskpos=False, # do NOT set this to True!
                      maskneg=True,
@@ -194,11 +194,11 @@ def main_biascorrection(
                      uptake_dates=uptake_dates, lats=lats, lons=lons)
     elif pref_data == "others":
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Pref, reflats, reflons = get_reference_data(ipath_refp, "precipitation", uptake_dates)
+        p_ref, reflats, reflons = get_reference_data(ipath_refp, "precipitation", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
 
     # convert water fluxes from mm-->m3 to avoid area weighting in between
-    Pref = convert_mm_m3(Pref, areas)
+    p_ref = convert_mm_m3(p_ref, areas)
     
     if fbc_t2p:
         print("Reading T")
@@ -209,7 +209,7 @@ def main_biascorrection(
         Tref = convert_mm_m3(Tref, areas)
 
         # calculate T/E
-        t_over_e = Tref/Eref
+        t_over_e = Tref/e_ref
         # requires adjustments...
         t_over_e[t_over_e>1]         = 1
         t_over_e[t_over_e=="inf"]    = 1
@@ -241,8 +241,8 @@ def main_biascorrection(
     consistencycheck(Had, h_tot, bcscale, fdebug)
     consistencycheck(E2P, e_tot, bcscale, fdebug)
     # calculate bias correction factor
-    alpha_H     = calc_sourcebcf(ref=Href, diag=h_tot, tscale=bcscale)
-    alpha_E     = calc_sourcebcf(ref=Eref, diag=e_tot, tscale=bcscale)
+    alpha_H     = calc_sourcebcf(ref=h_ref, diag=h_tot, tscale=bcscale)
+    alpha_E     = calc_sourcebcf(ref=e_ref, diag=e_tot, tscale=bcscale)
     # apply bias correction factor
     Had_hcorrtd = np.multiply(alpha_H, Had)
     E2P_ecorrtd = np.multiply(alpha_E, E2P)
@@ -254,29 +254,29 @@ def main_biascorrection(
         print("   --- Bias correction using sink data...")
     # calculate (daily) bias correction factor
     if fuseattp:
-        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale=bcscale)
+        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P, tscale=bcscale)
         # perform monthly bias correction if necessary
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
-            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
+            alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
             fwritewarning= True
     else:    
-        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale=bcscale)
+        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale=bcscale)
         # perform monthly bias correction if necessary
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
-            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale='monthly')
+            alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale='monthly')
             fwritewarning= True
     # apply bias correction factor
     E2P_pcorrtd     = np.swapaxes(alpha_P * np.swapaxes(E2P, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
-    if not checkpsum(Pref[ibgn:,xla,xlo], E2P_pcorrtd, verbose=False):
+    if not checkpsum(p_ref[ibgn:,xla,xlo], E2P_pcorrtd, verbose=False):
         print("        * Additional monthly bias correction needed to match reference precipitation...")
-        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale='monthly')
+        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale='monthly')
         E2P_pcorrtd = np.swapaxes(alpha_P * np.swapaxes(E2P_pcorrtd, 0, 3), 0, 3) 
         fwritewarning= True
-    checkpsum(Pref[ibgn:,xla,xlo], E2P_pcorrtd, verbose=verbose)
+    checkpsum(p_ref[ibgn:,xla,xlo], E2P_pcorrtd, verbose=verbose)
     
     #******************************************************************************
     ## (iii) BIAS CORRECTING THE SOURCE AND THE SINK (P only)
@@ -286,23 +286,23 @@ def main_biascorrection(
     # step 1: check how much E2P changed due to source-correction already
     alpha_P_Ecor    = calc_sinkbcf(ref=E2P_ecorrtd, att=E2P, tscale=bcscale)
     # step 2: calculate how much more correction is needed to match sink 
-    alpha_P         = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale=bcscale)
+    alpha_P         = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale=bcscale)
     # perform monthly bias correction if necessary
     if np.all( np.nan_to_num(alpha_P) == 0):
         print("        * Monthly bias correction needed to match reference precipitation...")
-        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale='monthly')
+        alpha_P     = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P_pcorrtd, tscale='monthly')
         fwritewarning= True
     # step 3: calculate adjusted bias correction factor
     alpha_P_res     = np.divide(alpha_P, alpha_P_Ecor)
     E2P_epcorrtd    = np.swapaxes(alpha_P_res * np.swapaxes(E2P_ecorrtd, 0, 3), 0, 3) 
     
     # additionally perform monthly bias correction of P if necessary
-    if not checkpsum(Pref[ibgn:,xla,xlo], E2P_epcorrtd, verbose=False):
+    if not checkpsum(p_ref[ibgn:,xla,xlo], E2P_epcorrtd, verbose=False):
         print("        * Additional monthly bias correction needed to match reference precipitation...")
-        alpha_P_res = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P_epcorrtd, tscale='monthly')
+        alpha_P_res = calc_sinkbcf(ref=p_ref[ibgn:,xla,xlo], att=E2P_epcorrtd, tscale='monthly')
         E2P_epcorrtd= np.swapaxes(alpha_P_res * np.swapaxes(E2P_epcorrtd, 0, 3), 0, 3)
         fwritewarning= True
-    checkpsum(Pref[ibgn:,xla,xlo], E2P_epcorrtd, verbose=verbose)
+    checkpsum(p_ref[ibgn:,xla,xlo], E2P_epcorrtd, verbose=verbose)
 
     # save some data in case debugging is needed
     if fdebug:
@@ -330,7 +330,7 @@ def main_biascorrection(
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        writestats_03(sfile,Pref,ae2p,ae2p_ecorrtd,ae2p_pcorrtd,ae2p_epcorrtd,aHad,aHad_hcorrtd,xla,xlo,ibgn)
+        writestats_03(sfile,p_ref,ae2p,ae2p_ecorrtd,ae2p_pcorrtd,ae2p_epcorrtd,aHad,aHad_hcorrtd,xla,xlo,ibgn)
 
     ##--6. unit conversion ##############################################################
     # and convert water fluxes back from m3 --> mm
@@ -351,7 +351,7 @@ def main_biascorrection(
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
-                mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(p_tot[ibgn:,:,:],xla,xlo),
+                mask3darray(p_ref[ibgn:,:,:],xla,xlo),mask3darray(p_tot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(ae2p,areas),convert_mm_m3(ae2p_ecorrtd,areas),
                 convert_mm_m3(ae2p_pcorrtd,areas),convert_mm_m3(ae2p_epcorrtd,areas),
                 np.nan_to_num(frac_E2P),
