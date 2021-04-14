@@ -91,8 +91,8 @@ def main_biascorrection(
             print("   --- file: "+str(attrfile))
 
     with nc4.Dataset(attrfile, mode="r") as f:
-        E2Psrt       = np.asarray(checknan(f['E2P'][:]))
-        Hadsrt       = np.asarray(checknan(f['Had'][:]))
+        e2psrt       = np.asarray(checknan(f['E2P'][:]))
+        hadsrt       = np.asarray(checknan(f['Had'][:]))
         arrival_time = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
         utime_srt    = np.asarray(f['level'][:])
         uptake_time  = udays2udate(arrival_time,utime_srt)
@@ -102,13 +102,13 @@ def main_biascorrection(
         lons         = np.asarray(f['lon'][:])
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))[:,0]
     # expand uptake dimension to dates (instead of backward days)
-    E2P = expand4Darray(E2Psrt,arrival_time,utime_srt,veryverbose)
-    Had = expand4Darray(Hadsrt,arrival_time,utime_srt,veryverbose)
+    E2P = expand4Darray(e2psrt,arrival_time,utime_srt,veryverbose)
+    Had = expand4Darray(hadsrt,arrival_time,utime_srt,veryverbose)
     # convert water fluxes from mm-->m3
     E2P = convert_mm_m3(E2P, areas)
 
     # clean up
-    del(E2Psrt, Hadsrt)
+    del(e2psrt, hadsrt)
     
     ##--2. load diagnosis data ####################################################
     if verbose: 
