@@ -203,13 +203,13 @@ def main_biascorrection(
     if fbc_t2p:
         print("Reading T")
         # attention: data has to be on the correct grid and daily (or subdaily that can be summed up) and with the correct sign (all positive)
-        Tref, reflats, reflons = get_reference_data(ipath_reft, "transpiration", uptake_dates)
+        t_ref, reflats, reflons = get_reference_data(ipath_reft, "transpiration", uptake_dates)
         gridcheck(totlats,reflats,totlons,reflons)
         # convert water fluxes from mm-->m3 to avoid area weighting in between
-        Tref = convert_mm_m3(Tref, areas)
+        t_ref = convert_mm_m3(t_ref, areas)
 
         # calculate T/E
-        t_over_e = Tref/e_ref
+        t_over_e = t_ref/e_ref
         # requires adjustments...
         t_over_e[t_over_e>1]         = 1
         t_over_e[t_over_e=="inf"]    = 1
