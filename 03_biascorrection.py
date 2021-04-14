@@ -128,21 +128,21 @@ def main_biascorrection(
 
     # make sure we use daily aggregates
     if fdays.size != ftime.size:
-        Etot    = convert2daily(E,ftime,fagg="sum")
-        Ptot    = convert2daily(P,ftime,fagg="sum")
-        Htot    = convert2daily(H,ftime,fagg="mean")
+        e_tot    = convert2daily(E,ftime,fagg="sum")
+        p_tot    = convert2daily(P,ftime,fagg="sum")
+        h_tot    = convert2daily(H,ftime,fagg="mean")
     else: 
-        Etot = E
-        Ptot = P
-        Htot = H
+        e_tot = E
+        p_tot = P
+        h_tot = H
         
     ## only keep what is really needed (P is stored analogous to E and H for consistency)
     datecheck(uptake_dates[0],fdays)
     ibgn = np.where(fdays==uptake_dates[0])[0][0]
     iend = np.where(fdays==uptake_dates[-1])[0][0]
-    Etot = Etot[ibgn:iend+1,:,:]
-    Ptot = Ptot[ibgn:iend+1,:,:]
-    Htot = Htot[ibgn:iend+1,:,:]
+    e_tot = e_tot[ibgn:iend+1,:,:]
+    p_tot = p_tot[ibgn:iend+1,:,:]
+    h_tot = h_tot[ibgn:iend+1,:,:]
     fdates = fdays[ibgn:iend+1]  
     ## make sure we grabbed the right data
     if not np.array_equal(uptake_dates, fdates):
@@ -230,7 +230,7 @@ def main_biascorrection(
     ## preliminary checks
     if not fuseattp:
         # re-evaluate precip. data to check if it can be used (need daily data here because of upscaling in 02)
-        fuseattp = check_attributedp(pdiag=Ptot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
+        fuseattp = check_attributedp(pdiag=p_tot[ibgn:,xla,xlo],pattr=E2P,veryverbose=veryverbose)
     
     #******************************************************************************
     ## (i) BIAS CORRECTING THE SOURCE
@@ -238,11 +238,11 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source data...")
     # quick consistency check
-    consistencycheck(Had, Htot, bcscale, fdebug)
-    consistencycheck(E2P, Etot, bcscale, fdebug)
+    consistencycheck(Had, h_tot, bcscale, fdebug)
+    consistencycheck(E2P, e_tot, bcscale, fdebug)
     # calculate bias correction factor
-    alpha_H     = calc_sourcebcf(ref=Href, diag=Htot, tscale=bcscale)
-    alpha_E     = calc_sourcebcf(ref=Eref, diag=Etot, tscale=bcscale)
+    alpha_H     = calc_sourcebcf(ref=Href, diag=h_tot, tscale=bcscale)
+    alpha_E     = calc_sourcebcf(ref=Eref, diag=e_tot, tscale=bcscale)
     # apply bias correction factor
     Had_Hcorrtd = np.multiply(alpha_H, Had)
     E2P_Ecorrtd = np.multiply(alpha_E, E2P)
@@ -261,11 +261,11 @@ def main_biascorrection(
             alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=E2P, tscale='monthly')
             fwritewarning= True
     else:    
-        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale=bcscale)
+        alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale=bcscale)
         # perform monthly bias correction if necessary
         if np.all( np.nan_to_num(alpha_P) == 0):
             print("        * Monthly bias correction needed to match reference precipitation...")
-            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=Ptot[ibgn:,xla,xlo], tscale='monthly')
+            alpha_P     = calc_sinkbcf(ref=Pref[ibgn:,xla,xlo], att=p_tot[ibgn:,xla,xlo], tscale='monthly')
             fwritewarning= True
     # apply bias correction factor
     E2P_Pcorrtd     = np.swapaxes(alpha_P * np.swapaxes(E2P, 0, 3), 0, 3) 
@@ -306,8 +306,8 @@ def main_biascorrection(
 
     # save some data in case debugging is needed
     if fdebug:
-        frac_E2P = calc_alpha(E2P,Etot)
-        frac_Had = calc_alpha(Had,Htot)
+        frac_E2P = calc_alpha(E2P,e_tot)
+        frac_Had = calc_alpha(Had,h_tot)
 
     # T2P; transpiration fraction
     if fbc_t2p:
@@ -351,7 +351,7 @@ def main_biascorrection(
     if fdebug:
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
-                mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(Ptot[ibgn:,:,:],xla,xlo),
+                mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(p_tot[ibgn:,:,:],xla,xlo),
                 convert_mm_m3(aE2P,areas),convert_mm_m3(aE2P_Ecorrtd,areas),
                 convert_mm_m3(aE2P_Pcorrtd,areas),convert_mm_m3(aE2P_EPcorrtd,areas),
                 np.nan_to_num(frac_E2P),
