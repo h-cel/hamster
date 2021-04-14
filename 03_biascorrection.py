@@ -158,7 +158,6 @@ def main_biascorrection(
     if verbose: 
         print(" * Reading reference data...")
     
-    print("Reading E")
     if eref_data == "eraint":
         e_ref, reflats, reflons = eraloader_12hourly(var='e',
                      datapath=ipath_refe+"/E_1deg_",
@@ -174,7 +173,6 @@ def main_biascorrection(
     # convert water fluxes from mm-->m3 to avoid area weighting in between
     e_ref = convert_mm_m3(e_ref, areas)
         
-    print("Reading H")
     if href_data == "eraint":
         h_ref, reflats, reflons = eraloader_12hourly(var='sshf',
                      datapath=ipath_refh+"/H_1deg_",
@@ -187,7 +185,6 @@ def main_biascorrection(
         h_ref, reflats, reflons = get_reference_data(ipath_refh, "sensible heat flux", uptake_dates)
     gridcheck(totlats,reflats,totlons,reflons)
     
-    print("Reading P")
     if pref_data == "eraint":
         p_ref, reflats, reflons = eraloader_12hourly(var='tp',
                      datapath=ipath_refp+"/P_1deg_",

@@ -1324,6 +1324,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     uyears = np.unique(uptake_years)
 
     with nc4.Dataset(datapath+str(uyears[0])+'.nc', mode='r') as f: 
+        print("     * Reading "+str(datapath+str(uyears[0])+'.nc'))
         reflats   = np.asarray(f['latitude'][:])
         reflons   = np.asarray(f['longitude'][:])
         reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
@@ -1333,6 +1334,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
 
     for ii in range(1,uyears.size):
 
+        print("     * Reading "+str(datapath+str(uyears[ii])+'.nc'))
         with nc4.Dataset(datapath+str(uyears[ii])+'.nc', mode='r') as f:
             reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
             reftime  = np.concatenate((reftime, reftimeY))
