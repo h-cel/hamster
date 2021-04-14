@@ -36,7 +36,9 @@ Alternatively, make an anaconda environment with the necessary python packages
 or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
 
 - - - - 
-## HAMSTER: modules.
+## What is HAMSTER?
+**HAMSTER** is a heat- and moisture tracking framwork to evaluate air parcel trajectories from a Lagrangian model, such as FLEXPART (Stohl et al., 2005) and to establish source–receptor relationships, such as the source regions of precipitation or heat. The current version of **HAMSTER** has been built using simulations from FLEXPART driven with ERA-Interim reanalysis data, but other simulations may be supported as well. 
+
 **HAMSTER** consists of 4 modules, 
 
 0. flex2traj
@@ -44,25 +46,25 @@ or install the packages listed in requirements.txt in your local environment. No
 2. Attribution
 3. Bias-correction
 
-which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. 
+which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. In the following, a short description of each module (step) is given. 
 
 ### 0. flex2traj
 This module of **HAMSTER** reads in the instantaneous binary FLEXPART files, filters for a specific region (using a netcdf mask), constructs trajectories and writes them to a file.
 
 ### 1. Diagnosis
-The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using trajectories constructed from FLEXPART binary data. There are several thresholds and criteria that can be set (see docs) to reduce the bias, increase the probability of detection and reduce the probability of false detection. The output from this part can be used to bias correct source–receptor relationships. 
+The diagnosis part of **HAMSTER** identifies atmospheric fluxes of humidity (precipitation and evaporation) or heat (sensible heat flux) using trajectories constructed from FLEXPART binary data. There are several thresholds and criteria that can be set to reduce the bias and to increase the probability of detection for each flux. The output from this diagnosis step is used to bias correct source–receptor relationships. 
 
 ### 2. Attribution
-The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route, or applying a random attribution for moisture), and establishes a first (biased) source–receptor relationship. Multiple options to ensure mass- and energy conservation along trajectories are available (see docs). Various time and space-scales for attribution are possible (see docs). 
+The attribution part of **HAMSTER** constructs mass- and energy-conserving trajectories of heat and moisture (e.g. using a linear discounting of changes en route, or applying a random attribution for moisture), and establishes a first (biased) source–receptor relationship. The output of this step are, e.g., 4D netcdf files that illustrate the spatio-temporal origins of precipitation or *heat* arriving in the receptor region. Multiple options to construct these relationships are available.
 
 ### 3. Bias-correction
-The last module of **HAMSTER** uses information from the former two modules to bias-correct source–receptor relationships. Multiple options for bias-correction are available (see docs). 
+The last module of **HAMSTER** uses information from the former two steps to bias-correct source–receptor relationships. Multiple options for bias-correction are available. 
 
 ## Running HAMSTER.
 ### Prerequisites
 To execute the full chain (all 4 modules) of **HAMSTER**, the only prerequisites are: 
 * Output from a Lagrangian model that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
-* Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels
+* Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels, or any other reference data set
 * A file paths.txt which lists the paths where the above data is found and where output will be stored.
 
 The file paths.txt is not part of **HAMSTER**. Users have to create the file themselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
