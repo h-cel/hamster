@@ -319,10 +319,10 @@ def main_biascorrection(
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
     aHad          = np.nansum(Had, axis=1)
     aHad_Hcorrtd  = np.nansum(Had_Hcorrtd, axis=1)
-    aE2P          = np.nansum(E2P, axis=1)
-    aE2P_ecorrtd  = np.nansum(E2P_ecorrtd, axis=1)
-    aE2P_pcorrtd  = np.nansum(E2P_pcorrtd, axis=1)
-    aE2P_epcorrtd = np.nansum(E2P_epcorrtd, axis=1)
+    ae2p          = np.nansum(E2P, axis=1)
+    ae2p_ecorrtd  = np.nansum(E2P_ecorrtd, axis=1)
+    ae2p_pcorrtd  = np.nansum(E2P_pcorrtd, axis=1)
+    ae2p_epcorrtd = np.nansum(E2P_epcorrtd, axis=1)
     at2p_epcorrtd = np.nansum(t2p_epcorrtd, axis=1)
     # free up memory if backward time not needed anymore... 
     if faggbwtime:
@@ -330,7 +330,7 @@ def main_biascorrection(
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        writestats_03(sfile,Pref,aE2P,aE2P_ecorrtd,aE2P_pcorrtd,aE2P_epcorrtd,aHad,aHad_Hcorrtd,xla,xlo,ibgn)
+        writestats_03(sfile,Pref,ae2p,ae2p_ecorrtd,ae2p_pcorrtd,ae2p_epcorrtd,aHad,aHad_Hcorrtd,xla,xlo,ibgn)
 
     ##--6. unit conversion ##############################################################
     # and convert water fluxes back from m3 --> mm
@@ -341,10 +341,10 @@ def main_biascorrection(
         E2P_epcorrtd  = convert_m3_mm(E2P_epcorrtd,areas)
         t2p_epcorrtd  = convert_m3_mm(t2p_epcorrtd,areas)
     if fdebug or faggbwtime:    
-        aE2P          = convert_m3_mm(aE2P,areas)
-        aE2P_ecorrtd  = convert_m3_mm(aE2P_ecorrtd,areas)
-        aE2P_pcorrtd  = convert_m3_mm(aE2P_pcorrtd,areas)
-        aE2P_epcorrtd = convert_m3_mm(aE2P_epcorrtd,areas)
+        ae2p          = convert_m3_mm(ae2p,areas)
+        ae2p_ecorrtd  = convert_m3_mm(ae2p_ecorrtd,areas)
+        ae2p_pcorrtd  = convert_m3_mm(ae2p_pcorrtd,areas)
+        ae2p_epcorrtd = convert_m3_mm(ae2p_epcorrtd,areas)
         at2p_epcorrtd = convert_m3_mm(at2p_epcorrtd,areas)
     
     ##--7. debugging needed? ######################################################
@@ -352,8 +352,8 @@ def main_biascorrection(
         print(" * Creating debugging file")
         writedebugnc(opath+"/debug.nc",arrival_time,uptake_time,lons,lats,maskbymaskval(mask,maskval),
                 mask3darray(Pref[ibgn:,:,:],xla,xlo),mask3darray(p_tot[ibgn:,:,:],xla,xlo),
-                convert_mm_m3(aE2P,areas),convert_mm_m3(aE2P_ecorrtd,areas),
-                convert_mm_m3(aE2P_pcorrtd,areas),convert_mm_m3(aE2P_epcorrtd,areas),
+                convert_mm_m3(ae2p,areas),convert_mm_m3(ae2p_ecorrtd,areas),
+                convert_mm_m3(ae2p_pcorrtd,areas),convert_mm_m3(ae2p_epcorrtd,areas),
                 np.nan_to_num(frac_E2P),
                 np.nan_to_num(frac_Had),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
@@ -376,10 +376,10 @@ def main_biascorrection(
                         glon=lons, glat=lats, 
                         Had=aHad, 
                         Had_Hs=aHad_Hcorrtd, 
-                        E2P=aE2P, 
-                        E2P_Es=aE2P_ecorrtd, 
-                        E2P_Ps=aE2P_pcorrtd, 
-                        E2P_EPs=aE2P_epcorrtd, 
+                        E2P=ae2p, 
+                        E2P_Es=ae2p_ecorrtd, 
+                        E2P_Ps=ae2p_pcorrtd, 
+                        E2P_EPs=ae2p_epcorrtd, 
                         T2P_EPs=at2p_epcorrtd, 
                         strargs=biasdesc, 
                         precision=precision,
