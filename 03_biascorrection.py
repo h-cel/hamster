@@ -411,4 +411,4 @@ def main_biascorrection(
 
     if os.path.exists(ofile):
         print("Removing "+str(attrfile)+" ...")
-        #os.remove(attrfile)
+        os.remove(attrfile)
