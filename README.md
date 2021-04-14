@@ -105,7 +105,7 @@ path_bias = "./flexpart_data/bahamas/bias"
 
 The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive.
 
-### Run and settings.
+### Running hamster. 
 To run **HAMSTER**, run
 ```python
 python main.py
@@ -117,6 +117,17 @@ python main.py -h
 ```
 for more details on setting dates, thresholds and other options. All user-specific paths are set in paths.txt. 
 
+To run all steps sequentially with the default settings, proceed in two steps. First, extract global 2-step trajectories and perform the global diagnosis of fluxes, using
+```
+python main.py --steps 0 --ctraj_len 0 --maskval -999
+python main.py --steps 1
+```
+Then, extract 10-day trajectories for a specific region (using a maskvalue of 1 for the given maskfile), and diagnose source regions of heat and moisture, and finally bias-correct them using the global diagnosis data from above:
+```
+python main.py --steps 0
+python main.py --steps 2
+python main.py --steps 3
+```
 
 #### The most important settings are: 
 
