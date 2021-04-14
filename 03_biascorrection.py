@@ -244,7 +244,7 @@ def main_biascorrection(
     alpha_H     = calc_sourcebcf(ref=Href, diag=h_tot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=Eref, diag=e_tot, tscale=bcscale)
     # apply bias correction factor
-    Had_Hcorrtd = np.multiply(alpha_H, Had)
+    Had_hcorrtd = np.multiply(alpha_H, Had)
     E2P_ecorrtd = np.multiply(alpha_E, E2P)
     
     #******************************************************************************
@@ -318,7 +318,7 @@ def main_biascorrection(
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
     aHad          = np.nansum(Had, axis=1)
-    aHad_Hcorrtd  = np.nansum(Had_Hcorrtd, axis=1)
+    aHad_hcorrtd  = np.nansum(Had_hcorrtd, axis=1)
     ae2p          = np.nansum(E2P, axis=1)
     ae2p_ecorrtd  = np.nansum(E2P_ecorrtd, axis=1)
     ae2p_pcorrtd  = np.nansum(E2P_pcorrtd, axis=1)
@@ -326,11 +326,11 @@ def main_biascorrection(
     at2p_epcorrtd = np.nansum(t2p_epcorrtd, axis=1)
     # free up memory if backward time not needed anymore... 
     if faggbwtime:
-        del(Had,Had_Hcorrtd,E2P,E2P_ecorrtd,E2P_pcorrtd,E2P_epcorrtd,t2p_epcorrtd)
+        del(Had,Had_hcorrtd,E2P,E2P_ecorrtd,E2P_pcorrtd,E2P_epcorrtd,t2p_epcorrtd)
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
-        writestats_03(sfile,Pref,ae2p,ae2p_ecorrtd,ae2p_pcorrtd,ae2p_epcorrtd,aHad,aHad_Hcorrtd,xla,xlo,ibgn)
+        writestats_03(sfile,Pref,ae2p,ae2p_ecorrtd,ae2p_pcorrtd,ae2p_epcorrtd,aHad,aHad_hcorrtd,xla,xlo,ibgn)
 
     ##--6. unit conversion ##############################################################
     # and convert water fluxes back from m3 --> mm
@@ -375,7 +375,7 @@ def main_biascorrection(
                         fdate_seq=arrival_time, udate_seq=np.nan, 
                         glon=lons, glat=lats, 
                         Had=aHad, 
-                        Had_Hs=aHad_Hcorrtd, 
+                        Had_Hs=aHad_hcorrtd, 
                         E2P=ae2p, 
                         E2P_Es=ae2p_ecorrtd, 
                         E2P_Ps=ae2p_pcorrtd, 
@@ -390,7 +390,7 @@ def main_biascorrection(
                         fdate_seq=arrival_time, udate_seq=utime_srt, 
                         glon=lons, glat=lats, 
                         Had=reduce4Darray(Had,veryverbose), 
-                        Had_Hs=reduce4Darray(Had_Hcorrtd,veryverbose), 
+                        Had_Hs=reduce4Darray(Had_hcorrtd,veryverbose), 
                         E2P=reduce4Darray(E2P,veryverbose), 
                         E2P_Es=reduce4Darray(E2P_ecorrtd,veryverbose), 
                         E2P_Ps=reduce4Darray(E2P_pcorrtd,veryverbose), 
