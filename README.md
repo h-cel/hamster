@@ -3,39 +3,6 @@
 **HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. It has been developed within the DRY-2-DRY project at the Hydro-Climatic Extremes Laboratory (H-CEL) at Ghent University. 
 
 - - - -
-## Getting started. 
-
-This section describes the prerequisites required to run HAMSTER, as well as the steps to install it. 
-
-### Prerequisites
-To run HAMSTER, you need 
-* python 3
-* [git](https://git-scm.com/)
-
-and
-* [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
-
-or
-* python 3 and the required modules on a cluster
-
-### Installation
-1. Clone the repository
-    ```
-    git clone https://github.ugent.be/jkeune/hamster.git
-    cd hamster
-    ```
-2. Load the following python 3.7 environment: 
-    ```
-    module load h5py/2.10.0-intel-2019b-Python-3.7.4
-    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
-    ```
-Alternatively, make an anaconda environment with the necessary python packages
-    ```
-    conda create -n _newenvironment_ --file requirements.txt
-    ```
-or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
-
-- - - - 
 ## What is HAMSTER?
 **HAMSTER** is a heat- and moisture tracking framwork to evaluate air parcel trajectories from a Lagrangian model, such as FLEXPART (Stohl et al., 2005) and to establish source–receptor relationships, such as the source regions of precipitation or heat. The current version of **HAMSTER** has been built using simulations from FLEXPART driven with ERA-Interim reanalysis data, but other simulations may be supported as well. 
 
@@ -60,8 +27,44 @@ The attribution part of **HAMSTER** constructs mass- and energy-conserving traje
 ### 3. Bias-correction
 The last module of **HAMSTER** uses information from the former two steps to bias-correct source–receptor relationships. Multiple options for bias-correction are available. 
 
-## Running HAMSTER.
-### Prerequisites
+- - - -
+## How do I run HAMSTER?
+
+### Prerequisites and Installation
+This section describes the prerequisites required to run HAMSTER, as well as the steps to install it. 
+
+#### Prerequisites
+To run HAMSTER, you need 
+* python 3
+* [git](https://git-scm.com/)
+
+and
+* [anaconda](https://www.anaconda.com/) (or similar to manage python packages)
+
+or
+* python 3 and the required modules on a cluster
+
+
+#### Installation
+To install **HAMSTER**, do the following:
+
+1. Clone the repository
+    ```
+    git clone https://github.ugent.be/jkeune/hamster.git
+    cd hamster
+    ```
+2. Load the following python 3.7 environment: 
+    ```
+    module load h5py/2.10.0-intel-2019b-Python-3.7.4
+    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
+    ```
+Alternatively, make an anaconda environment with the necessary python packages
+    ```
+    conda create -n _newenvironment_ --file requirements.txt
+    ```
+or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
+
+#### What else is needed?
 To execute the full chain (all 4 modules) of **HAMSTER**, the only prerequisites are: 
 * Output from a Lagrangian model that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
 * Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels, or any other reference data set
