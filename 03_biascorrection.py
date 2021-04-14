@@ -103,7 +103,7 @@ def main_biascorrection(
         areas        = 1e6*np.nan_to_num(gridded_area_exact(lats, res=abs(lats[1]-lats[0]), nlon=lons.size))[:,0]
     # expand uptake dimension to dates (instead of backward days)
     e2p = expand4Darray(e2psrt,arrival_time,utime_srt,veryverbose)
-    Had = expand4Darray(hadsrt,arrival_time,utime_srt,veryverbose)
+    had = expand4Darray(hadsrt,arrival_time,utime_srt,veryverbose)
     # convert water fluxes from mm-->m3
     e2p = convert_mm_m3(e2p, areas)
 
@@ -238,13 +238,13 @@ def main_biascorrection(
     if verbose: 
         print("   --- Bias correction using source data...")
     # quick consistency check
-    consistencycheck(Had, h_tot, bcscale, fdebug)
+    consistencycheck(had, h_tot, bcscale, fdebug)
     consistencycheck(e2p, e_tot, bcscale, fdebug)
     # calculate bias correction factor
     alpha_H     = calc_sourcebcf(ref=h_ref, diag=h_tot, tscale=bcscale)
     alpha_E     = calc_sourcebcf(ref=e_ref, diag=e_tot, tscale=bcscale)
     # apply bias correction factor
-    had_hcorrtd = np.multiply(alpha_H, Had)
+    had_hcorrtd = np.multiply(alpha_H, had)
     e2p_ecorrtd = np.multiply(alpha_E, e2p)
     
     #******************************************************************************
@@ -307,7 +307,7 @@ def main_biascorrection(
     # save some data in case debugging is needed
     if fdebug:
         frac_e2p = calc_alpha(e2p,e_tot)
-        frac_Had = calc_alpha(Had,h_tot)
+        frac_had = calc_alpha(had,h_tot)
 
     # T2P; transpiration fraction
     if fbc_t2p:
@@ -317,7 +317,7 @@ def main_biascorrection(
     
     ##--5. aggregate ##############################################################
     ## aggregate over uptake time (uptake time dimension is no longer needed!)
-    ahad          = np.nansum(Had, axis=1)
+    ahad          = np.nansum(had, axis=1)
     ahad_hcorrtd  = np.nansum(had_hcorrtd, axis=1)
     ae2p          = np.nansum(e2p, axis=1)
     ae2p_ecorrtd  = np.nansum(e2p_ecorrtd, axis=1)
@@ -326,7 +326,7 @@ def main_biascorrection(
     at2p_epcorrtd = np.nansum(t2p_epcorrtd, axis=1)
     # free up memory if backward time not needed anymore... 
     if faggbwtime:
-        del(Had,had_hcorrtd,e2p,e2p_ecorrtd,e2p_pcorrtd,e2p_epcorrtd,t2p_epcorrtd)
+        del(had,had_hcorrtd,e2p,e2p_ecorrtd,e2p_pcorrtd,e2p_epcorrtd,t2p_epcorrtd)
 
     if fwritestats:
         # write some additional statistics about P-biascorrection before converting back to mm
@@ -355,7 +355,7 @@ def main_biascorrection(
                 convert_mm_m3(ae2p,areas),convert_mm_m3(ae2p_ecorrtd,areas),
                 convert_mm_m3(ae2p_pcorrtd,areas),convert_mm_m3(ae2p_epcorrtd,areas),
                 np.nan_to_num(frac_e2p),
-                np.nan_to_num(frac_Had),
+                np.nan_to_num(frac_had),
                 alpha_P,np.nan_to_num(alpha_P_Ecor),np.nan_to_num(alpha_P_res),
                 np.nan_to_num(alpha_E),np.nan_to_num(alpha_H),
                 strargs,precision)
@@ -389,7 +389,7 @@ def main_biascorrection(
             writefinalnc(ofile=ofile, 
                         fdate_seq=arrival_time, udate_seq=utime_srt, 
                         glon=lons, glat=lats, 
-                        Had=reduce4Darray(Had,veryverbose), 
+                        Had=reduce4Darray(had,veryverbose), 
                         Had_Hs=reduce4Darray(had_hcorrtd,veryverbose), 
                         E2P=reduce4Darray(e2p,veryverbose), 
                         E2P_Es=reduce4Darray(e2p_ecorrtd,veryverbose), 
