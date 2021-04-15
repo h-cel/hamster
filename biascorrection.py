@@ -1,11 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-MAIN FUNCTION FOR 03_biascorrection
-"""
 
-############################################################################
-#############################    SETTINGS ##################################
+import gzip
+import pandas as pd
+import numpy as np
+import os, fnmatch
+import timeit
+import netCDF4 as nc4
+import sys
+import argparse
+import time
+import math as math
+from datetime import datetime, timedelta, date
+from math import sin,cos,acos,atan,atan2,sqrt,floor
+from dateutil.relativedelta import relativedelta
+import datetime as datetime
+import imp
+import warnings
+import csv
+import random
+import struct
+import calendar
+import h5py
+import re
+from functools import reduce
+from hamsterfunctions import *
 
 def main_biascorrection(
            ryyyy, ayyyy, am,

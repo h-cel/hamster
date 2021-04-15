@@ -1,11 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-MAIN FUNCTIONS FOR 02_attribution
-"""
 
-############################################################################
-#############################    SETTINGS ##################################
+import gzip
+import pandas as pd
+import numpy as np
+import os, fnmatch
+import timeit
+import netCDF4 as nc4
+import sys
+import argparse
+import time
+import math as math
+from datetime import datetime, timedelta, date
+from math import sin,cos,acos,atan,atan2,sqrt,floor
+from dateutil.relativedelta import relativedelta
+import datetime as datetime
+import imp
+import warnings
+import csv
+import random
+import struct
+import calendar
+import h5py
+import re
+from functools import reduce
+from hamsterfunctions import *
 
 def main_attribution(
            ryyyy, ayyyy, am, ad,
@@ -458,7 +477,7 @@ def main_attribution(
             ary_heat[:,:,:] = convertunits(ary_heat[:,:,:], garea, "H")
     
             if fwrite_netcdf:
-                writenc4D(ofile,arv_idx,ary_etop,ary_heat)
+                writenc4D(ofile,arv_idx,ary_etop,ary_heat,verbose)
         
         ## STATS summary
         tneval  += neval

@@ -13,41 +13,25 @@ To execute interactively:
 ##--- MODULES
 ###########################################################################
 
-import gzip
-import pandas as pd
-import numpy as np
-import os, fnmatch
-import timeit
-import netCDF4 as nc4
-import sys
+import os
 import argparse
-import time
-import math as math
-from datetime import datetime, timedelta, date
-from math import sin,cos,acos,atan,atan2,sqrt,floor
-from dateutil.relativedelta import relativedelta
-import datetime as datetime
 import imp
-import warnings
-import csv
-import random
-import struct
-import calendar
-import h5py
-import re
-from functools import reduce
-
+import time
+from hamsterfunctions import *
+from diagnosis import main_diagnosis
+from attribution import main_attribution
+from biascorrection import main_biascorrection
 
 ###########################################################################
 ##--- FUNCTIONS + COMMAND LINE ARGUMENTS
 ###########################################################################
 
 ## (1) LOADING FUNCTIONS
-exec(open("hamsterfunctions.py").read())
-exec(open("flex2traj.py").read())
-exec(open("diagnosis.py").read())
-exec(open("attribution.py").read())
-exec(open("biascorrection.py").read())
+#exec(open("hamsterfunctions.py").read())
+#exec(open("flex2traj.py").read())
+#exec(open("diagnosis.py").read())
+#exec(open("attribution.py").read())
+#exec(open("biascorrection.py").read())
 
 ## (2) COMMAND LINE ARGUMENTS
 # read command line arguments (dates, thresholds and other flags)
