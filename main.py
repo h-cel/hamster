@@ -18,6 +18,7 @@ import argparse
 import imp
 import time
 from hamsterfunctions import *
+from flex2traj import main_flex2traj
 from diagnosis import main_diagnosis
 from attribution import main_attribution
 from biascorrection import main_biascorrection
@@ -101,7 +102,8 @@ if args.steps ==0:
                    maskval=args.maskval,
                    idir=path_orig,
                    odir=path_f2t,
-                   fout=base_f2t)
+                   fout=base_f2t,
+                   verbose=args.verbose)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,

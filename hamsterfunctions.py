@@ -2251,7 +2251,7 @@ def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
-def f2t_loader(ifile, fixlons=True, fixids=True):
+def f2t_loader(ifile, fixlons=True, fixids=True, verbose=True):
     dummy = f2t_read_partposit(ifile, verbose=False)
     ## fix parcel ID's (ATTN: specific to the global FP-ERA-Interim run!)
     if fixids:
@@ -2367,7 +2367,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          ifile = partdir+'/partposit_'+time_str[ii]+'.gz'
-         dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars] # load
+         dummy = f2t_loader(ifile, fixlons=True, fixids=True, verbose=verbose)[:,selvars] # load
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
          data[ii,dummy.shape[0]:] = np.NaN
 
@@ -2396,7 +2396,7 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
         data[ii,:,:] = data[ii+1,:,:]
     # load new data | rely on dummy variable
     ifile = partdir+'/partposit_'+time_str[-1]+'.gz'
-    dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars]
+    dummy = f2t_loader(ifile, fixlons=True, fixids=True, verbose=verbose)[:,selvars]
     # insert new data, use NaN for rest
     data[-1,:dummy.shape[0]] = dummy[:]
     data[-1,dummy.shape[0]:] = np.NaN
@@ -2449,7 +2449,7 @@ def maxlastn(series, n=4):
     return(np.max(maxy, axis=0))
 
 def grabhpbl_partposit(ifile):
-    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
+    dummy   = f2t_loader(ifile, fixlons=True, fixids=True, verbose=False)[:,[0,9]] # 0: id, 9: hpbl
     return(dummy)
 
 def grabmesomehpbl(filelist, verbose):

@@ -27,7 +27,7 @@ from functools import reduce
 from hamsterfunctions import *
 
 def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
-        idir, odir, fout):
+        idir, odir, fout, verbose):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -67,9 +67,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     #******************************************************************************
     
     # last day of month
-    ed   = int(calendar.monthrange(args.ayyyy, args.am)[1])
+    ed   = int(calendar.monthrange(ayyyy, am)[1])
 
-    ## use parsed args to set up datetime objects etc.
     dt_h = 6 # hardcoded, as further edits would be necessary if this was changed!
     time_bgn = datetime.datetime(year=ayyyy, month=am, day=ad, hour=6)
     # add 6 hours to handle end of month in same way as any other period
