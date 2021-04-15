@@ -133,13 +133,12 @@ python main.py --steps 2
 python main.py --steps 3
 ```
 
-#### The most important settings are: 
+**The most important settings are**:
 
 - `--steps` to select the part of hamster that is being executed (e.g., `--steps 0` runs flex2traj, `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
 - `--ayyyy` and `--am` to select the analysis year and month (e.g., `--ayyyy 2002 --am 1`)
-- `--expid` to name a setting (e.g., `--expid Ghent_SOD`)
+- `--expid` to name a setting (e.g., `--expid "ALL-ABL"`)
 - `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days)
-- `--mattribution` to determine the attribution method for precipitation (e.g., `--mattribution random` uses the random attribution to attribute moisture for precipitation along trajectories – it keeps linear discounting for heat though)
 - `--maskval` to filter for a value other than 1 using the maskfile from `paths.txt`(e.g., `--maskval 5001`)
 
 #### The detection of fluxes (P, E and H) is set via a set of flags.
