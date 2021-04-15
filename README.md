@@ -44,33 +44,16 @@ and
 or
 * python 3 and the required modules on a cluster
 
+In addition, to execute the full chain (all 4 modules) of **HAMSTER**, the following data sets are needed: 
+* **Output from a Lagrangian model** that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
+* **Reference data**; e.g., the reanalysis used to run FLEXPART and track parcels, or any other reference data set used for bias-correction
 
-#### Installation
-To install **HAMSTER**, do the following:
+To run **HAMSTER**, you will also need to create one file:
+* `paths.txt` 
 
-1. Clone the repository
-    ```
-    git clone https://github.ugent.be/jkeune/hamster.git
-    cd hamster
-    ```
-2. Load the following python 3.7 environment: 
-    ```
-    module load h5py/2.10.0-intel-2019b-Python-3.7.4
-    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
-    ```
-Alternatively, make an anaconda environment with the necessary python packages
-    ```
-    conda create -n _newenvironment_ --file requirements.txt
-    ```
-or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
+which lists the paths where the above data is found and where output will be stored.
 
-#### What else is needed?
-To execute the full chain (all 4 modules) of **HAMSTER**, the only prerequisites are: 
-* Output from a Lagrangian model that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
-* Benchmarking data; e.g., the reanalysis used to run FLEXPART and track parcels, or any other reference data set
-* A file paths.txt which lists the paths where the above data is found and where output will be stored.
-
-The file paths.txt is not part of **HAMSTER**. Users have to create the file themselves. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference (benchmark) data: 
+The file `paths.txt` is not part of **HAMSTER**. The order in this file is arbitrary, but it has to contain paths for diagnosis, attribution and biascorrection and reference data: 
 ```
 # This file contains all required paths and file names to run hamster; the order doesn't matter and paths can also be empty (if, e.g., not used)
 
@@ -105,7 +88,27 @@ path_bias = "./flexpart_data/bahamas/bias"
 
 The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive.
 
-### Running hamster. 
+#### Installation
+To install **HAMSTER**, do the following:
+
+1. Clone the repository
+    ```
+    git clone https://github.ugent.be/jkeune/hamster.git
+    cd hamster
+    ```
+2. Load the following python 3.7 environment: 
+    ```
+    module load h5py/2.10.0-intel-2019b-Python-3.7.4
+    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
+    ```
+Alternatively, make an anaconda environment with the necessary python packages
+    ```
+    conda create -n _newenvironment_ --file requirements.txt
+    ```
+or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
+
+
+### How do I run HAMSTER?
 To run **HAMSTER**, run
 ```python
 python main.py
@@ -117,6 +120,7 @@ python main.py -h
 ```
 for more details on setting dates, thresholds and other options. All user-specific paths are set in paths.txt. 
 
+#### Quick start.
 To run all steps sequentially with the default settings, proceed in two steps. First, extract global 2-step trajectories and perform the global diagnosis of fluxes, using
 ```
 python main.py --steps 0 --ctraj_len 0 --maskval -999
