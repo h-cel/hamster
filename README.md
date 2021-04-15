@@ -28,7 +28,7 @@ The attribution part of **HAMSTER** constructs mass- and energy-conserving traje
 The last module of **HAMSTER** uses information from the former two steps to bias-correct source–receptor relationships. Multiple options for bias-correction are available. 
 
 - - - -
-## How do I run HAMSTER?
+## What do I need to get and run HAMSTER?
 
 ### Prerequisites and Installation
 This section describes the prerequisites required to run HAMSTER, as well as the steps to install it. 
@@ -108,7 +108,9 @@ Alternatively, make an anaconda environment with the necessary python packages
 or install the packages listed in requirements.txt in your local environment. Note, however, that due to different versions, some errors might occur. It is thus recommended to load preinstalled environments, such as the one above. 
 
 
-### How do I run HAMSTER?
+- - - -
+## How do I run HAMSTER?
+
 To run **HAMSTER**, run
 ```python
 python main.py
@@ -118,9 +120,9 @@ Note that — without any flags — main.py is run with default values. Use
 ```python
 python main.py -h
 ```
-for more details on setting dates, thresholds and other options. All user-specific paths are set in paths.txt. 
+for more details on setting dates, thresholds and other options. All user-specific paths are set in `paths.txt`. 
 
-#### Quick start.
+### Quick start.
 To run all steps sequentially with the default settings, proceed in two steps. First, extract global 2-step trajectories and perform the global diagnosis of fluxes, using
 ```
 python main.py --steps 0 --ctraj_len 0 --maskval -999
@@ -140,6 +142,11 @@ python main.py --steps 3
 - `--expid` to name a setting (e.g., `--expid "ALL-ABL"`)
 - `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days)
 - `--maskval` to filter for a value other than 1 using the maskfile from `paths.txt`(e.g., `--maskval 5001`)
+
+- - - -
+## What flags can I set? 
+
+Here, we provide a short description of all flags that be used when running **HAMSTER**. 
 
 #### The detection of fluxes (P, E and H) is set via a set of flags.
 
@@ -181,7 +188,6 @@ Using these flags, a lot of the settings used in FLEXPART publications can be mi
     ```
 
 
-
 #### A few more notes on flags...
 - Short flags available! See `python main.py -h` for details (e.g., `-–ayyyy`can be replaced with `-ay` etc.)
 - Bias correction is, per default, performed using ERA-Interim data (i.e., the base for FLEXPART simulations). However, alternative data sets for P, E and/or H can be employed using `--pref_data others`, `--eref_data others` and `--href_data others`, respectively. The data has to be placed in the respective paths of `paths.txt` (`path_ref_p`, `path_ref_e`, `path_ref_h`) and **have to be in the correct format (netcdf), in the correct resolution on the correct (grid set via `--resolution`) with daily (or subdaily) time steps, and in the correct units (mm d-1 and W m-2)**. If `others` is employed, all files with the year (`--ayyyy`) from the respective directory are read in and used for bias correction.
@@ -192,7 +198,11 @@ Using these flags, a lot of the settings used in FLEXPART publications can be mi
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
 - Use `--maskval -999` (or set maskfile=None in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
 
-#### A very basic example. 
+- - - -
+## An example. 
+
+Here, we provide a very basic example. 
+
 1. Create a (global) netcdf file with a mask (value=1) for a specific region of interest, e.g., the Bahamas. 
 2. Adjust the maskfile in `paths.txt`.
 3. Construct trajectories for parcels whose arrival+midpoints are over the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month and the first day of the following month):
@@ -215,7 +225,7 @@ Using these flags, a lot of the settings used in FLEXPART publications can be mi
   ```
   The final netcdf file, `ALL-ABL_biascor-attr_r02_2002-06.nc` then contains all the source regions of heat and precipitation, both the raw and bias-corrected version (i.e., Had and Had_Hs, and E2P, E2P_Es, E2P_Ps, and E2P_EPs).  
 
-
+- - - -
 ## Miscellaneous notes
 - Everything is coded for a **backward** analysis (Where does the heat come from? What is the source region of precipitation?). Adjustments for a forward analysis can be easily made, but require code changes.
 - Note that, however, flex2traj writes out data in a forward format (startdate --> enddate; but still filtering for the last step, i.e. in a backward manner), but that the time axis is swapped when reading this data in (enddate <-- startdate, see function `readtraj`) for all the remaining analysis steps.
@@ -226,10 +236,12 @@ Using these flags, a lot of the settings used in FLEXPART publications can be mi
 - The 'minimum' time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
 
+- - - -
 ## Known errors. 
 - **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda) and only on some clusters (victini). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
 - **Resolutions other than 1°**: the current version only supports grids of 1 degree - for ALL data (mask, reference data, hamster output) - the code should abort if that is not the case, stating that the grids are not identical, but it may not necessarily do so... so check your outputs carefully, if its runs through anyhow (at least step 3 - bias correction - should be erroneous!)
 
+- - - -
 ## Epilogue
 Keep in mind that... 
 - **This code is not bug-free.** Please report any bugs through 'Issues' on https://github.ugent.be/jkeune/hamster/issues. 
