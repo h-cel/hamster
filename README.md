@@ -261,8 +261,8 @@ This software is published under the GPLv3 license. This means:
 
 ## References
 - Fremme, A. and Sodemann, H.: The role of land and ocean evaporation on the variability of precipitation in the Yangtze River valley, Hydrol. Earth Syst. Sci., 23, 2525–2540, https://doi.org/10.5194/hess-23-2525-2019, 2019.
-- Keune, J., and Miralles, D. G.: A precipitation recycling network to assess freshwater vulnerability: Challenging the watershed convention, Water Resources Research, 55, 9947– 9961, https://doi.org/10.1029/2019WR025310, 2019.
+- Keune, J., and Miralles, D. G.: A precipitation recycling network to assess freshwater vulnerability: Challenging the watershed convention, Water Resour. Res., 55, 9947– 9961, https://doi.org/10.1029/2019WR025310, 2019.
 - Schumacher, D.L., Keune, J., van Heerwaarden, C.C. et al.: Amplification of mega-heatwaves through heat torrents fuelled by upwind drought, Nat. Geosci. 12, 712–717, https://doi.org/10.1038/s41561-019-0431-6, 2019.
-- Schumacher, D.L., Keune, J. and Miralles, D.G.: Atmospheric heat and moisture transport to energy- and water-limited ecosystems. Ann. N.Y. Acad. Sci., 1472: 123-138, https://doi.org/10.1111/nyas.14357, 2020.
-- Sodemann, H.: Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77(2), 413-433, https://doi.org/10.1175/JAS-D-18-0336.1, 2020.
+- Schumacher, D.L., Keune, J. and Miralles, D.G.: Atmospheric heat and moisture transport to energy- and water-limited ecosystems. Ann. N.Y. Acad. Sci., 1472, 123-138, https://doi.org/10.1111/nyas.14357, 2020.
+- Sodemann, H.: Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, J. Atmos. Sci., 77(2), 413-433, https://doi.org/10.1175/JAS-D-18-0336.1, 2020.
 
