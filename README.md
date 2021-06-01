@@ -244,11 +244,15 @@ Here, we provide a very basic example.
 - - - -
 ## Epilogue
 Keep in mind that... 
-- **This code is not bug-free.** Please report any bugs through 'Issues' on https://github.ugent.be/jkeune/hamster/issues. 
+- **This code is not bug-free.** Please report any bugs through 'Issues' on https://github.com/h-cel/hamster/issues. 
 - **This code is not intended to cover specific research-related tasks.** This code is intended to serve as a common base for the analysis of (FLEXPART) trajectories. Every user may create their own branch and adjust the code accordingly. Features of broad interest may be merged in future releases. 
 
 ### Contact and support
 Dominik Schumacher (dominik.schumacher@ugent.be) and Jessica Keune (jessica.keune@ugent.be)
+
+### References
+If you use HAMSTER, please cite:
+Keune, J., D. L. Schumacher, D. G. Miralles: A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model.
 
 ### License
 Copyright 2021 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
