@@ -248,7 +248,7 @@ Keep in mind that...
 - **This code is not intended to cover specific research-related tasks.** This code is intended to serve as a common base for the analysis of (FLEXPART) trajectories. Every user may create their own branch and adjust the code accordingly. Features of broad interest may be merged in future releases. 
 
 ### Contact and support
-Dominik Schumacher and Jessica Keune
+Dominik Schumacher (dominik.schumacher@ugent.be) and Jessica Keune (jessica.keune@ugent.be)
 
 ### License
 Copyright 2021 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
