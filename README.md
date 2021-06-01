@@ -65,28 +65,24 @@ maskfile  = "./flexpart_data/masks/mask.nc"
 path_orig = "./flexpart_data/orig"
 
 # location of the reference data used for bias correction (e.g., ERA-Interim)
-## (available on the VSC Tier-2 HPC clusters)
 ## for each variable (P, E, H)
-path_ref_p  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/tp_12hourly"
-path_ref_e  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/evap_12hourly"
-path_ref_h  = "/data/gent/vo/000/gvo00090/EXT/data/ERA-INTERIM/by_var_nc/1x1/sshf_12hourly"
+path_ref_p  = "./ERA-INTERIM/1x1/tp_12hourly"
+path_ref_e  = "./ERA-INTERIM/1x1/evap_12hourly"
+path_ref_h  = "./ERA-INTERIM/1x1/sshf_12hourly"
 
 # path and base name for global parcel diag data (t2)
-## (available on the VSC Tier-2 HPC clusters)
 base_f2t_diag = "global"
-path_f2t_diag = "/scratch/gent/vo/000/gvo00090/D2D/data/FLEXPART/era_global/flex2traj_t2"
+path_f2t_diag = "./flexpart_data/global/f2t_diag"
 
 # path and base name for parcel trajectory data
 base_f2t_traj = "bahamas_15d"
 path_f2t_traj = "./flexpart_data/bahamas/f2t_traj"
 
 # paths for processed data
-path_diag = "./flexpart_data/bahamas/diag"
+path_diag = "./flexpart_data/global/diag"
 path_attr = "./flexpart_data/bahamas/attr"
 path_bias = "./flexpart_data/bahamas/bias"
 ```
-
-The sample paths provided here are (mostly) accessible for members of the virtual organization (VO00090) from H-CEL at the HPC @ Gent. Note, however, that the binary FLEXPART data needs to be untarred from the archive.
 
 #### Installation
 To install **HAMSTER**, do the following:
@@ -96,12 +92,7 @@ To install **HAMSTER**, do the following:
     git clone https://github.ugent.be/jkeune/hamster.git
     cd hamster
     ```
-2. Load the following python 3.7 environment: 
-    ```
-    module load h5py/2.10.0-intel-2019b-Python-3.7.4
-    module load netcdf4-python/1.5.3-intel-2019b-Python-3.7.4
-    ```
-Alternatively, make an anaconda environment with the necessary python packages
+2. Make an anaconda environment with the necessary python packages
     ```
     conda create -n _newenvironment_ --file requirements.txt
     ```
@@ -196,7 +187,7 @@ Using these flags, a lot of the settings used in FLEXPART publications can be mi
 - There are quite a few flags for 02_attribution (e.g., refering to settings concerning the random attribution) and 03_biascorrection (e.g., refering to the applied time scale and the aggregation of the output) available. Please use the help option for details for now. 
 - While the output of flex2traj could be adjusted through modifications in 00_flex2traj.py, currently, all other steps require the following 9 variables (and in that specific order): `parcel id`, `lon`, `lat`, `ztra1`, `topo`, `qvi`, `rhoi`, `hmixi`, `tti`.
 - If `--writestats True` is set for `--steps 2`, then the attribution statistics are written to a file `*_stats.csv` (absolute fraction of attributed precipitation, etc.). If `--writestats True` is set for `--steps 3`, then the validation statistics are written to a file `*_stats.csv` (bias in the sink region, the probability of detection etc.).  
-- Use `--maskval -999` (or set maskfile=None in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj (data already available on the HPC).
+- Use `--maskval -999` (or set maskfile=None in paths.txt) in combination with `--ctraj_len 0` to extract global 2-step trajectories for a global 'diagnosis' with flex2traj.
 
 - - - -
 ## An example. 
