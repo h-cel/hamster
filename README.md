@@ -17,6 +17,8 @@
 
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. In the following, a short description of each module (step) is given. 
 
+[Workflow_Fig1.pdf](https://github.com/h-cel/hamster/files/6575112/Workflow_Fig1.pdf)
+
 ### 0. flex2traj
 This module of **HAMSTER** reads in the instantaneous binary FLEXPART files, filters for a specific region (using a netcdf mask), constructs trajectories and writes them to a file.
 
