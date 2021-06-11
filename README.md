@@ -46,6 +46,8 @@ and
 or
 * python 3 and the required modules on a cluster
 
+The packages required to run **HAMSTER** are listed in `requirements.txt`. 
+
 In addition, to execute the full chain (all 4 modules) of **HAMSTER**, the following data sets are needed: 
 * **Output from a Lagrangian model** that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
 * **Reference data**; e.g., the reanalysis used to run FLEXPART and track parcels, or any other reference data set used for bias-correction
@@ -223,14 +225,13 @@ Here, we provide a very basic example.
 - Everything is coded for a **backward** analysis (Where does the heat come from? What is the source region of precipitation?). Adjustments for a forward analysis can be easily made, but require code changes.
 - Note that, however, flex2traj writes out data in a forward format (startdate --> enddate; but still filtering for the last step, i.e. in a backward manner), but that the time axis is swapped when reading this data in (enddate <-- startdate, see function `readtraj`) for all the remaining analysis steps.
 - Everything is more or less hard-coded for (global) FLEXPART–ERA-Interim simulations with a 6-hourly time step and a maximum of ~2 million parcels. Any changes in resolution or input data require code adjustments!
-- The bias correction is currently implemented for the driving ERA-Interim data only (again, using a hard-coded structure of that data). This data can, however, be easily substituted with other data sets, but it requires changes in the code. 
 - Note that regardless of the sink region size, 'flex2traj' reads in and temporarily stores data from all parcels during the backward analysis time period; in case of 15-day trajectories and 9 variables of interest, this translates to a numpy array with a size of ~ 7.2 GB (62 x 2e6 x 9 x 64 bit). For a small sink region with ~13'000 parcels (trajectory array: 62 x 13'000 x 9 x 64 bit ~ 0.5 GB), a total of 10 GB RAM is recommended to safely run flex2traj with a trajectory length of 15 days.
 - flex2traj-related directories are currently assumed to have an annual structure (e.g., path_f2t_diag + "/2002") - these are created automatically.
-- The minimum time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. This could be adjusted and tested though...  
+- The minimum time scale for steps 1-2-3 is daily, which we assumed to be a reasonable limit for the FLEXPART–ERA-Interim simulations with 6-hourly time steps. 
 - An additional file `*_warning.txt` is written, if a monthly bias-correction was required and daily data cannot be trusted (this is the case if, e.g., the reference data set contains precipitation for a specific day, but precipitation was not detected using FLEXPART and the selected detection criteria; and hence no trajectories were evaluated and no attribution for that specific day was performed, but the contribution of other precipitation days was upscaled to match the monthly precipitation amount). 
 
 - - - -
-## Known errors. 
+## Known issues. 
 - **Remote I/O error** when reading/writing a netcdf or h5 file: this only seems to happen with specific h5py / netCDF4 module versions (used in anaconda) and only on some clusters (victini). If you're on the UGent HPC cluster, please try to use the HPC modules listed above - then the error should disappear... 
 - **Resolutions other than 1°**: the current version only supports grids of 1 degree - for ALL data (mask, reference data, hamster output) - the code should abort if that is not the case, stating that the grids are not identical, but it may not necessarily do so... so check your outputs carefully, if its runs through anyhow (at least step 3 - bias correction - should be erroneous!)
 
