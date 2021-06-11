@@ -1,16 +1,445 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-NON-METEOROLOGICAL FUNCTIONS USED BY MODULES
-01_attribution, 02_diagnosis, 03_bias-correction
 
-@author: jessica and dominik
+import gzip
+import pandas as pd
+import numpy as np
+import os, fnmatch
+import timeit
+import netCDF4 as nc4
+import sys
+import argparse
+import time
+import math as math
+from datetime import datetime, timedelta, date
+from math import sin,cos,acos,atan,atan2,sqrt,floor
+from dateutil.relativedelta import relativedelta
+import datetime as datetime
+import imp
+import warnings
+import csv
+import random
+import struct
+import calendar
+import h5py
+import re
+from functools import reduce
+from hamsterfunctions import *
 
-To execute interactively: 
-> exec(open("./hamsterfunctions.py").read())
+def disclaimer():
+    print("\n============================================================================================================")
+    print("\n============================================================================================================")
+    print(os.system("figlet hamster"))
+    print(" * Copyright 2021                                                      *")
+    print(" * Dominik Schumacher, Jessica Keune                                   *")
+    print(" *                                                                     *")
+    print(" * This program is part of HAMSTER (v.04).                             *")
+    print(" *                                                                     *")
+    print(" * HAMSTER is free under the terms of the GNU General Public license   *")
+    print(" * version 3 as published by the Free Software Foundation              *")
+    print(" * HAMSTER is distributed WITHOUT ANY WARRANTY! (see LICENSE)          *") 
+    print("\n============================================================================================================")
 
-"""
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
+## CONSTANTS
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
 
+RSPECIFIC       = 287.057                   # specific gas constant
+RSPECIFICW      = 461.5                     # specific gas constant for water vapor
+EPS             = RSPECIFIC/RSPECIFICW
+LAPSERATE_DRY   = (-9.8/1e3)                # dry adiabatic lapse rate
+EARTHRADIUS     = 6371                      # earth radius 
+PI              = 3.141592654               # pi
+GRAV            = 9.8076                    # 
+CPD             = 1005.7                    # specific heat of dry air [J kg-1 K-1]
+HV              = 2.5e6
+TREF            = 273.15                    # reference temperature [K]
+PREF            = 1013.25e2                 # reference pressure of standard atmosphere [Pa]
+EPSILON         = 0.6620
+KAPPAD          = 0.2854
+C               = 273.15
+L0s             = 2.56313e6 
+L1s             = 1754
+K2              = 1.137e6
+
+# RUN-SPECIFIC CONSTANTS
+PMASS           = 2548740090557.712         # average parcel mass 
+
+
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
+## METEOROLOGY FUNCTIONS
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
+
+def calc_pres(rho_kgm3, q_kgkg, T_K):
+    """
+    INPUTS
+        - rho_kgm3 : kg m-3,    density
+        - q_kgkg : kg kg-1,     specific humidity
+        - T_K : K,              temperature
+    ACTION
+        Pressure is obtained using the ideal gas law, to which end the
+        virtual temperature is calculated, allowing to use the specific
+        gas constant of dry air
+    OUTPUTS
+        - pres_Pa: Pa,             pressure
+    """
+    ## convert specific humidity to mixing ratio (exact)
+    r_kgkg = -q_kgkg/(q_kgkg-1)
+    ## now calculate virtual temperature 
+    Tv_K = T_K*(1 + r_kgkg/EPSILON)/(1 + r_kgkg)
+    ## use ideal gas to obtain pressure
+    return rho_kgm3*RSPECIFIC*Tv_K
+
+def dist_on_sphere(lat1,lon1,lat2,lon2):
+    """
+    INPUT 
+        - lon1 :    longitude of point 1
+        - lon2 :    longitude of point 2
+        - lat1 :    latitude of point 1
+        - lat2 :    latitude of point 2
+
+    ACTION
+    This function calculates the linear distance between two points
+    defined by lat1,lon1 and lat2,lon2 (in °, lat [-90,90], lon[-180,180])
+    on Earth's surface, relying on the following assumptions:
+        - Earth is a perfect sphere,
+        - the radius is precisely 6371 km
+    The calculation is based on a transformation to cartesian coordinates,
+    followed by computing the dot product between two vectors spanned
+    by the two points on Earth's surface and the center, respectively.
+
+    DEPENDENCIES
+        all from module math: sin, cos, acos
+        
+    RETURNS:
+        - dist :    distance between locations in kilometers.
+
+    """
+
+    ## first off, must adapt lat/lon for spherical coordinates
+    lat1 = 90 - lat1
+    lat2 = 90 - lat2
+    lon1 = 180 + lon1
+    lon2 = 180 + lon2
+
+    ## second, must obtain angles in radian from (arc) degree
+    la1 = (PI/180)*lat1
+    la2 = (PI/180)*lat2
+    lo1 = (PI/180)*lon1
+    lo2 = (PI/180)*lon2
+
+    ## third, convert to cartesian coordinates
+    ## use unit sphere for simplicity (r=1)
+    x1 = sin(la1) * cos(lo1)
+    y1 = sin(la1) * sin(lo1)
+    z1 = cos(la1)
+
+    x2 = sin(la2) * cos(lo2)
+    y2 = sin(la2) * sin(lo2)
+    z2 = cos(la2)
+
+    ## fourth, calculate dot product and angle
+    dotp = (x1*x2 + y1*y2 + z1*z2)
+    angle = acos(dotp)
+
+    ## fifth, calculate distance
+    dist = angle * EARTHRADIUS   # pi cancels out
+
+    return(dist)
+
+
+def dist_on_sphere2(lat1,lon1,lat2,lon2):
+    
+    lon1 = math.radians(lon1)
+    lon2 = math.radians(lon2)
+    dlon = lon2 - lon1
+
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    dlat = lat2 - lat1
+
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(sqrt(a), sqrt(1 - a))
+
+    dist = c * EARTHRADIUS
+
+    return(dist)
+
+def gridded_area_exact(lats_centr, res, nlon):
+    """
+    INPUT
+        - lats_centr :  latitute of the center [deg N], between -90 to +90 (float or 1D np ary)
+        - res :         regular (!) grid resolution [deg]
+        - nlon :        to return array of dim (nlat x nlon)
+
+    RETURNS
+        - area :        EXACT gridded area, shape as defined by input [km^2] as array of dimension (nlon x nlat)
+
+    ACTION
+        based on the grid spacing inferred by lats & lons,
+        areas of all grid cells specified by indices and coordinates (lats)
+        are computed and summed up in the end.
+        Since the spacing between grid cell border longitudes ALWAYS remains
+        the same, that is, the resolution in degrees, this function does NOT
+        rely on any longitudinal input.
+
+    CAUTION
+        1.) this will NOT work properly close to the poles!
+        2.) this is based on input coordinates referring to CENTROIDS
+        3.) only for regular grids (independent from longitude)
+        4.) will produce CRAP if / results in integer division (Python 2.7) !
+
+    NOTES
+        - original formula, using degrees (caution -- np.sin requires radian)
+            A = (pi/180)R^2 |sin(lat1)-sin(lat2)| |lon1-lon2|
+          obtained from:
+            pmel.noaa.gov/maillists/tmap/ferret_users/fu_2004/msg00023.html
+
+    """
+
+    ## make use of numpy vectorization
+    lats1 = (lats_centr+(res/2))*np.pi/180 # np.sin requires radians
+    lats2 = (lats_centr-(res/2))*np.pi/180
+    areas = (np.pi/180)*(EARTHRADIUS**2)*np.abs(np.sin(lats1)-np.sin(lats2))*res
+
+    ## overwrite any areas of 0 (at the poles) with np.NaN to prevent problems
+    try:
+        areas[np.where(areas==0.)] = np.NaN # only works for arrays
+    except TypeError:
+        pass # simply ignore if it's a float
+    # return array of dimension nlat x nlon
+    ary_area = np.swapaxes(np.tile(areas, (nlon,1)), 0,1)
+    return(ary_area)
+
+def midpoint_on_sphere(lat1,lon1,lat2,lon2):
+
+    """
+    INPUT
+        - lon1 :    longitude of point 1
+        - lon2 :    longitude of point 2
+        - lat1 :    latitude of point 1
+        - lat2 :    latitude of point 2
+        * must come as lons [-180 .. 180], lats [-90 .. 90]
+    
+    WARNING 
+        the coordinate transformation is probably correct,
+        but the last transformations were done empirically
+        (and not based on logic). 
+        A number of checks has not revealed any issues.
+
+    DEPENDENCIES:
+        numpy, various trigonometric functions from module math
+        
+    OUTPUT: 
+        - lon_mid :     geographical center longitude (lat/lon)
+        - lat_mid :     geographical center latitude (lat/lon)
+
+    """
+
+    ## first off, must adapt lat/lon for spherical coordinates
+    lat1 = 90 - lat1
+    lat2 = 90 - lat2
+    lon1 = 180 + lon1
+    lon2 = 180 + lon2
+
+    ## second, must obtain angles in radian from (arc) degree
+    lat1 = (PI/180)*lat1
+    lat2 = (PI/180)*lat2
+    lon1 = (PI/180)*lon1
+    lon2 = (PI/180)*lon2
+
+    ## third, convert to cartesian coordinates
+    ## use unit sphere for simplicity (r=1)
+    x1 = sin(lat1) * cos(lon1)
+    y1 = sin(lat1) * sin(lon1)
+    z1 = cos(lat1)
+
+    x2 = sin(lat2) * cos(lon2)
+    y2 = sin(lat2) * sin(lon2)
+    z2 = cos(lat2)
+
+    ## fourth, add vector to obtain "middle" vector, scale back to length 1
+    middle_vec = [x1+x2, y1+y2, z1+z2]
+    mv = np.asarray(middle_vec)/sqrt(sum(np.asarray(middle_vec)**2))
+
+    ## TRANSFORM BACK TO RADIAN
+    potT = atan(sqrt((mv[0]**2)+(mv[1]**2))/(mv[2]))
+    phi   = atan2(mv[1],mv[0]) # is "same" as atan(y/x), but NEED atan2 (sign!)
+
+    ## convert these mid coordinates back to (arc) degree & shift
+    if potT > 0:
+        lat_mid = 90 - potT*(180/PI)
+    else:
+        lat_mid = -(90 + potT*(180/PI))
+    if phi > 0:
+        lon_mid = (phi*(180/PI)-180)
+    else:
+        lon_mid = 180 + phi*(180/PI)
+
+    if (lon_mid>179.5): lon_mid -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    return(lat_mid, lon_mid)
+
+def midpoint_on_sphere2(lat1, lon1, lat2, lon2):
+    #Input values as degrees
+    # following http://www.movable-type.co.uk/scripts/latlong.html
+    lat1    = math.radians(lat1)
+    lon1    = math.radians(lon1)
+    lat2    = math.radians(lat2)
+    lon2    = math.radians(lon2)
+    bx      = math.cos(lat2) * math.cos(lon2 - lon1)
+    by      = math.cos(lat2) * math.sin(lon2 - lon1)
+    latm    = math.atan2(math.sin(lat1) + math.sin(lat2), math.sqrt((math.cos(lat1) + bx) * (math.cos(lat1) + bx) + by**2))
+    lonm    = lon1 + math.atan2(by, math.cos(lat1) + bx)
+    londeg  = math.degrees(lonm)
+    if (londeg>180): londeg -= 360    # now shift all coords that otherwise would be allocated to +180 deg to - 180
+    latdeg  = math.degrees(latm)
+    return latdeg, londeg
+
+
+def q2rh(q_kgkg,p_Pa,T_K):
+    """
+    INPUT
+        - q_kgkg: kg kg-1,  specific humidity, float or vector
+        - p_Pa: Pa,         pressure, float or vector
+        - T_K: K,           temperature, float or vector
+    
+    ACTION
+        Converting specific to relative humidity following Bolton (1980), see:
+        https://www.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html
+
+    OUTPUTS
+        - RH: %        relative humidity in percent.
+    """
+    # convert q into e, vapor pressure
+    e = q_kgkg*p_Pa/(0.622+0.378*q_kgkg)
+
+    # compute saturation vapor pressure, must convert T to °C
+    es = 611.2*np.exp(17.67*(T_K-TREF)/(T_K-TREF+243.5))
+
+    # return relative humidity
+    return(1e2*e/es)
+
+def calc_pottemp_e(p_Pa, q_kgkg, T_K):
+    """
+    INPUTS
+        - p_Pa : hPa,           pressure
+        - q_kgkg : kg kg-1,     specific humidity
+        - T_K : K,              temperature
+    
+    ACTION
+        Dewpoint temperature is calculated to approximate the temperature at
+        the lifting condensation level, which is then used to find potT there,
+        and at last calculate potT-e.
+        The procedure is essentially identical to what is used by MetPy,
+        with the exception of making use of eq. 6.5 instead of eq. B39
+        (see Davies-Jones, 2009; doi=10.1175/2009MWR2774.1)
+    
+    OUTPUTS
+        - potT-e: K,   equivalent potential temperature
+    """
+    ## convert specific humidity to mixing ratio (exact)
+    r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
+    r_gkg  = r_kgkg*1e3
+    
+    ## calculate potT using Bolton eq. 7
+    p_hPa = p_Pa/1e2
+    potT = T_K*(1000/p_hPa)**(0.2854*(1-0.00028*r_gkg))
+    
+    ## convert q into e, vapor pressure (Bolton 1980)
+    e_Pa = q_kgkg*p_Pa/(0.622+0.378*q_kgkg)
+    
+    ## calculate dewpoint temperature according to inverted Bolton 1980 eq.,
+    ## https://archive.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html
+    e_hPa = e_Pa / 1e2
+    T_D = np.log(e_hPa/6.112)*243.5/(17.67-np.log(e_hPa/6.112)) + 273.15
+    
+    ## temperature at lifting condensation level (all temperatures in KElVIN; eq. 15)
+    T_L = (1. / (1. / (T_D - 56.) + np.log(T_K / T_D) / 800.)) + 56.
+    
+    ## potT at lifting condensation level (eq. 3.19, Davies-Jones 2009)
+    potT_DL = potT*(((potT/T_L)**(0.28*r_kgkg))*(1+(r_kgkg/EPSILON))**KAPPAD)
+    
+    ## potT at lifting condensation level (eq. 6.5, Davies-Jones 2009)
+    potT_E = potT_DL*np.exp((L0s-L1s*(T_L-C)+K2*r_kgkg)*r_kgkg/(CPD*T_L))
+    
+    return(potT_E)
+    
+def calc_pottemp(p_Pa, q_kgkg, T_K):
+    """
+    INPUTS
+        - p_Pa : hPa,           pressure
+        - q_kgkg : kg kg-1,     specific humidity
+        - T_K : K,              temperature
+    
+    ACTION
+        The potential temperature is calculated using Bolton's eq. 7;
+        to this end, specific humidity is converted into mixing ratio
+    
+    OUTPUTS
+        - potT: K,     potential temperature
+    """
+    ## convert specific humidity to mixing ratio (exact)
+    r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
+    r_gkg  = r_kgkg*1e3
+    
+    ## calculate potT using Bolton eq. 7
+    p_hPa = p_Pa/1e2
+    return( T_K*(1000/p_hPa)**(0.2854*(1-0.00028*r_gkg)) )
+    
+def moist_ascender(p_Pa, q_kgkg, T_K):
+    """    
+    INPUTS
+        - p_Pa : hPa,           pressure
+        - q_kgkg : kg kg-1,     specific humidity
+        - T_K : K,              temperature
+    
+    ACTION
+        Calculate lifting condensation level (LCL) temperature analogously to
+        potT_e,
+        then approximate lapse rate at LCL using the approximation from:
+            http://glossary.ametsoc.org/wiki/Saturation-adiabatic_lapse_rate
+    
+    OUTPUTS
+        - T_LCL: K,     temperature at LCL
+        - MALR: K m-1,  moist adiabatic lapse rate
+    
+    """
+    ## convert q into e, vapor pressure (Bolton 1980)
+    e_Pa = q_kgkg*p_Pa/(0.622+0.378*q_kgkg)
+    
+    ## calculate dewpoint temperature according to inverted Bolton 1980 eq.,
+    ## https://archive.eol.ucar.edu/projects/ceop/dm/documents/refdata_report/eqns.html
+    e_hPa = e_Pa / 1e2
+    T_D = np.log(e_hPa/6.112)*243.5/(17.67-np.log(e_hPa/6.112)) + 273.15
+    
+    ## temperature at lifting condensation level (all temperatures in KElVIN; eq. 15)
+    T_LCL = (1. / (1. / (T_D - 56.) + np.log(T_K / T_D) / 800.)) + 56.
+    
+    ## now that we have T_LCL, calculate moist adiabatic lapse rate...
+    
+    ## convert specific humidity to mixing ratio (exact)
+    r_kgkg = -q_kgkg/(q_kgkg-1) # needs q in kg/kg
+    ## now, finally, approximate lapse rate
+    MALR = GRAV*( (RSPECIFIC*(T_LCL**2)) + (HV*r_kgkg*T_LCL) )/( (CPD*RSPECIFIC*T_LCL**2) + (HV**2*r_kgkg*EPS))
+    
+    return(T_LCL, -MALR) # T_LCL in Kelvin, MALR in K/m
+
+def makegrid(resolution):
+    glat        = np.arange(-90,90+resolution,resolution)
+    glon        = np.arange(-180,180,resolution)
+    gd_area     = gridded_area_exact(glat, res=resolution, nlon=glon.size)
+    return glon, glat, gd_area
+
+
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
+## HAMSTER-SPECIFIC FUNCTIONS
+###------------------------------------------------------------------------------
+###------------------------------------------------------------------------------
 def str2bol(v):
     """
     ACTION: converts (almost) any string to boolean False/True
@@ -40,26 +469,36 @@ def read_cmdargs():
     parser.add_argument('--ad',         '-ad',  help = "analysis day (D)",                                              metavar ="", type = int,     default = 1)
     parser.add_argument('--mode',       '-m',   help = "mode (test,oper)",                                              metavar ="", type = str,     default = "oper")
     parser.add_argument('--expid',      '-id',  help = "experiment ID (string, example versionA)",                      metavar ="", type = str,     default = "FXv")
-    parser.add_argument('--tdiagnosis', '-dgn', help = "diagnosis method (KAS, SOD, SOD2)",                             metavar ="", type = str,     default = "KAS")
     parser.add_argument('--maskval',    '-mv',  help = "use <value> from maskfile for masking",                         metavar ="", type = int,     default = 1)
     parser.add_argument('--ctraj_len',  '-len', help = "threshold for maximum allowed trajectory length in days",       metavar ="", type = int,     default = 10)
     parser.add_argument('--cprec_dqv',  '-cpq', help = "threshold for detection of P based on delta(qv)",               metavar ="", type = float,   default = 0)
+    parser.add_argument('--fprec',      '-fp',  help = "flag: filter for P (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--cprec_rh',   '-cpr', help = "threshold for detection of P based on RH",                      metavar ="", type = float,   default = 80)
-    parser.add_argument('--cprec_dtemp','-cpt', help = "threshold for detection of P based on delta(T)",                metavar ="", type = float,   default = 0)
-    parser.add_argument('--cevap_cc',   '-cec', help = "threshold for detection of E based on CC criterion",            metavar ="", type = float,   default = 0.7)
+    parser.add_argument('--fevap',      '-fe',  help = "flag: filter for E (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--cevap_dqv',  '-ceq', help = "threshold for detection of E based on delta(qv)",               metavar ="", type = float,   default = 0)
     parser.add_argument('--cevap_hgt',  '-ceh', help = "threshold for detection of E using a maximum height",           metavar ="", type = float,   default = 0)
-    parser.add_argument('--cheat_cc',   '-chc', help = "threshold for detection of H based on CC criterion",            metavar ="", type = float,   default = 0.7)
+    parser.add_argument('--fevap_drh',  '-fer', help = "flag: check for maximum delta(RH) for detection of E",          metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--cevap_drh',  '-cer', help = "threshold for detection of E using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
+    parser.add_argument('--fheat',      '-fh',  help = "flag: filter for H (01 only)",                                  metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--cheat_hgt',  '-chh', help = "threshold for detection of H using a maximum height",           metavar ="", type = float,   default = 0)
     parser.add_argument('--cheat_dtemp','-cht', help = "threshold for detection of H using a minimum delta(T)",         metavar ="", type = float,   default = 0)
-    parser.add_argument('--cpbl_strict','-pbl', help = "filter for PBL - 1: both within max, 2: one within max, 3: not used", metavar ="", type = int,     default = 2)
-    parser.add_argument('--cc_advanced','-cc',  help = "use advanced CC criterion (flag, DEVELOPMENT)",                 metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--fheat_drh',  '-fhr', help = "flag: check for maximum delta(RH) for detection of H",          metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--cheat_drh',  '-chr', help = "threshold for detection of H using a maximum delta(RH)",        metavar ="", type = float,   default = 15)
+    parser.add_argument('--fheat_rdq',  '-fhq', help = "flag: check for maximum relative delta(Q) for detection of H",  metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--cheat_rdq',  '-chq', help = "threshold for detection of H using a maximum relative d(Q) [%]",metavar ="", type = float,   default = 10)
+    parser.add_argument('--cpbl_factor','-pblf',help = "factor for PBL relaxation",                                     metavar ="", type = float,   default = 1)
+    parser.add_argument('--cpbl_method','-pblm',help = "filter for PBL: mean, max, actual heights between 2 points",    metavar ="", type = str,     default = "max")
+    parser.add_argument('--cpbl_strict','-pbls',help = "filter for PBL: 0/1/2 locations within max PBL (0: no filter)", metavar ="", type = int,     default = 1)
     parser.add_argument('--timethis',   '-t',   help = "time the main loop (flag)",                                     metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--write_netcdf','-o',  help = "write netcdf output (flag)",                                    metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--pref_data',  '-pref',help = "preciptation bias correction data set (eraint/others)",         metavar ="", type = str,     default = "eraint")
+    parser.add_argument('--eref_data',  '-eref',help = "evaporation bias correction data set (eraint/others)",          metavar ="", type = str,     default = "eraint")
+    parser.add_argument('--href_data',  '-href',help = "sensible heat bias correction data set (eraint/others)",        metavar ="", type = str,     default = "eraint")
     parser.add_argument('--write_month','-mo',  help = "write monthly aggreagted netcdf output (03 only; flag)",        metavar ="", type = str2bol, default = False,     nargs='?')
     parser.add_argument('--precision',  '-f',   help = "precision for writing netcdf file variables (f4,f8)",           metavar ="", type = str,     default = "f8")
     parser.add_argument('--verbose',    '-v',   help = "verbose output (flag)",                                         metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--veryverbose','-vv',  help = "very verbose output (flag)",                                    metavar ="", type = str2bol, default = False,    nargs='?')
-    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       metavar ="", type = str2bol, default = True,     nargs='?')
+    parser.add_argument('--fallingdry', '-dry', help = "cut off trajectories falling dry (flag)",                       metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--memento',    '-mto', help = "keep track of trajectory history (02 only - needed for Had; flag)", metavar ="", type = str2bol, default = True,     nargs='?')
     parser.add_argument('--mattribution','-matt',help= "attribution method (for E2P as of now: random/linear)",         metavar ="", type = str,     default = "linear")
     parser.add_argument('--ratt_nit',   '-rnit',help = "minimum number of iterations for random attribution",           metavar ="", type = int,     default = 10)
@@ -72,11 +511,19 @@ def read_cmdargs():
     parser.add_argument('--variable_mass','-vm',help = "use variable mass (flag)",                                      metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--writestats', '-ws',  help = "write additional stats to file (02 and 03 only; flag)",         metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--bc_aggbwtime','-aggbt',help = "aggregate backward time (03 only; flag)",                     metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_e2p',     '-e2p', help = "bias correction: write E2P (raw) to file (flag)",               metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_e2p_p',   '-e2pp',help = "bias correction: write E2P_Ps to file (flag)",                  metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_e2p_e',   '-e2pe',help = "bias correction: write E2P_Es to file (flag)",                  metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--bc_e2p_ep',  '-e2pep',help= "bias correction: write E2P_EPs to file (flag)",                 metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_t2p_ep',  '-t2pep',help= "bias correction: calculate transpiration to P (T2P_EPs, flag)", metavar ="", type = str2bol, default = False,    nargs='?')
+    parser.add_argument('--bc_had',     '-had', help = "bias correction: write Had (raw) to file (flag)",               metavar ="", type = str2bol, default = True,    nargs='?')
+    parser.add_argument('--bc_had_h',   '-hadh',help = "bias correction: write Had_Hs to file (flag)",                  metavar ="", type = str2bol, default = True,    nargs='?')
     parser.add_argument('--debug',      '-d',   help = "debugging option (flag)",                                       metavar ="", type = str2bol, default = False,    nargs='?')
     parser.add_argument('--gres',       '-r',   help = "output grid resolution (degrees)",                              metavar ="", type = float,   default = 1)
     parser.add_argument('--ryyyy',      '-ry',  help = "run name (here, YYYY, example: 2002, default: ayyyy)",          metavar ="", type = int,     default = None)
     parser.add_argument('--refdate',    '-rd',  help = "reference date (YYYYMMDDHH)",                                   metavar ="", type = str,     default = None)
     parser.add_argument('--waiter',     '-wt',  help = "random waiter to avoid simulatenous access to files",           metavar ="", type = str2bol, default = True, nargs='?')
+    parser.add_argument('--fproc_npart','-fpn', help = "01: process all parcels (n parcel evaluation)",                 metavar ="", type = str2bol, default = True, nargs='?')
     #print(parser.format_help())
     args = parser.parse_args()  # namespace
     # handle None cases already
@@ -86,67 +533,41 @@ def read_cmdargs():
         args.refdate = str(args.ryyyy)+"123118"
     return args
 
-def printsettings(args,step):
-    ## 01_DIAGNOSIS
-    if step == 1 and args.tdiagnosis in ['KAS']:
-        return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+
-        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "
-        "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+
-        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
-        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))) 
-    if step == 1 and args.tdiagnosis in ['SOD']:
-        return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)
-         + "; REFERENCE: " +
-        "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"))
-    if step == 1 and args.tdiagnosis in ['SOD2']:
-        return(str("Diagnosis following Sodemann (2020) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.1, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode) 
-         + "; REFERENCE: " +
-        "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
-    
-    ## 02_ATTRIBUTION
-    if (step == 2) and args.tdiagnosis in ['KAS']:
-        return(str("Diagnosis following Schumacher & Keune (----) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh)+ 
-        ", cprec_dtemp = " +str(args.cprec_dtemp) + ", "+
-        "[[EVAPORATION]] cevap_cc = "+str(args.cevap_cc)+ ", cevap_hgt = " +str(args.cevap_hgt) + ", "
-        "[[SENSIBLE HEAT]] cheat_cc = "+str(args.cheat_cc)+ ", cheat_hgt = " +str(args.cheat_hgt)+ 
-        ", cheat_dtemp = " +str(args.cheat_dtemp) + ", "+
-        "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict)+", cc_advanced = "+str(args.cc_advanced)+
-        ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)))
-    if (step == 2) and args.tdiagnosis in ['SOD']:
-        return(str("Diagnosis following Sodemann et al. (2008) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.2, cevap_hgt < 1.5 * mean ABL, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", cheat_hgt < 1.5 * mean ABL, " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+", "+
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)
-         + "; REFERENCE: " +
-        "Sodemann, H., Schwierz, C., & Wernli, H. (2008). Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. Journal of Geophysical Research: Atmospheres, 113(D3). http://dx.doi.org/10.1029/2007JD008503"
-        ))
-    if (step == 2) and args.tdiagnosis in ['SOD2']:
-        return(str("Diagnosis following Sodemann (2020) with the following settings: " +
-        "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + ", " +
-        "[[EVAPORATION]] cevap_dqv = 0.1, " +
-        "[[SENSIBLE HEAT]] cheat_dTH = "+str(args.cheat_dtemp)+ ", " +
-        "[[OTHERS]]: variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode)+ ", "+ 
-        "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
-        ", memento = "+str(args.memento)
-         + "; REFERENCE: " +
-        "Sodemann, H. (2020). Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, Journal of the Atmospheric Sciences, 77, 413-433. https://doi.org/10.1175/JAS-D-18-0336.1"))
+def printsettings(args):
+
+    str0 = str("[[DATES]] ayyyy = "+str(args.ayyyy)+ ", am = " +str(args.am) + ", ad = " +str(args.ad) + ", ryyyy = "+str(args.ryyyy) + " " +
+    "[[GRID]] gres = "+str(args.gres)+ " " +
+    "[[PATHS & MASK]] pathfile = "+ str(args.pathfile) + ", maskval = "+str(args.maskval) + " " +
+    "[[EXPERIMENT ID]] expid = "+str(args.expid))
+
+    str1 = str("Diagnosis with the following settings: " +
+    "[[PRECIPITATION]] cprec_dqv = "+str(args.cprec_dqv)+ ", cprec_rh = " +str(args.cprec_rh) + " " +
+    "[[EVAPORATION]] cevap_hgt = " +str(args.cevap_hgt) + ", cevap_dqv = " +str(args.cevap_dqv) + 
+    ", fevap_drh = " +str(args.fevap_drh) + ", cevap_drh = " +str(args.cevap_drh) + " " +
+    "[[SENSIBLE HEAT]] cheat_hgt = " +str(args.cheat_hgt) + ", cheat_dtemp = " +str(args.cheat_dtemp) + 
+    ", fheat_drh = " +str(args.fheat_drh) + ", cheat_drh = " +str(args.cheat_drh) + " " +
+    "[[OTHERS]]: cpbl_strict = "+str(args.cpbl_strict) +
+    ", cpbl_method = "+str(args.cpbl_method) + ", cpbl_factor = "+str(args.cpbl_factor) + 
+    ", variable_mass = "+str(args.variable_mass)+ ", mode = "+str(args.mode))
+
+    str2 = str("Attribution with the following settings: "+
+    "[[ATTRIBUTION]]: ctraj_len = "+str(args.ctraj_len)+", fallingdry = "+str(args.fallingdry)+
+    ", memento (H) = "+str(args.memento) + ", attribution = "+str(args.mattribution) +
+    ", explainp (P) = "+str(args.explainp) +
+    ", dupscale (P) = "+str(args.dupscale) + ", mupscale (P) = "+str(args.mupscale))
+    if args.mattribution=="random":
+        str2 = str2 + str(" [random attribution settings] ratt_nit = "+str(args.ratt_nit)+ ", ratt_forcall = "+str(args.ratt_forcall))
+
+    str3 = str("Bias correction with the following settings: "+
+    "[[BIAS CORRECTION]]: bc_time = "+str(args.bc_time)+", bc_useattp = "+str(args.bc_useattp)+
+    ", bc_aggbwtime = "+str(args.bc_aggbwtime) + ", write_month = "+str(args.write_month))
+
+    if args.steps==1:
+        return(str0+"; "+str1)
+    if args.steps==2:
+        return(str0+"; "+str1+"; "+str2)
+    if args.steps==3:
+        return(str3) # copying ncdf description from 2 in step 3; thus only passing BC info
 
 
 def readtraj(idate, # date as string [YYYYMMDDHH]
@@ -169,19 +590,21 @@ def readtraj(idate, # date as string [YYYYMMDDHH]
     return(dataar)
 
 def checkpbl(cpbl,ztra,hpbl,maxhgt):
+    if (cpbl == 0):
+        # do not check for PBL; use everything
+        return True
     if (cpbl == 1):
-        #if (ztra < max(np.max(hpbl),maxhgt)).all():
-        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
-            return True
-        else:
-            return False
-    if (cpbl == 2):
+        # at least one location is within the max PBL
         if (ztra < max(hpbl[1],hpbl[0],maxhgt)).any():
             return True
         else:
             return False
-    if (cpbl == 3):
-        return True
+    if (cpbl == 2):
+        # both locations are within the max PBL 
+        if (ztra < max(hpbl[1],hpbl[0],maxhgt)).all():
+            return True
+        else:
+            return False
 
 def readparcel(parray):
     lats    = parray[:,2]                   # latitude
@@ -193,11 +616,22 @@ def readparcel(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     hpbl    = parray[:,7]                   # ABL height (m)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
 
     return lons, lats, temp, ztra, qv, hpbl, dens, pres, pottemp, epottemp 
+
+def calc_allvars(parray):
+    # calculate all additional variables required for heat + moisture analysis; for all parcels! 
+    # hardcoded on 3D array and variable structure...
+    # pressure (10th variable, index 9)
+    parray  = np.dstack((parray, calc_pres(parray[:,:,6],parray[:,:,5],parray[:,:,8])))
+    # relative humidity (11th variable, index 10)
+    parray  = np.dstack((parray, q2rh(parray[:,:,5],parray[:,:,9],parray[:,:,8])))
+    # potential temperature (12th variable, index 11)
+    parray  = np.dstack((parray, calc_pottemp(parray[:,:,9],parray[:,:,5],parray[:,:,8])))
+    return(parray)
 
 def readmidpoint(parray):
     lats    = parray[:,2]                   # latitude
@@ -219,14 +653,15 @@ def readsparcel(parray):
 def readpres(parray):
     temp    = parray[:,8]                   # temperature (K)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    qv      = parray[:,5]                   # specific humidity (kg kg-1)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     return pres
 
 def readepottemp(parray):
     temp    = parray[:,8]                   # temperature (K)
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     epottemp= calc_pottemp_e(pres, qv, temp)# equivalent potential temperature (K)
     return epottemp
 
@@ -234,7 +669,7 @@ def readpottemp(parray):
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
     temp    = parray[:,8]                   # temperature (K)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
     pottemp = calc_pottemp(pres, qv, temp)  # potential temperature (K)
     return pottemp
 
@@ -275,7 +710,7 @@ def glanceparcel(parray):
     temp    = parray[:,8]                   # temperature (K)
     qv      = parray[:,5]                   # specific humidity (kg kg-1)
     dens    = parray[:,6]                   # density (kg m-3)
-    pres    = calc_pres(dens,temp)          # pressure (Pa)
+    pres    = calc_pres(dens, qv, temp)     # pressure (Pa)
 
     return ztra, hpbl, temp, qv, dens, pres
 
@@ -337,35 +772,132 @@ def convertunits(ary_val, garea, var):
     if var in ['H']:
         return(PMASS*ary_val*CPD/(1e6*garea*6*3600))
 
+def movingmax(x, n=2):
+    if len(x)==2:
+        return max(x[0],x[1])
+    else:
+        return np.array([np.max(x[i:i+n]) for i in range(len(x)-(n-1))])
 
-def PBL_check(cpbl_strict, z, hpbl, sethpbl):
-    """
-    INPUT
-        - PBL strictness flag; 1 (moderate), 2 (relaxed), 3 (fully relaxed)
-        - parcel altitude
-        - PBL heigt at parcel location
-        - prescribed PBL height
-    ACTION
-        - raises any hpbl below sethpbl to this value; no effect if sethpbl=0
-        - calculates whether parcel locations 'before' and 'after' each change,
-          i.e. during analysis steps, are within PBL
-        - depending on cpbl_strict, require both before & after to be
-          inside PBL (1), either (2), or none (3), for change locations
-    RETURN
-        - returns boolean vector for all change locations
-          (True if inside PBL), length given by z.size-1
-    """
-    hpbl[hpbl<sethpbl] = sethpbl
-    befor_inside = np.logical_or( z[1:] < hpbl[:-1], z[1:]  < hpbl[1:])
-    after_inside = np.logical_or(z[:-1] < hpbl[:-1], z[:-1] < hpbl[1:])
-    if cpbl_strict == 1:
-        change_inside = np.logical_and(befor_inside, after_inside)
-    elif cpbl_strict == 2:
-        change_inside = np.logical_or(befor_inside, after_inside)
-    elif cpbl_strict == 3:
-        change_inside = np.ones(dtype=bool, shape=befor_inside.size)
-    return change_inside
+def movingmean(x, n=2):
+    if len(x)==2:
+        return mean(x[0],x[1])
+    else:
+        return np.array([np.mean(x[i:i+n]) for i in range(len(x)-(n-1))])    
 
+def pblcheck(ary, cpbl_strict, minh, fpbl, method):
+    # returns boolean vector for all change locations (z.size-1)
+    # manually tweak PBL heights to account for minimum heights (attn; if fpbl != 1; the heights are adjusted)
+    z  = ary[:,0]
+    # (i) skip everything if no pbl check required
+    if cpbl_strict == 0:
+        return np.ones(dtype=bool, shape=z.size-1)
+    else:
+        hpbl = ary[:,1]
+        hpbl[hpbl<minh] = minh
+        if method=="mean":
+            before_inside = ( z[1:]  <= fpbl*movingmean(hpbl, n=2) )
+            after_inside  = ( z[:-1] <= fpbl*movingmean(hpbl, n=2) )
+        elif method=="max":
+            before_inside = ( z[1:]  <= fpbl*movingmax(hpbl, n=2) )
+            after_inside  = ( z[:-1] <= fpbl*movingmax(hpbl, n=2) )
+        elif method=="actual":
+            before_inside = ( z[1:]  <= fpbl*hpbl[1:] )
+            after_inside  = ( z[:-1] <= fpbl*hpbl[:-1] )
+        if cpbl_strict == 2:
+            # both inside (and)
+            return np.logical_and(before_inside, after_inside)
+        elif cpbl_strict == 1:
+            # one inside (or) 
+            return np.logical_or(before_inside, after_inside)
+
+def pblcheck_diag(z, hpbl, cpbl_strict, minh, fpbl, method):
+    hpbl[hpbl<minh] = minh
+    if cpbl_strict==0:
+        return np.asarray([range(z.shape[1])])
+    if method=="actual":
+        fpbl1  = z[0,:]<=fpbl*hpbl[0,:]
+        fpbl2  = z[1,:]<=fpbl*hpbl[1,:]
+    elif method=="mean":
+        mpbl   = np.apply_over_axes(np.mean, hpbl[:,:], 0)[0,:]
+        fpbl1  = z[0,:]<=fpbl*mpbl
+        fpbl2  = z[1,:]<=fpbl*mpbl
+    elif method=="max":
+        mpbl   = np.apply_over_axes(np.max, hpbl[:,:], 0)[0,:]
+        fpbl1  = z[0,:]<=fpbl*mpbl
+        fpbl2  = z[1,:]<=fpbl*mpbl
+    if cpbl_strict==1:
+        fpbl   = np.where(np.logical_or(fpbl1,fpbl2))
+    if cpbl_strict==2:
+        fpbl   = np.where(np.logical_and(fpbl1,fpbl2))
+    return fpbl
+
+def drhcheck(rh, checkit, maxdrh):
+    if not checkit:
+        retvals = np.ones(dtype=bool, shape=rh.size-1)
+    elif checkit:
+        drh     = trajparceldiff(rh, "diff")
+        retvals = ( np.abs(drh) <= maxdrh ) 
+    return retvals    
+
+def drhcheck_diag(ary2d, checkit, maxdrh):
+    if not checkit:
+        fdrh = np.asarray([range(len(ary2d[0,:]))])
+    else:
+        fdrh = np.where(abs(ary2d[0,:]-ary2d[1,:])<=maxdrh)
+    return fdrh
+
+def rdqvcheck(qv, checkit, maxrdqv):
+    # checks if the absolute humidity changed by less than maxrdqv %
+    if not checkit:
+        retvals = np.ones(dtype=bool, shape=qv.size-1)
+    elif checkit:
+        dqv     = trajparceldiff(qv, "diff")
+        rdqv    = abs(dqv)/qv[:-1] # using most recent Q as a reference here
+        retvals = ( 100*np.abs(rdqv) <= maxrdqv ) 
+    return retvals    
+
+def rdqcheck_diag(ary2d, checkit, maxrdqv):
+    # checks if the absolute humidity changed by less than maxrdqv %
+    if not checkit:
+        frdq    = np.asarray([range(len(ary2d[0,:]))])
+    elif checkit:
+        pchange = 100*abs(ary2d[0,:]-ary2d[1,:])/ary2d[0,:] # %
+        frdq    = np.where(pchange<=maxrdqv)
+    return frdq
+
+def filter_for_evap_parcels(eary, dq, cpbl_method, cpbl_strict, cpbl_factor, cevap_hgt, fevap_drh, cevap_drh, cevap_dqv, veryverbose):
+    # check for dq > cevap_dqv
+    fdqv    = np.where(dq[0,:]>cevap_dqv)
+    eary    = eary[:,fdqv[0],:]
+    # check for drh
+    fdrh    = drhcheck_diag(eary[:,:,10], checkit=fevap_drh, maxdrh=cevap_drh)
+    eary    = eary[:,fdrh[0],:]
+    # check for pbl
+    fpbl    = pblcheck_diag(eary[:,:,3],eary[:,:,7],cpbl_strict, cevap_hgt, cpbl_factor, cpbl_method)
+    if veryverbose:
+        print(" * Filter for E: "+str(fdqv[0].size)+" parcels after dqv-filter")
+        print("                 "+str(fdrh[0].size)+" parcels after drh-filter")
+        print("                 "+str(fpbl[0].size)+" parcels after pbl-filter")
+    return fdqv[0][fdrh[0][fpbl[0]]]
+
+def filter_for_heat_parcels(hary, dTH, cpbl_method, cpbl_strict, cpbl_factor, cheat_hgt, fheat_drh, cheat_drh, cheat_dtemp, fheat_rdq, cheat_rdq, veryverbose):
+    # check for dTH > cheat_dtemp 
+    fdTH    = np.where(dTH[0,:]>cheat_dtemp)
+    hary    = hary[:,fdTH[0],:]
+    # check for drh
+    fdrh    = drhcheck_diag(hary[:,:,10], checkit=fheat_drh, maxdrh=cheat_drh)
+    hary    = hary[:,fdrh[0],:]
+    # check for rdq
+    frdq    = rdqcheck_diag(hary[:,:,5], checkit=fheat_rdq, maxrdqv=cheat_rdq)
+    hary    = hary[:,frdq[0],:]
+    # check for pbl
+    fpbl    = pblcheck_diag(hary[:,:,3],hary[:,:,7], cpbl_strict, cheat_hgt, cpbl_factor, cpbl_method)
+    if veryverbose:
+        print(" * Filter for H: "+str(fdTH[0].size)+" parcels after dTH-filter")
+        print("                 "+str(fdrh[0].size)+" parcels after drh-filter")
+        print("                 "+str(frdq[0].size)+" parcels after rdq-filter")
+        print("                 "+str(fpbl[0].size)+" parcels after pbl-filter")
+    return fdTH[0][fdrh[0][frdq[0][fpbl[0]]]]
 
 def scale_mass(ary_val, ary_part, ary_rpart):
     ary_sval    = np.zeros(shape=(ary_val.shape)) 
@@ -573,27 +1105,18 @@ def gridder(plon, plat, pval,
     gval[ind_lat,ind_lon]    += pval
     return(gval)
 
-
-def mgridder(mlon, mlat, pval,
-            glat, glon):
-    """
-    INPUT
-        - plon, plat: parcel longitutde and latitude
-        - glon, glat: grid longitude and latitutde
-        - pval      : parcel value to be assigned to grid
-    ACTION
-        1. calculated midpoint of two coordinates
-        2. assigns val to gridcell corresponding to midpoint
-    RETURN
-        - array of dimension (glat.size x glon.size) with 0's and one value assigned
-    """
-    # get grid index
-    ind_lat = np.argmin(np.abs(glat-mlat))    # index on grid
-    ind_lon = np.argmin(np.abs(glon-mlon))    # index on grid
-    # and assign pval to gridcell (init. with 0's)
-    gval    = np.zeros(shape=(glat.size, glon.size))       # shape acc. to pre-allocated result array of dim (ntime, glat.size, glon.size)
-    gval[ind_lat,ind_lon]    += pval
-    return(gval)
+def gridall(lon,lat,val,glon,glat):
+    # create pandas data frame to sum up over each grid cell
+    mydf = pd.DataFrame({"lon":lon, "lat":lat, "v":val})
+    uniq = mydf.groupby(["lon","lat"]).sum()
+    # extract values from pandas df (all 1D vectors; unique x,y combin.)
+    v = np.asarray(uniq["v"])
+    x = np.asarray(uniq.index.get_level_values(0))
+    y = np.asarray(uniq.index.get_level_values(1))
+    # write into field
+    gvalues = np.zeros(shape=(glat.size,glon.size))
+    gvalues[y,x] = v
+    return gvalues
 
 def midpindex(parray,glon,glat):
     lats    = parray[:,2]                   # latitude
@@ -619,7 +1142,13 @@ def arrpindex(parray,glon,glat):
     ind_lon = np.argmin(np.abs(glon-lons))
     return ind_lat, ind_lon
 
-def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.4"):
+def get_all_midpindices(ary, glon, glat):
+    # gets midpoint indices for all parcels from 3D array of dimension nsteps x nparcels x nvars
+    lary            = [y for y in (np.moveaxis(ary, 1, 0))] # convert to list for first dimension (parcels) to be able to use map
+    imidi           = np.asarray(list(map(lambda p: midpindex(p, glon=glon, glat=glat), lary)))
+    return imidi
+
+def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,fproc_npart,fprec,fevap,fheat,currentversion="v0.4"):
     # delete nc file if it is present (avoiding error message)
     try:
         os.remove(ofile)
@@ -638,13 +1167,17 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     times               = nc_f.createVariable('time', 'f8', 'time')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('time','lat','lon'))
-    evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'))
-    precs               = nc_f.createVariable('P', precision, ('time','lat','lon'))
-    nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'))
-    pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'))
-    enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'))
-    hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'))
+    if fheat:
+        heats               = nc_f.createVariable('H', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        hnparts             = nc_f.createVariable('H_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fevap:
+        evaps               = nc_f.createVariable('E', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        enparts             = nc_f.createVariable('E_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fprec:
+        precs               = nc_f.createVariable('P', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+        pnparts             = nc_f.createVariable('P_n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    if fproc_npart:
+        nparts              = nc_f.createVariable('n_part', 'i4', ('time','lat','lon'), fill_value=nc4.default_fillvals['i4'])
     
     # set attributes
     nc_f.title          = "Diagnosis (01) of FLEXPART fluxes"
@@ -652,25 +1185,29 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
-    heats.units         = 'W m-2'
-    heats.long_name	    = 'surface sensible heat flux'
-    evaps.units         = 'mm'
-    evaps.long_name	    = 'evaporation'
-    precs.units         = 'mm'
-    precs.long_name	    = 'precipitation'
-    nparts.units        = 'int'
-    nparts.long_name    = 'number of parcels (mid pos.)'
-    pnparts.units       = 'int'
-    pnparts.long_name   = 'number of P parcels (mid pos.)'
-    enparts.units       = 'int'
-    enparts.long_name   = 'number of E parcels (mid pos.)'
-    hnparts.units       = 'int'
-    hnparts.long_name   = 'number of H parcels (mid pos.)'
+    if fheat:
+        heats.units         = 'W m-2'
+        heats.long_name	    = 'surface sensible heat flux'
+        hnparts.units       = 'int'
+        hnparts.long_name   = 'number of H parcels (mid pos.)'
+    if fevap:
+        evaps.units         = 'mm'
+        evaps.long_name	    = 'evaporation'
+        enparts.units       = 'int'
+        enparts.long_name   = 'number of E parcels (mid pos.)'
+    if fprec:
+        precs.units         = 'mm'
+        precs.long_name	    = 'precipitation'
+        pnparts.units       = 'int'
+        pnparts.long_name   = 'number of P parcels (mid pos.)'
+    if fproc_npart:
+        nparts.units        = 'int'
+        nparts.long_name    = 'number of parcels (mid pos.)'
     
     # write data
     times[:]            = nc4.date2num(fdate_seq, times.units, times.calendar)
@@ -680,18 +1217,11 @@ def writeemptync(ofile,fdate_seq,glon,glat,strargs,precision,currentversion="v0.
     nc_f.close()
     print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(glat.size)+","+str(glon.size)+") !")
 
-def writenc(ofile,ix,ary_prec,ary_evap,ary_heat,ary_npart,ary_pnpart,ary_enpart,ary_hnpart):
+def writenc(ofile,ix,iarray,ivar,verbose=True):
     if verbose:
-        print(" * Writing to netcdf...")
-
+        print(" * Writing "+ivar+" to netcdf...")
     nc_f = nc4.Dataset(ofile, 'r+')
-    nc_f['P'][ix,:,:]       = ary_prec
-    nc_f['E'][ix,:,:]       = ary_evap
-    nc_f['H'][ix,:,:]       = ary_heat
-    nc_f['n_part'][ix,:,:]  = ary_npart
-    nc_f['P_n_part'][ix,:,:]  = ary_pnpart
-    nc_f['E_n_part'][ix,:,:]  = ary_enpart
-    nc_f['H_n_part'][ix,:,:]  = ary_hnpart
+    nc_f[ivar][ix,:,:]       = iarray
     nc_f.close()
 
 def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentversion="v0.4"):
@@ -716,8 +1246,8 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
     utimes              = nc_f.createVariable('level', 'i4', 'level')
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    heats               = nc_f.createVariable('H', precision, ('time','level','lat','lon'))
-    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'))
+    heats               = nc_f.createVariable('Had', precision, ('time','level','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    etops               = nc_f.createVariable('E2P', precision, ('time','level','lat','lon'), fill_value=nc4.default_fillvals[precision])
     
     # set attributes
     nc_f.title          = "Attribution (02) of sources using FLEXPART output"
@@ -725,7 +1255,7 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     atimes.units        = 'hours since 1900-01-01 00:00:00'
     atimes.calendar     = 'Standard' 
     utimes.long_name    = 'Difference between uptake and arrival time, in days'
@@ -748,14 +1278,57 @@ def writeemptync4D(ofile,fdate_seq,upt_days,glat,glon,strargs,precision,currentv
 
     print("\n * Created empty file: "+ofile+" of dimension ("+str(len(fdate_seq))+","+str(upt_days.size)+","+str(glat.size)+","+str(glon.size)+") !")
         
-def writenc4D(ofile,ix,ary_etop,ary_heat):
+def writenc4D(ofile,ix,ary_etop,ary_heat,verbose):
     if verbose:
         print(" * Writing to netcdf...")
 
     nc_f = nc4.Dataset(ofile, 'r+')
     nc_f['E2P'][ix,:,:,:]     = ary_etop[:,:,:]
-    nc_f['H'][ix,:,:,:]       = ary_heat[:,:,:]
+    nc_f['Had'][ix,:,:,:]       = ary_heat[:,:,:]
     nc_f.close()
+
+def get_reference_data(refpath, ivar, idates):
+    # ATTENTION: this function assumes that
+    # (i)   all data is already on the correct grid (resolution, orientation!)
+    # (ii)  all data comes at daily (or subdaily) time steps; in case it's subdaily, these are *summed up* to daily (likely works for E and P, but not for H!)
+    # (iii) there are no duplicate files and dates in the refpath folder
+    # (iv)  the units HAVE to be as follows: E [mm]; P [mm]; H [W m-2] !
+
+    seldates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in idates])
+    selyears = np.unique([dft.strftime('%Y') for dft in idates])
+
+    # get files from refpath that have selyears in the filename
+    ifiles   = [fnmatch.filter(os.listdir(refpath), "*"+str(iyear)+"*.nc") for iyear in selyears]
+    
+    # read grid
+    with nc4.Dataset(os.path.join(refpath,str(ifiles[0][0])), mode='r') as f: 
+        reflats  = np.asarray(f['lat'][:])
+        reflons  = np.asarray(f['lon'][:])
+
+    # initialize empty array of correct size (seldates x latitude x longitude)
+    refdata     = np.zeros(shape=(len(seldates), len(reflats), len(reflons)))
+    dcounter    = np.zeros(shape=(len(seldates)))
+    
+    for ifile in ifiles:
+        reffile   = os.path.join(refpath,ifile[0])
+        print("     * Reading "+str(reffile))
+        with nc4.Dataset(reffile, mode='r') as f:
+            reftime  = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar)
+            refdates = np.asarray([datetime.date(rt.year, rt.month, rt.day) for rt in reftime])
+            idata    = np.asarray(f[ivar][:,:,:])
+            ifiledates = np.intersect1d(refdates,seldates)
+        for i in range(len(ifiledates)):
+            isel     = np.where(seldates == ifiledates[i])[0][0]
+            iref     = np.where(refdates == ifiledates[i])[0][0]
+            dcounter[isel] += 1 
+            refdata[isel,:,:] += idata[iref,:,:]
+    
+    if np.any(dcounter==0):
+        print(" * The following dates are missing in the reference data set (for variable "+str(ivar)+"): "+str(seldates[np.where(dcounter==0)[0]]) )
+        raise SystemExit("---------- FATAL ERROR: DATES MISSING IN THE REFERENCES DATA SET!!!")
+    
+    return refdata, reflats, reflons
+
 
 def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dates, lats, lons):
     """
@@ -766,6 +1339,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
     uyears = np.unique(uptake_years)
 
     with nc4.Dataset(datapath+str(uyears[0])+'.nc', mode='r') as f: 
+        print("     * Reading "+str(datapath+str(uyears[0])+'.nc'))
         reflats   = np.asarray(f['latitude'][:])
         reflons   = np.asarray(f['longitude'][:])
         reftime   = nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
@@ -775,6 +1349,7 @@ def eraloader_12hourly(var, datapath, maskpos, maskneg, uptake_years, uptake_dat
 
     for ii in range(1,uyears.size):
 
+        print("     * Reading "+str(datapath+str(uyears[ii])+'.nc'))
         with nc4.Dataset(datapath+str(uyears[ii])+'.nc', mode='r') as f:
             reftimeY =  nc4.num2date(f['time'][:], f['time'].units, f['time'].calendar) - timedelta(hours=12)
             reftime  = np.concatenate((reftime, reftimeY))
@@ -846,9 +1421,11 @@ def checkdim(var):
 
 def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
                  Had, Had_Hs,
-                 E2P, E2P_Es, E2P_Ps, E2P_EPs,
+                 E2P, E2P_Es, E2P_Ps, E2P_EPs, T2P_EPs,
                  strargs,precision,
                  fwrite_month,
+                 fbc_had, fbc_had_h,
+                 fbc_e2p, fbc_e2p_p, fbc_e2p_e, fbc_e2p_ep, fbc_t2p_ep,
                  currentversion="v0.4"):
     
     # delete nc file if it is present (avoiding error message)
@@ -878,12 +1455,20 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
 
     # create variables
-    heats               = nc_f.createVariable('Had', precision, checkdim(Had))
-    heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs))
-    evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P))
-    evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es))
-    evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps))
-    evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs))
+    if fbc_had:
+        heats               = nc_f.createVariable('Had', precision, checkdim(Had), fill_value=nc4.default_fillvals[precision])
+    if fbc_had_h:
+        heats_Hs            = nc_f.createVariable('Had_Hs', precision, checkdim(Had_Hs), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p:
+        evaps               = nc_f.createVariable('E2P', precision, checkdim(E2P), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_e:
+        evaps_Es            = nc_f.createVariable('E2P_Es', precision, checkdim(E2P_Es), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_p:
+        evaps_Ps            = nc_f.createVariable('E2P_Ps', precision, checkdim(E2P_Ps), fill_value=nc4.default_fillvals[precision])
+    if fbc_e2p_ep:
+        evaps_EPs           = nc_f.createVariable('E2P_EPs', precision, checkdim(E2P_EPs), fill_value=nc4.default_fillvals[precision])
+    if fbc_t2p_ep:
+        trans_EPs           = nc_f.createVariable('T2P_EPs', precision, checkdim(T2P_EPs), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Bias-corrected source-sink relationships from FLEXPART"
@@ -891,7 +1476,7 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     if not np.any(np.isnan(udate_seq)):    
@@ -899,18 +1484,27 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
         utimes.units        = 'day'
     latitudes.units     = 'degrees_north'
     longitudes.units    = 'degrees_east'
-    heats.units         = 'W m-2'
-    heats.long_name     = 'advected surface sensible heat'
-    heats_Hs.units      = 'W m-2'
-    heats_Hs.long_name  = 'advected surface sensible heat, H-scaled' # this is garbage, I know
-    evaps.units         = 'mm'
-    evaps.long_name     = 'evaporation resulting in precipitation'
-    evaps_Es.units      = 'mm'
-    evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
-    evaps_Ps.units      = 'mm'
-    evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
-    evaps_EPs.units     = 'mm'
-    evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
+    if fbc_had:
+        heats.units         = 'W m-2'
+        heats.long_name     = 'advected surface sensible heat'
+    if fbc_had_h:
+        heats_Hs.units      = 'W m-2'
+        heats_Hs.long_name  = 'advected surface sensible heat, H-scaled' # this is garbage, I know
+    if fbc_e2p:
+        evaps.units         = 'mm'
+        evaps.long_name     = 'evaporation resulting in precipitation'
+    if fbc_e2p_e:
+        evaps_Es.units      = 'mm'
+        evaps_Es.long_name  = 'evaporation resulting in precipitation, E-corrected'
+    if fbc_e2p_p:
+        evaps_Ps.units      = 'mm'
+        evaps_Ps.long_name  = 'evaporation resulting in precipitation, P-corrected'
+    if fbc_e2p_ep:
+        evaps_EPs.units     = 'mm'
+        evaps_EPs.long_name = 'evaporation resulting in precipitation, E-and-P-corrected'
+    if fbc_t2p_ep:
+        trans_EPs.units     = 'mm'
+        trans_EPs.long_name = 'transpiration resulting in precipitation, E-and-P-corrected'
 
     # write data
     if fwrite_month:
@@ -923,26 +1517,41 @@ def writefinalnc(ofile,fdate_seq,udate_seq,glon,glat,
     longitudes[:]       = glon
   
     if fwrite_month:
-        heats[:]            = np.nanmean(Had,axis=0,keepdims=True)[:]
-        heats_Hs[:]         = np.nanmean(Had_Hs,axis=0,keepdims=True)[:]
-        evaps[:]            = np.nansum(E2P,axis=0,keepdims=True)[:]
-        evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
-        evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
-        evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+        if fbc_had:
+            heats[:]            = np.nanmean(Had,axis=0,keepdims=True)[:]
+        if fbc_had_h:
+            heats_Hs[:]         = np.nanmean(Had_Hs,axis=0,keepdims=True)[:]
+        if fbc_e2p:
+            evaps[:]            = np.nansum(E2P,axis=0,keepdims=True)[:]
+        if fbc_e2p_e:
+            evaps_Es[:]         = np.nansum(E2P_Es,axis=0,keepdims=True)[:]
+        if fbc_e2p_p:
+            evaps_Ps[:]         = np.nansum(E2P_Ps,axis=0,keepdims=True)[:]
+        if fbc_e2p_ep:
+            evaps_EPs[:]        = np.nansum(E2P_EPs,axis=0,keepdims=True)[:]
+        if fbc_t2p_ep:
+            trans_EPs[:]        = np.nansum(T2P_EPs,axis=0,keepdims=True)[:]
     else:
-        heats[:]            = Had[:]
-        heats_Hs[:]         = Had_Hs[:]
-        evaps[:]            = E2P[:]
-        evaps_Es[:]         = E2P_Es[:]
-        evaps_Ps[:]         = E2P_Ps[:]
-        evaps_EPs[:]        = E2P_EPs[:]
+        if fbc_had:
+            heats[:]            = Had[:]
+        if fbc_had_h:
+            heats_Hs[:]         = Had_Hs[:]
+        if fbc_e2p:
+            evaps[:]            = E2P[:]
+        if fbc_e2p_e:
+            evaps_Es[:]         = E2P_Es[:]
+        if fbc_e2p_p:
+            evaps_Ps[:]         = E2P_Ps[:]
+        if fbc_e2p_ep:
+            evaps_EPs[:]        = E2P_EPs[:]
+        if fbc_t2p_ep:
+            trans_EPs[:]        = T2P_EPs[:]
 
-    myshape=nc_f['E2P'].shape
     # close file
     nc_f.close()
     
     # print info
-    print("\n * Created and wrote to file: "+ofile+" of dimension "+str(myshape)+" !\n")
+    print("\n * Created and wrote to file: "+ofile+" !\n")
 
 def append2csv(filename, listvals):
     # Open file in append mode
@@ -950,14 +1559,6 @@ def append2csv(filename, listvals):
         csv_writer = csv.writer(write_obj, delimiter='\t', lineterminator='\n')
         csv_writer.writerow(listvals)
 
-def uptake_locator_KAS(c_hgt, cpbl_strict, hgt, hpbl,
-                       dX, dtemp, dA, dB, c_cc, dAdB):
-    ## NOTE: for heat, dX==dB, but not for evap!
-    is_inpbl    = PBL_check(cpbl_strict, z=hgt, hpbl=hpbl, sethpbl=c_hgt)
-    is_uptk     = dX > dtemp
-    is_uptkcc   = np.abs(dA) < c_cc * dB * dAdB
-    return( np.where(np.logical_and(is_inpbl, np.logical_and(is_uptk, is_uptkcc)))[0] )
-    
 
 def convert2daily(xar,ftime,fagg="mean"):
 
@@ -1315,25 +1916,25 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
     # Variables
-    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'))
-    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'))
-    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'))
-    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'))
-    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'))
-    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'))
-    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'))
-    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'))
-    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'))
-    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'))
-    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'))
-    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'))
-    nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'))
-    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'))
-    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'))
-    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'))
-    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'))
-    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'))
-    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'))
+    nc_mask             = nc_f.createVariable('mask', 'i4', ('lat','lon'), fill_value=nc4.default_fillvals['i4'])
+    nc_pref             = nc_f.createVariable('Pref', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_pdiag            = nc_f.createVariable('Pdiag', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_pattr            = nc_f.createVariable('Pattr', precision, ('time','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_prefs            = nc_f.createVariable('Pref_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pdiags           = nc_f.createVariable('Pdiag_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs           = nc_f.createVariable('Pattr_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_es        = nc_f.createVariable('Pattr_Es_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_ps        = nc_f.createVariable('Pattr_Ps_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_pattrs_eps       = nc_f.createVariable('Pattr_EPs_sum', precision, ('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap           = nc_f.createVariable('alpha_P',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap_ebc       = nc_f.createVariable('alpha_P_Ecorrected',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphap_res       = nc_f.createVariable('alpha_P_res',precision,('time'), fill_value=nc4.default_fillvals[precision])
+    nc_alphae           = nc_f.createVariable('alpha_E',precision,('uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_alphah           = nc_f.createVariable('alpha_H',precision,('uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_frace2p          = nc_f.createVariable('frac_E2P',precision,('time','uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_frachad          = nc_f.createVariable('frac_Had',precision,('time','uptaketime','lat','lon'), fill_value=nc4.default_fillvals[precision])
+    nc_malphae          = nc_f.createVariable('max_alpha_E',precision,('uptaketime'), fill_value=nc4.default_fillvals[precision])
+    nc_malphah          = nc_f.createVariable('max_alpha_H',precision,('uptaketime'), fill_value=nc4.default_fillvals[precision])
  
     # set attributes
     nc_f.title          = "Debug-file from 03_biascorrection (HAMSTER)"
@@ -1341,7 +1942,7 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
     today               = datetime.datetime.now()
     nc_f.history        = "Created " + today.strftime("%d/%m/%Y %H:%M:%S") + " using HAMSTER."
     nc_f.institution    = "Hydro-Climate Extremes Laboratory (H-CEL), Ghent University, Ghent, Belgium"
-    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune)" 
+    nc_f.source         = "HAMSTER "+str(currentversion)+" ((c) Dominik Schumacher and Jessica Keune): https://github.ugent.be/jkeune/hamster" 
     times.units         = 'hours since 1900-01-01 00:00:00'
     times.calendar      = 'Standard' # do NOT use gregorian here!
     utimes.units        = 'hours since 1900-01-01 00:00:00'
@@ -1416,6 +2017,12 @@ def writedebugnc(ofile,fdate_seq,udate_seq,glon,glat,mask,
 
     # print info
     print("\n * Created and wrote to file: "+ofile+" !")
+
+def append_attrfrac_netcdf(ofile,attrfrac):
+    nc_f                = nc4.Dataset(ofile, 'r+')
+    attrdesc            = getattr(nc_f,"description") + "; [[STATS]] attributed fraction (P) = " + attrfrac
+    nc_f.description    = attrdesc
+    nc_f.close()
 
 def maskbymaskval(mask,maskval):
     mymask  = np.copy(mask)
@@ -1563,7 +2170,7 @@ def writemasknc(mask, mlat, mlon, ofile="mask.nc",currentversion="v0.4"):
     # create variables
     latitudes           = nc_f.createVariable('lat', 'f8', 'lat')
     longitudes          = nc_f.createVariable('lon', 'f8', 'lon')
-    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'))
+    ncmask              = nc_f.createVariable('mask', 'i4', ('lat','lon'), fill_value=nc4.default_fillvals['i4'])
     # set attributes
     nc_f.title          = "HAMSTER: mask"
     today               = datetime.datetime.now()
@@ -1644,7 +2251,7 @@ def f2t_timelord(ntraj_d, dt_h, tbgn, tend):
     fulltime_str = [dft.strftime('%Y%m%d%H%M%S') for dft in fulltime]
     return(fulltime_str)
 
-def f2t_loader(ifile, fixlons=True, fixids=True):
+def f2t_loader(ifile, fixlons=True, fixids=True, verbose=True):
     dummy = f2t_read_partposit(ifile, verbose=False)
     ## fix parcel ID's (ATTN: specific to the global FP-ERA-Interim run!)
     if fixids:
@@ -1760,7 +2367,7 @@ def f2t_establisher(partdir, selvars, time_str, ryyyy, mask, maskval, mlat, mlon
     for ii in range(len(time_str)):
          if verbose: print("       "+time_str[ii][:-4], end='')
          ifile = partdir+'/partposit_'+time_str[ii]+'.gz'
-         dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars] # load
+         dummy = f2t_loader(ifile, fixlons=True, fixids=True, verbose=verbose)[:,selvars] # load
          data[ii,:dummy.shape[0]] = dummy[:] # fill only where data available
          data[ii,dummy.shape[0]:] = np.NaN
 
@@ -1789,7 +2396,7 @@ def f2t_ascender(data, partdir, selvars, ryyyy, time_str, mask, maskval,
         data[ii,:,:] = data[ii+1,:,:]
     # load new data | rely on dummy variable
     ifile = partdir+'/partposit_'+time_str[-1]+'.gz'
-    dummy = f2t_loader(ifile, fixlons=True, fixids=True)[:,selvars]
+    dummy = f2t_loader(ifile, fixlons=True, fixids=True, verbose=verbose)[:,selvars]
     # insert new data, use NaN for rest
     data[-1,:dummy.shape[0]] = dummy[:]
     data[-1,dummy.shape[0]:] = np.NaN
@@ -1842,7 +2449,7 @@ def maxlastn(series, n=4):
     return(np.max(maxy, axis=0))
 
 def grabhpbl_partposit(ifile):
-    dummy   = f2t_loader(ifile, fixlons=True, fixids=True)[:,[0,9]] # 0: id, 9: hpbl
+    dummy   = f2t_loader(ifile, fixlons=True, fixids=True, verbose=False)[:,[0,9]] # 0: id, 9: hpbl
     return(dummy)
 
 def grabmesomehpbl(filelist, verbose):
@@ -1867,3 +2474,6 @@ def grabmesomehpbl(filelist, verbose):
         extendarchive.append(grabhpbl_partposit(filelist[it]))
 
     return(extendarchive)
+
+
+

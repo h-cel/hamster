@@ -1,11 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-MAIN FUNCTIONS FOR 00_flex2traj
-"""
+
+import gzip
+import pandas as pd
+import numpy as np
+import os, fnmatch
+import timeit
+import netCDF4 as nc4
+import sys
+import argparse
+import time
+import math as math
+from datetime import datetime, timedelta, date
+from math import sin,cos,acos,atan,atan2,sqrt,floor
+from dateutil.relativedelta import relativedelta
+import datetime as datetime
+import imp
+import warnings
+import csv
+import random
+import struct
+import calendar
+import h5py
+import re
+from functools import reduce
+from hamsterfunctions import *
 
 def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
-        idir, odir, fout):
+        idir, odir, fout, verbose):
 
     ###--- MISC ---################################################################
     logo =""" 
@@ -45,9 +67,8 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
     #******************************************************************************
     
     # last day of month
-    ed   = int(calendar.monthrange(args.ayyyy, args.am)[1])
+    ed   = int(calendar.monthrange(ayyyy, am)[1])
 
-    ## use parsed args to set up datetime objects etc.
     dt_h = 6 # hardcoded, as further edits would be necessary if this was changed!
     time_bgn = datetime.datetime(year=ayyyy, month=am, day=ad, hour=6)
     # add 6 hours to handle end of month in same way as any other period

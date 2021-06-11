@@ -13,49 +13,32 @@ To execute interactively:
 ##--- MODULES
 ###########################################################################
 
-import gzip
-import pandas as pd
-import numpy as np
-import os, fnmatch
-import timeit
-import netCDF4 as nc4
-import sys
+import os
 import argparse
-import time
-import math as math
-from datetime import datetime, timedelta, date
-from math import sin,cos,acos,atan,atan2,sqrt,floor
-from dateutil.relativedelta import relativedelta
-import datetime as datetime
 import imp
-import warnings
-import csv
-import random
-import struct
-import calendar
-import h5py
-import re
-
+import time
+from hamsterfunctions import *
+from flex2traj import main_flex2traj
+from diagnosis import main_diagnosis
+from attribution import main_attribution
+from biascorrection import main_biascorrection
 
 ###########################################################################
 ##--- FUNCTIONS + COMMAND LINE ARGUMENTS
 ###########################################################################
 
 ## (1) LOADING FUNCTIONS
-exec(open("disclaimer.py").read())
-exec(open("constants.py").read())
-exec(open("metfunctions.py").read())
-exec(open("00_flex2traj.py").read())
-exec(open("01_diagnosis.py").read())
-exec(open("02_attribution.py").read())
-exec(open("03_biascorrection.py").read())
-exec(open("hamsterfunctions.py").read())
+#exec(open("hamsterfunctions.py").read())
+#exec(open("flex2traj.py").read())
+#exec(open("diagnosis.py").read())
+#exec(open("attribution.py").read())
+#exec(open("biascorrection.py").read())
 
 ## (2) COMMAND LINE ARGUMENTS
 # read command line arguments (dates, thresholds and other flags)
 args    = read_cmdargs()
 verbose = args.verbose
-print(printsettings(args,args.steps))
+print(printsettings(args))
 
 # just waiting a random number of seconds (max. 30s)
 # to avoid overlap of path.exist and makedirs between parallel jobs (any better solution?)
@@ -74,7 +57,10 @@ os.chdir(wpath)
 ## load input and output paths & input file name base(s)
 print("Using paths from: "+ wpath+"/"+args.pathfile)
 content = imp.load_source('',wpath+"/"+args.pathfile) # load like a python module
-path_ref = content.path_ref
+path_refp = content.path_ref_p
+path_refe = content.path_ref_e
+path_reft = content.path_ref_t
+path_refh = content.path_ref_h
 path_orig = content.path_orig
 path_diag = content.path_diag
 path_attr = content.path_attr
@@ -116,7 +102,8 @@ if args.steps ==0:
                    maskval=args.maskval,
                    idir=path_orig,
                    odir=path_f2t,
-                   fout=base_f2t)
+                   fout=base_f2t,
+                   verbose=args.verbose)
 
 if args.steps == 1:
     main_diagnosis(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad,
@@ -128,23 +115,35 @@ if args.steps == 1:
               gres=args.gres,
               verbose=args.verbose,
               veryverbose=args.veryverbose,
-              tdiagnosis=args.tdiagnosis,
-              cheat_dtemp=args.cheat_dtemp,
-              cheat_cc=args.cheat_cc,
-              cevap_cc=args.cevap_cc,
-              cevap_hgt=args.cevap_hgt,
-              cheat_hgt=args.cheat_hgt,
-              cprec_dqv=args.cprec_dqv,
-              cprec_dtemp=args.cprec_dtemp,
+              fproc_npart=args.fproc_npart,
+              # E criteria
+              fevap=args.fevap,
+              cevap_dqv=args.cevap_dqv,
+              fevap_drh=args.fevap_drh,
+              cevap_drh=args.cevap_drh,
+              cevap_hgt=args.cevap_hgt, 
+              # P criteria
+              fprec=args.fprec,
+              cprec_dqv=args.cprec_dqv, 
               cprec_rh=args.cprec_rh,
+              # H criteria
+              fheat=args.fheat,
+              cheat_dtemp=args.cheat_dtemp,
+              fheat_drh=args.fheat_drh,
+              cheat_drh=args.cheat_drh,
+              cheat_hgt=args.cheat_hgt,
+              fheat_rdq=args.fheat_rdq,
+              cheat_rdq=args.cheat_rdq,
+              # pbl and height criteria
+              cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
+              cpbl_factor=args.cpbl_factor,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
               ftimethis=args.timethis,
-              fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
-              strargs=printsettings(args,1))
+              strargs=printsettings(args))
 
 if args.steps == 2:
     main_attribution(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am, ad=args.ad, 
@@ -159,17 +158,26 @@ if args.steps == 2:
               maskval=args.maskval,
               verbose=args.verbose,
               veryverbose=args.veryverbose,
-              tdiagnosis=args.tdiagnosis,
               ctraj_len=args.ctraj_len,
-              cheat_dtemp=args.cheat_dtemp,
-              cheat_cc=args.cheat_cc, 
-              cevap_cc=args.cevap_cc,
+              # E criteria
+              cevap_dqv=args.cevap_dqv,
+              fevap_drh=args.fevap_drh,
+              cevap_drh=args.cevap_drh,
               cevap_hgt=args.cevap_hgt, 
-              cheat_hgt=args.cheat_hgt,
+              # P criteria
               cprec_dqv=args.cprec_dqv, 
-              cprec_dtemp=args.cprec_dtemp, 
               cprec_rh=args.cprec_rh,
+              # H criteria
+              cheat_dtemp=args.cheat_dtemp,
+              fheat_drh=args.fheat_drh,
+              cheat_drh=args.cheat_drh,
+              cheat_hgt=args.cheat_hgt,
+              fheat_rdq=args.fheat_rdq,
+              cheat_rdq=args.cheat_rdq,
+              # pbl and height criteria
+              cpbl_method=args.cpbl_method,
               cpbl_strict=args.cpbl_strict,
+              cpbl_factor=args.cpbl_factor,
               refdate=args.refdate,
               fwrite_netcdf=args.write_netcdf,
               precision=args.precision,
@@ -182,16 +190,18 @@ if args.steps == 2:
               explainp=args.explainp,
               fdupscale=args.dupscale,
               fmupscale=args.mupscale,
-              fcc_advanced=args.cc_advanced,
               fvariable_mass=args.variable_mass,
               fwritestats=args.writestats,
-              strargs=printsettings(args,2))
+              strargs=printsettings(args))
 
 if args.steps == 3:
     main_biascorrection(ryyyy=args.ryyyy, ayyyy=args.ayyyy, am=args.am,
-               opathA=path_attr, 
-               opathD=path_diag, 
-               ipathR=path_ref,
+               opath_attr=path_attr, 
+               opath_diag=path_diag, 
+               ipath_refp=path_refp,
+               ipath_refe=path_refe,
+               ipath_reft=path_reft,
+               ipath_refh=path_refh,
                opath=path_bias, 
                ofile_base=args.expid, # output
                mode=args.mode,
@@ -201,10 +211,20 @@ if args.steps == 3:
                veryverbose=args.veryverbose,
                fuseattp=args.bc_useattp,
                bcscale=args.bc_time,
+               pref_data=args.pref_data,
+               eref_data=args.eref_data,
+               href_data=args.href_data,
                faggbwtime=args.bc_aggbwtime,
+               fbc_e2p=args.bc_e2p,
+               fbc_e2p_p=args.bc_e2p_p,
+               fbc_e2p_e=args.bc_e2p_e,
+               fbc_e2p_ep=args.bc_e2p_ep,
+               fbc_t2p_ep=args.bc_t2p_ep,
+               fbc_had=args.bc_had,
+               fbc_had_h=args.bc_had_h,
                fdebug=args.debug,
                fwrite_netcdf=args.write_netcdf,
                fwrite_month=args.write_month,
                fwritestats=args.writestats,
                precision=args.precision,
-               strargs=printsettings(args,3))
+               strargs=printsettings(args))
