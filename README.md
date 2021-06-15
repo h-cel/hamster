@@ -123,7 +123,6 @@ python main.py --steps 1
 ```
 Then, extract 10-day trajectories for a specific region (using a maskvalue of 1 for the given maskfile), and diagnose source regions of heat and moisture, and finally bias-correct them using the global diagnosis data from above:
 ```
-python main.py --steps 0
 python main.py --steps 2
 python main.py --steps 3
 ```
