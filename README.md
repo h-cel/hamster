@@ -116,13 +116,14 @@ python main.py -h
 for more details on setting dates, thresholds and other options. All user-specific paths are set in `paths.txt`. 
 
 ### Quick start.
-To run all steps sequentially with the default settings, proceed in two steps. First, extract global 2-step trajectories and perform the global diagnosis of fluxes, using
+To run all steps sequentially with the default settings, please proceed as follows. First, extract global 2-step trajectories (`steps--0  --maskval -999 --ctraj_len 0`) and perform the global diagnosis of fluxes (`--steps 1`), using
 ```
-python main.py --steps 0 --ctraj_len 0 --maskval -999
+python main.py --steps 0 --maskval -999 --ctraj_len 0
 python main.py --steps 1
 ```
-Then, extract 10-day trajectories for a specific region (using a maskvalue of 1 for the given maskfile), and diagnose source regions of heat and moisture, and finally bias-correct them using the global diagnosis data from above:
+Then, extract 10-day trajectories for a specific region (using a default maskvalue of 1 for the given maskfile; `--steps 0`), which are required to diagnose source regions of heat and moisture (`--steps 2`), and finally bias-correct these source regions using the global diagnosis data from above (`--steps 3`):
 ```
+python main.py --steps 0
 python main.py --steps 2
 python main.py --steps 3
 ```
@@ -132,7 +133,7 @@ python main.py --steps 3
 - `--steps` to select the part of hamster that is being executed (e.g., `--steps 0` runs flex2traj, `--steps 1` runs the diagnosis, `--steps 2` performs the attribution, ...)
 - `--ayyyy` and `--am` to select the analysis year and month (e.g., `--ayyyy 2002 --am 1`)
 - `--expid` to name a setting (e.g., `--expid "ALL-ABL"`)
-- `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days)
+- `--ctraj_len` to determine the maximum length of a trajectory for evaluation (e.g., `--ctraj_len 15` to select 15 days; 10 is the default)
 - `--maskval` to filter for a value other than 1 using the maskfile from `paths.txt`(e.g., `--maskval 5001`)
 
 - - - -
