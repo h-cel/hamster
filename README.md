@@ -93,7 +93,7 @@ To install **HAMSTER**, do the following:
 
 1. Clone the repository
     ```
-    git clone https://github.ugent.be/jkeune/hamster.git
+    git clone https://github.com/h-cel/hamster
     cd hamster
     ```
 2. Make an anaconda environment with the necessary python packages
