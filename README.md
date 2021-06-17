@@ -79,7 +79,7 @@ base_f2t_diag = "global"
 path_f2t_diag = "./flexpart_data/global/f2t_diag"
 
 # path and base name for parcel trajectory data
-base_f2t_traj = "bahamas_15d"
+base_f2t_traj = "bahamas_10d"
 path_f2t_traj = "./flexpart_data/bahamas/f2t_traj"
 
 # paths for processed data
@@ -206,7 +206,7 @@ Here, we provide a very basic example.
 2. Adjust the maskfile in `paths.txt`.
 3. Construct trajectories for parcels whose arrival+midpoints are over the Bahamas (don't forget to untar the binary FLEXPART simulations for this and the previous month and the first day of the following month):
   ```python
-  python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 16 --maskval 1 
+  python main.py --steps 0 --ayyyy 2000 --am 6 --ctraj_len 11 --maskval 1 
   ```
 4. Perform a global analysis of fluxes (and the previous month), and evaluate the bias and the reliability of detection for your region of interest and its (potential) source region, possibly selecting various diagnosis methods and fine tuning detection criteria (using the already available global data set on the VO), e.g.,  
   ```python
@@ -214,9 +214,9 @@ Here, we provide a very basic example.
   ...
   python main.py --steps 1 --ayyyy 2000 --am 6 --cpbl_strict 2 --cpbl_method "max" --cevap_dqv 0 --cheat_dtemp 0 --expid "ALL-ABL"
   ```
-5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 15 days, e.g.
+5. Once you have fine-tuned your detection criteria, perform a first backward analysis considering a trajectory length of 10 days, e.g.
   ```python
-  python main.py --steps 2 --ayyyy 2000 --am 6 --ctraj_len 15 --cpbl_strict 2 --cpbl_method "max" --cevap_dqv 0 --cheat_dtemp 0 --expid "ALL-ABL"
+  python main.py --steps 2 --ayyyy 2000 --am 6 --ctraj_len 10 --cpbl_strict 2 --cpbl_method "max" --cevap_dqv 0 --cheat_dtemp 0 --expid "ALL-ABL"
   ```
 6. Bias-correct the established source and aggregate the results over the backward time dimension
   ```python
