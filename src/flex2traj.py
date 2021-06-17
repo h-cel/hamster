@@ -118,4 +118,4 @@ def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
         print("\n\n---- Done! \n     Files with base '"+fout+"' written to:\n    ",odir+'/'+str(ryyyy))
         print("     Dimensions: nstep x nparcel x nvar\n     Var order: ", end='')
         print(*thevars[selvars].tolist(), sep=', ')
-        print("\n     Have a nice day :) :P")
+        print("\n     All done!")
