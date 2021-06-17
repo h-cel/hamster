@@ -106,7 +106,11 @@ or install the packages listed in requirements.txt in your local environment. No
 - - - -
 ## How do I run HAMSTER?
 
-To run **HAMSTER**, run
+To run **HAMSTER**, change into the `src` directory
+```
+cd src
+```
+and run
 ```python
 python main.py
 ```
