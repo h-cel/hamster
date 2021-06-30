@@ -28,14 +28,7 @@ from hamsterfunctions import *
 ##--- FUNCTIONS + COMMAND LINE ARGUMENTS
 ###########################################################################
 
-## (1) LOADING FUNCTIONS
-#exec(open("hamsterfunctions.py").read())
-#exec(open("flex2traj.py").read())
-#exec(open("diagnosis.py").read())
-#exec(open("attribution.py").read())
-#exec(open("biascorrection.py").read())
-
-## (2) COMMAND LINE ARGUMENTS
+## COMMAND LINE ARGUMENTS
 # read command line arguments (dates, thresholds and other flags)
 args    = read_cmdargs()
 verbose = args.verbose
