@@ -4,7 +4,6 @@
 import argparse
 import calendar
 import csv
-import datetime as datetime
 import fnmatch
 import gzip
 import imp
@@ -18,6 +17,7 @@ import time
 import timeit
 import warnings
 from datetime import date, datetime, timedelta
+import datetime as datetime
 from functools import reduce
 from math import acos, atan, atan2, cos, floor, sin, sqrt
 
