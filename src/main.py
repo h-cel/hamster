@@ -1,13 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-MAIN SCRIPT MOISTURE AND HEAT DIAGNOSIS
-@author: dominik and jessica
-
-To execute interactively: 
-> exec(open("./main.py").read())
-
-"""
+#
+# MAIN SCRIPT OF HAMSTER
+# 
+# This file is part of HAMSTER, 
+# originally created by Dominik Schumacher, Jessica Keune, Diego G. Miralles
+# at the Hydro-Climate Extremes Lab, Department of Environment, Ghent University
+# 
+# https://github.com/h-cel/hamster
+# 
+# HAMSTER is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation v3.
+#
+# HAMSTER is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HAMSTER. If not, see <http://www.gnu.org/licenses/>.
+#
 
 ###########################################################################
 ##--- MODULES

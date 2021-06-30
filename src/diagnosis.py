@@ -1,5 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# Main script to diagnose fluxes of two-step trajectories from a Lagrangian model, 
+# such as FLEXPART. This script diagnoses evaporation (E) and precipitation (P) based
+# on the change in specific humidity (q), and sensible heat (H) based on the potential 
+# temperature. Diagnosis is performed globally. 
+# 
+# This file is part of HAMSTER, 
+# originally created by Dominik Schumacher, Jessica Keune, Diego G. Miralles
+# at the Hydro-Climate Extremes Lab, Department of Environment, Ghent University
+# 
+# https://github.com/h-cel/hamster
+# 
+# HAMSTER is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation v3.
+#
+# HAMSTER is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with HAMSTER. If not, see <http://www.gnu.org/licenses/>.
+#
 
 import argparse
 import calendar
