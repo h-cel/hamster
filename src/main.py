@@ -13,15 +13,16 @@ To execute interactively:
 ##--- MODULES
 ###########################################################################
 
-import os
 import argparse
 import imp
+import os
 import time
-from hamsterfunctions import *
-from flex2traj import main_flex2traj
-from diagnosis import main_diagnosis
+
 from attribution import main_attribution
 from biascorrection import main_biascorrection
+from diagnosis import main_diagnosis
+from flex2traj import main_flex2traj
+from hamsterfunctions import *
 
 ###########################################################################
 ##--- FUNCTIONS + COMMAND LINE ARGUMENTS

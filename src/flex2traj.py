@@ -1,30 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import gzip
-import pandas as pd
-import numpy as np
-import os, fnmatch
-import timeit
-import netCDF4 as nc4
-import sys
 import argparse
-import time
-import math as math
-from datetime import datetime, timedelta, date
-from math import sin,cos,acos,atan,atan2,sqrt,floor
-from dateutil.relativedelta import relativedelta
-import datetime as datetime
-import imp
-import warnings
-import csv
-import random
-import struct
 import calendar
-import h5py
+import csv
+import datetime
+import fnmatch
+import gzip
+import imp
+import math
+import os
+import random
 import re
+import struct
+import sys
+import time
+import timeit
+import warnings
+from datetime import date, datetime, timedelta
 from functools import reduce
+from math import acos, atan, atan2, cos, floor, sin, sqrt
+
+import h5py
+import netCDF4 as nc4
+import numpy as np
+import pandas as pd
+from dateutil.relativedelta import relativedelta
+
 from hamsterfunctions import *
+
 
 def main_flex2traj(ryyyy, ayyyy, am, ad, tml, maskfile, maskval,
         idir, odir, fout, verbose):
