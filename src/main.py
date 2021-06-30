@@ -66,8 +66,11 @@ print("Using paths from: " + wpath + "/" + args.pathfile)
 content = imp.load_source("", wpath + "/" + args.pathfile)  # load like a python module
 path_refp = content.path_ref_p
 path_refe = content.path_ref_e
-path_reft = content.path_ref_t
 path_refh = content.path_ref_h
+if args.bc_t2p_ep:
+    path_reft = content.path_ref_t
+else:
+    path_reft = ""
 path_orig = content.path_orig
 path_diag = content.path_diag
 path_attr = content.path_attr
