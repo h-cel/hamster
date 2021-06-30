@@ -29,6 +29,11 @@ from dateutil.relativedelta import relativedelta
 
 from hamsterfunctions import *
 
+def get_currentversion():
+    version_file = os.path.join("../.","VERSION")
+    with open(version_file) as vfile:
+        version = vfile.readlines()[0].strip()
+    return(version)
 
 def disclaimer():
     print(
@@ -41,7 +46,7 @@ def disclaimer():
     print(" * Copyright 2021                                                      *")
     print(" * Dominik Schumacher, Jessica Keune                                   *")
     print(" *                                                                     *")
-    print(" * This program is part of HAMSTER (v.04).                             *")
+    print(" * This program is part of HAMSTER v"+str(get_currentversion())+"                              *")
     print(" *                                                                     *")
     print(" * HAMSTER is free under the terms of the GNU General Public license   *")
     print(" * version 3 as published by the Free Software Foundation              *")
@@ -1840,7 +1845,7 @@ def writeemptync(
     fprec,
     fevap,
     fheat,
-    currentversion="v0.4",
+    currentversion=get_currentversion(),
 ):
     # delete nc file if it is present (avoiding error message)
     try:
@@ -1971,7 +1976,7 @@ def writenc(ofile, ix, iarray, ivar, verbose=True):
 
 
 def writeemptync4D(
-    ofile, fdate_seq, upt_days, glat, glon, strargs, precision, currentversion="v0.4"
+    ofile, fdate_seq, upt_days, glat, glon, strargs, precision, currentversion=get_currentversion()
 ):
 
     # delete nc file if it is present (avoiding error message)
@@ -2251,7 +2256,7 @@ def writefinalnc(
     fbc_e2p_e,
     fbc_e2p_ep,
     fbc_t2p_ep,
-    currentversion="v0.4",
+    currentversion=get_currentversion(),
 ):
 
     # delete nc file if it is present (avoiding error message)
@@ -3007,7 +3012,7 @@ def writedebugnc(
     alpha_H,
     strargs,
     precision,
-    currentversion="v0.4",
+    currentversion=get_currentversion(),
 ):
 
     Prefsum = np.nansum(Pref, axis=(1, 2))
@@ -3396,7 +3401,7 @@ def ncdf_fliplats(ary, lats, lataxis=0):
     return flip_ary, flip_lats
 
 
-def writemasknc(mask, mlat, mlon, ofile="mask.nc", currentversion="v0.4"):
+def writemasknc(mask, mlat, mlon, ofile="mask.nc", currentversion=get_currentversion()):
     # create netCDF4 instance
     nc_f = nc4.Dataset(ofile, "w", format="NETCDF4")
     ### create dimensions ###
