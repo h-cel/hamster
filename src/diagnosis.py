@@ -4,7 +4,7 @@
 import argparse
 import calendar
 import csv
-import datetime
+import datetime as datetime
 import fnmatch
 import gzip
 import imp
