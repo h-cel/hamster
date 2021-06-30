@@ -64,22 +64,19 @@ os.chdir(wpath)
 ## load input and output paths & input file name base(s)
 print("Using paths from: " + wpath + "/" + args.pathfile)
 content = imp.load_source("", wpath + "/" + args.pathfile)  # load like a python module
-path_refp = content.path_ref_p
-path_refe = content.path_ref_e
-path_refh = content.path_ref_h
-if args.bc_t2p_ep:
-    path_reft = content.path_ref_t
-else:
-    path_reft = ""
-path_orig = content.path_orig
-path_diag = content.path_diag
-path_attr = content.path_attr
-path_bias = content.path_bias
-maskfile = content.maskfile
-path_f2t_diag = content.path_f2t_diag
-base_f2t_diag = content.base_f2t_diag
-path_f2t_traj = content.path_f2t_traj
-base_f2t_traj = content.base_f2t_traj
+path_refp = check_paths(content, "path_ref_p")
+path_refe = check_paths(content, "path_ref_e")
+path_refh = check_paths(content, "path_ref_h")
+path_reft = check_paths(content, "path_ref_t")
+path_orig = check_paths(content, "path_orig")
+path_diag = check_paths(content, "path_diag")
+path_attr = check_paths(content, "path_attr")
+path_bias = check_paths(content, "path_bias")
+maskfile = check_paths(content, "maskfile")
+path_f2t_diag = check_paths(content, "path_f2t_diag")
+base_f2t_diag = check_paths(content, "base_f2t_diag")
+path_f2t_traj = check_paths(content, "path_f2t_traj")
+base_f2t_traj = check_paths(content, "base_f2t_traj")
 
 # create output directories if they do not exist (in dependency of step)
 if args.steps == 0 and args.ctraj_len == 0 and not os.path.exists(path_f2t_diag):
