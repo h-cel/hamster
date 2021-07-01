@@ -273,5 +273,6 @@ This software is published under the GPLv3 license. This means:
 - Keune, J., and Miralles, D. G.: A precipitation recycling network to assess freshwater vulnerability: Challenging the watershed convention, Water Resour. Res., 55, 9947– 9961, https://doi.org/10.1029/2019WR025310, 2019.
 - Schumacher, D.L., Keune, J., van Heerwaarden, C.C. et al.: Amplification of mega-heatwaves through heat torrents fuelled by upwind drought, Nat. Geosci. 12, 712–717, https://doi.org/10.1038/s41561-019-0431-6, 2019.
 - Schumacher, D.L., Keune, J. and Miralles, D.G.: Atmospheric heat and moisture transport to energy- and water-limited ecosystems. Ann. N.Y. Acad. Sci., 1472, 123-138, https://doi.org/10.1111/nyas.14357, 2020.
+- Sodemann, H., Schwierz, C., and Wernli, H.: Interannual variability of Greenland winter precipitation sources: Lagrangian moisture diagnostic and North Atlantic Oscillation influence. J. Geophys. Res. Atmos., 113(D3), https://doi.org/10.1029/2007JD008503, 2008.
 - Sodemann, H.: Beyond Turnover Time: Constraining the Lifetime Distribution of Water Vapor from Simple and Complex Approaches, J. Atmos. Sci., 77(2), 413-433, https://doi.org/10.1175/JAS-D-18-0336.1, 2020.
 
