@@ -48,7 +48,32 @@ and
 or
 * python 3 and the required modules on a cluster
 
-The packages required to run **HAMSTER** are listed in `requirements.txt`. 
+The main packages required to run **HAMSTER** are: 
+```bash
+import argparse
+import calendar
+import csv
+import fnmatch
+import gzip
+import imp
+import math
+import os
+import random
+import re
+import struct
+import sys
+import time
+import timeit
+import warnings
+import datetime
+import functools
+
+import h5py
+import netCDF4
+import numpy
+import pandas
+import dateutil
+```
 
 In addition, to execute the full chain (all 4 modules) of **HAMSTER**, the following data sets are needed: 
 * **Output from a Lagrangian model** that traces air parcels and their properties (driven with a reanalysis or output from a GCM/RCM)
