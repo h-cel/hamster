@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper in discussion below."
+authors:
+- family-names: "Keune"
+  given-names: "Jessica"
+  orcid: "https://orcid.org/0000-0001-6104-2165"
+- family-names: "Schumacher"
+  given-names: "Dominik L."
+  orcid: "https://orcid.org/0000-0003-2699-2880"
+- family-names: "Miralles"
+  given-names: "Diego G."
+  orcid: "https://orcid.org/0000-0001-6186-5751"
+title: "Heat- And MoiSture Tracking framEwoRk - h-cel/hamster v1.0.0" 
+version: 1.0.0
+doi: 10.5281/zenodo.4889311
+date-released: 2021-06-01
+url: "http://doi.org/10.5281/zenodo.4889311"
+preferred-citation:
+   type: article
+   authors:
+   - family-names: "Keune"
+     given-names: "Jessica"
+     orcid: "https://orcid.org/0000-0001-6104-2165"
+   - family-names: "Schumacher"
+     given-names: "Dominik L."
+     orcid: "https://orcid.org/0000-0003-2699-2880"
+   - family-names: "Miralles"
+     given-names: "Diego G."
+     orcid: "https://orcid.org/0000-0001-6186-5751"
+   doi: "10.5194/gmd-2021-180"
+   journal: "Geoscientific Model Development Discussions"
+   month: 6
+   title: "A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model"
+   year: 2021
+   url: https://gmd.copernicus.org/preprints/gmd-2021-180/
