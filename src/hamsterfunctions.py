@@ -1698,8 +1698,7 @@ def random_attribution_p(
             if veryverbose:
                 print("  *** -- enforcing attribution to uptake location " + str(ii))
         else:
-            i = random.randint(0, nupt - 1)  # get a random uptake location number
-            ii = np.where(pupt == 1)[0][i]  # uptake location index
+            ii = random.choice(iupt, k=1)
         # determine maximum attribution for current uptake location and iteration
         try:
             imin = np.argmin(qtot[1:ii]) + 1
