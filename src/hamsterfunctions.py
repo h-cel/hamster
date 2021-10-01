@@ -1637,6 +1637,18 @@ def calc_maxatt(qtot, iupt, verbose):
         )
     return maxatt
 
+def calc_maxcon(qtot, iupt, verbose):
+    dqdt = qtot[:-1] - qtot[1:]
+    dqdt = np.append(dqdt, qtot[-1])
+    nt = len(dqdt)
+    dqdt_max = np.zeros(shape=nt)
+    for ii in iupt[::-1]:
+        try:
+            imin = np.argmin(qtot[1:ii]) + 1
+        except:
+            imin = 1
+        dqdt_max[ii] = min(qtot[imin], dqdt[ii])
+    return dqdt_max
 
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
