@@ -1655,7 +1655,7 @@ def local_minima(x):
 
 
 def random_attribution_p(
-    qtot, iupt, explainp, nmin=1, forc_all=False, verbose=True, veryverbose=False
+    qtot, iupt, explainp, nmin=1, forc_all=False, weight_locations=False, verbose=True, veryverbose=False
 ):
     qtot = qtot * 1000
     # This is only coded for precipitation as of now
@@ -1689,6 +1689,16 @@ def random_attribution_p(
         prec = dqdt[0]
     else:
         prec = maxatt * dqdt[0]
+    # location weights?
+    maxcon = calc_maxcon(qtot, iupt, verbose)
+    if weight_locations:
+        # using dqdt without any constraints
+        #lweights = dqdt[iupt]/np.sum(dqdt[iupt])
+        # using dqdt with maximum contribution constraint
+        lmax = calc_maxcon(qtot, iupt, verbose=True)
+        lweights = lmax[iupt]/np.sum(lmax[iupt])
+    else:
+        lweights = np.repeat(1/nupt, nupt)
     ## starting the random attribution loop
     dqdt_random = np.zeros(shape=nt)
     expl = 0
@@ -1710,7 +1720,7 @@ def random_attribution_p(
             if veryverbose:
                 print("  *** -- enforcing attribution to uptake location " + str(ii))
         else:
-            ii = random.choice(iupt, k=1)
+            ii = random.choice(iupt, weights=lweights, k=1)
         # determine maximum attribution for current uptake location and iteration
         try:
             imin = np.argmin(qtot[1:ii]) + 1
