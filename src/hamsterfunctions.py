@@ -1701,8 +1701,6 @@ def random_attribution_p(
     # location weights?
     maxcon = calc_maxcon(qtot, iupt, verbose)
     if weight_locations:
-        # using dqdt without any constraints
-        #lweights = dqdt[iupt]/np.sum(dqdt[iupt])
         # using dqdt with maximum contribution constraint
         lmax = calc_maxcon(qtot, iupt, verbose=True)
         lweights = lmax[iupt]/np.sum(lmax[iupt])
