@@ -860,6 +860,15 @@ def read_cmdargs():
         nargs="?",
     )
     parser.add_argument(
+        "--ratt_wloc",
+        "-rwloc",
+        help="weight probability of locations according to their maximum potential contribution (random att.)",
+        metavar="",
+        type=str2bol,
+        default=False,
+        nargs="?",
+    )
+    parser.add_argument(
         "--explainp",
         "-exp",
         help="trajectory-based upscaling of E2P contributions (02 only: none/max/full)",

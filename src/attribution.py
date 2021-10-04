@@ -97,6 +97,7 @@ def main_attribution(
     mattribution,
     crandomnit,
     randatt_forcall,
+    randatt_wloc,
     explainp,
     fdupscale,
     fmupscale,
