@@ -1679,6 +1679,7 @@ def random_attribution_p(
     #  - the higher this value, the more iterations, the uptake locations are covered
     #  - a value of 10 enforces min. 10 iterations
     # forc_all = enforce attribution to all uptake locations (but still random)
+    # weight_locations = weighting of location picks according to their maximum potential contribution (True/False; False = Default)
     dqdt = qtot[:-1] - qtot[1:]
     # append initial condition as artificial uptake
     dqdt = np.append(dqdt, qtot[-1])
