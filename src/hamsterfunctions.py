@@ -1712,7 +1712,7 @@ def random_attribution_p(
     dqdt_random = np.zeros(shape=nt)
     expl = 0
     icount = 0
-    while round(expl, 8) < round(abs(prec), 8):
+    while np.round(expl, 8) < np.round(abs(prec), 8):
         # enforce attribution to initial cond. if explain==max
         if icount == 0 and explainp == "max" and not forc_all:
             ii = nt - 1
