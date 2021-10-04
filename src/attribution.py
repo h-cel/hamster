@@ -552,6 +552,7 @@ def main_attribution(
                                 explainp=explainp,
                                 nmin=crandomnit,
                                 forc_all=randatt_forcall,
+                                weight_locations=randatt_wloc,
                                 verbose=verbose,
                                 veryverbose=veryverbose,
                             )
