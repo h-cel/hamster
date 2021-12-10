@@ -208,6 +208,7 @@ if args.steps == 2:
         mattribution=args.mattribution,
         crandomnit=args.ratt_nit,
         randatt_forcall=args.ratt_forcall,
+        randatt_wloc=args.ratt_wloc,
         explainp=args.explainp,
         fdupscale=args.dupscale,
         fmupscale=args.mupscale,

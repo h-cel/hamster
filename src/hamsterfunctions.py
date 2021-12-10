@@ -860,6 +860,15 @@ def read_cmdargs():
         nargs="?",
     )
     parser.add_argument(
+        "--ratt_wloc",
+        "-rwloc",
+        help="weight probability of locations according to their maximum potential contribution (random att.)",
+        metavar="",
+        type=str2bol,
+        default=True,
+        nargs="?",
+    )
+    parser.add_argument(
         "--explainp",
         "-exp",
         help="trajectory-based upscaling of E2P contributions (02 only: none/max/full)",
@@ -1637,13 +1646,25 @@ def calc_maxatt(qtot, iupt, verbose):
         )
     return maxatt
 
+def calc_maxcon(qtot, iupt, verbose):
+    dqdt = qtot[:-1] - qtot[1:]
+    dqdt = np.append(dqdt, qtot[-1])
+    nt = len(dqdt)
+    dqdt_max = np.zeros(shape=nt)
+    for ii in iupt[::-1]:
+        try:
+            imin = np.argmin(qtot[1:ii]) + 1
+        except:
+            imin = 1
+        dqdt_max[ii] = min(qtot[imin], dqdt[ii])
+    return dqdt_max
 
 def local_minima(x):
     return np.r_[True, x[1:] < x[:-1]] & np.r_[x[:-1] < x[1:], True]
 
 
 def random_attribution_p(
-    qtot, iupt, explainp, nmin=1, forc_all=False, verbose=True, veryverbose=False
+    qtot, iupt, explainp, nmin=1, forc_all=False, weight_locations=True, verbose=True, veryverbose=False
 ):
     qtot = qtot * 1000
     # This is only coded for precipitation as of now
@@ -1658,6 +1679,7 @@ def random_attribution_p(
     #  - the higher this value, the more iterations, the uptake locations are covered
     #  - a value of 10 enforces min. 10 iterations
     # forc_all = enforce attribution to all uptake locations (but still random)
+    # weight_locations = weighting of location picks according to their maximum potential contribution (True/False; False = Default)
     dqdt = qtot[:-1] - qtot[1:]
     # append initial condition as artificial uptake
     dqdt = np.append(dqdt, qtot[-1])
@@ -1677,11 +1699,19 @@ def random_attribution_p(
         prec = dqdt[0]
     else:
         prec = maxatt * dqdt[0]
+    # location weights?
+    maxcon = calc_maxcon(qtot, iupt, verbose)
+    if weight_locations:
+        # using dqdt with maximum contribution constraint
+        lmax = calc_maxcon(qtot, iupt, verbose=True)
+        lweights = lmax[iupt]/np.sum(lmax[iupt])
+    else:
+        lweights = np.repeat(1/nupt, nupt)
     ## starting the random attribution loop
     dqdt_random = np.zeros(shape=nt)
     expl = 0
     icount = 0
-    while round(expl, 8) < round(abs(prec), 8):
+    while np.round(expl, 8) < np.round(abs(prec), 8):
         # enforce attribution to initial cond. if explain==max
         if icount == 0 and explainp == "max" and not forc_all:
             ii = nt - 1
@@ -1698,7 +1728,7 @@ def random_attribution_p(
             if veryverbose:
                 print("  *** -- enforcing attribution to uptake location " + str(ii))
         else:
-            ii = random.choice(iupt, k=1)
+            ii = random.choices(iupt, weights=lweights, k=1)
         # determine maximum attribution for current uptake location and iteration
         try:
             imin = np.argmin(qtot[1:ii]) + 1
