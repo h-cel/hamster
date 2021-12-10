@@ -1664,7 +1664,7 @@ def local_minima(x):
 
 
 def random_attribution_p(
-    qtot, iupt, explainp, nmin=1, forc_all=False, weight_locations=False, verbose=True, veryverbose=False
+    qtot, iupt, explainp, nmin=1, forc_all=False, weight_locations=True, verbose=True, veryverbose=False
 ):
     qtot = qtot * 1000
     # This is only coded for precipitation as of now
