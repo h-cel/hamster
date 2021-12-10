@@ -865,7 +865,7 @@ def read_cmdargs():
         help="weight probability of locations according to their maximum potential contribution (random att.)",
         metavar="",
         type=str2bol,
-        default=False,
+        default=True,
         nargs="?",
     )
     parser.add_argument(
