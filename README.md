@@ -2,8 +2,6 @@
 
 **HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. It has been developed within the DRY-2-DRY project at the Hydro-Climatic Extremes Laboratory (H-CEL) at Ghent University. 
 
-[![DOI](https://zenodo.org/badge/372759352.svg)](https://zenodo.org/badge/latestdoi/372759352)
-
 - - - -
 ## What is HAMSTER?
 **HAMSTER** is a heat- and moisture tracking framwork to evaluate air parcel trajectories from a Lagrangian model, such as FLEXPART (Stohl et al., 2005) and to establish source–receptor relationships, such as the source regions of precipitation or heat. The current version of **HAMSTER** has been built using simulations from FLEXPART driven with ERA-Interim reanalysis data, but other simulations may be supported as well. 
@@ -16,8 +14,6 @@
 3. Bias-correction
 
 which build up on each other. It is suggested to run them sequentially to obtain the most efficient and informative workflow. In the following, a short description of each module (step) is given. 
-
-[Workflow_Fig1.pdf](https://github.com/h-cel/hamster/files/6575112/Workflow_Fig1.pdf)
 
 ### 0. flex2traj
 This module of **HAMSTER** reads in the instantaneous binary FLEXPART files, filters for a specific region (using a netcdf mask), constructs trajectories and writes them to a file.
@@ -277,7 +273,7 @@ Dominik Schumacher (dominik.schumacher@ugent.be) and Jessica Keune (jessica.keun
 
 ### Referencing
 If you use HAMSTER, please cite:
-Keune, J., D. L. Schumacher, D. G. Miralles: A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model.
+Keune, J., Schumacher, D. L., and Miralles, D. G.: A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model, Geosci. Model Dev. Discuss. [preprint], https://doi.org/10.5194/gmd-2021-180, in review, 2021.
 
 ### License
 Copyright 2021 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
