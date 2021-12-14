@@ -2,6 +2,8 @@
 
 **HAMSTER** is an open source software framework to trace heat and moisture through the atmosphere and establish (bias-corrected) source–receptor relationships, using output from a Lagrangian model. It has been developed within the DRY-2-DRY project at the Hydro-Climatic Extremes Laboratory (H-CEL) at Ghent University. 
 
+[![DOI](https://zenodo.org/badge/372759352.svg)](https://zenodo.org/badge/latestdoi/372759352)
+
 - - - -
 ## What is HAMSTER?
 **HAMSTER** is a heat- and moisture tracking framwork to evaluate air parcel trajectories from a Lagrangian model, such as FLEXPART (Stohl et al., 2005) and to establish source–receptor relationships, such as the source regions of precipitation or heat. The current version of **HAMSTER** has been built using simulations from FLEXPART driven with ERA-Interim reanalysis data, but other simulations may be supported as well. 
