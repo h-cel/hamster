@@ -10,11 +10,11 @@ authors:
 - family-names: "Miralles"
   given-names: "Diego G."
   orcid: "https://orcid.org/0000-0001-6186-5751"
-title: "Heat- And MoiSture Tracking framEwoRk - h-cel/hamster v1.0.0" 
-version: 1.0.0
-doi: 10.5281/zenodo.4889311
-date-released: 2021-06-01
-url: "http://doi.org/10.5281/zenodo.4889311"
+title: "Heat- And MoiSture Tracking framEwoRk - h-cel/hamster v1.2.0" 
+version: 1.2.0
+doi: 10.5281/zenodo.5788506
+date-released: 2021-12-14
+url: "http://doi.org/10.5281/zenodo.5788506"
 preferred-citation:
    type: article
    authors:
@@ -27,9 +27,12 @@ preferred-citation:
    - family-names: "Miralles"
      given-names: "Diego G."
      orcid: "https://orcid.org/0000-0001-6186-5751"
-   doi: "10.5194/gmd-2021-180"
-   journal: "Geoscientific Model Development Discussions"
-   month: 6
-   title: "A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model"
-   year: 2021
-   url: https://gmd.copernicus.org/preprints/gmd-2021-180/
+   doi: "10.5194/gmd-15-1875-2022"
+   journal: "Geoscientific Model Development"
+   title: "A unified framework to estimate the origins of atmospheric moisture and heat using Lagrangian models"
+   year: 2022
+   url: "https://gmd.copernicus.org/articles/15/1875/2022/"
+   volume: 15
+   year: 2022
+   start: 1875
+   end: 1898
