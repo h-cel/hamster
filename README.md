@@ -275,7 +275,7 @@ Dominik Schumacher (dominik.schumacher@ugent.be) and Jessica Keune (jessica.keun
 
 ### Referencing
 If you use HAMSTER, please cite:
-Keune, J., Schumacher, D. L., and Miralles, D. G.: A holistic framework to estimate the origins of atmospheric moisture and heat using a Lagrangian model, Geosci. Model Dev. Discuss. [preprint], https://doi.org/10.5194/gmd-2021-180, in review, 2021.
+Keune, J., Schumacher, D. L., & Miralles, D. G. (2022). A unified framework to estimate the origins of atmospheric moisture and heat using Lagrangian models. Geoscientific Model Development, 15, 1875–1898. https://doi.org/10.5194/gmd-15-1875-2022
 
 ### License
 Copyright 2021 Dominik Schumacher, Jessica Keune, Diego G. Miralles. 
